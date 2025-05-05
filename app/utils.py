@@ -52,34 +52,52 @@ def extract_features(text):
 
 def extract_with_ollama(text):
     """
-    Extract features using Ollama local LLM.
+    Extract clinical features from patient text using Ollama local LLM.
+    
+    Questa funzione utilizza un LLM locale tramite Ollama per estrarre feature cliniche strutturate
+    dal testo del paziente. Il prompt è progettato specificamente per estrarre informazioni oncologiche
+    rilevanti come età, genere, diagnosi, stadio, stato ECOG, mutazioni genetiche, metastasi,
+    trattamenti precedenti e valori di laboratorio.
     
     Args:
-        text: The text to analyze
+        text: Il testo del paziente da analizzare
         
     Returns:
-        dict: Extracted features or None if Ollama is not available
+        dict: Feature estratte in formato JSON strutturato, o None se Ollama non è disponibile
     """
     try:
-        # Define the prompt for the LLM
+        # URL di Ollama API - controlla la variabile d'ambiente o usa il default
+        ollama_api_url = os.environ.get('OLLAMA_API_URL', 'http://localhost:11434')
+        
+        # SYSTEM PROMPT
+        # Questo è il prompt di sistema che definisce il compito e il formato di output per il LLM
         prompt = f"""
-        Extract the following medical features from this oncology patient text and return ONLY a valid JSON object with these fields:
-        - age: patient age as number (or null if not found)
-        - gender: "male", "female", or null if not found
-        - diagnosis: primary cancer diagnosis (or null if not found)
-        - stage: cancer stage (or null if not found)
-        - ecog: ECOG performance status as number (or null if not found)
-        - mutations: list of genetic mutations (empty list if none found)
-        - metastases: list of metastasis locations (empty list if none found)
-        - previous_treatments: list of previous treatments (empty list if none found)
-        - lab_values: object with lab values as key-value pairs (empty object if none found)
+        # COMPITO
+        Sei un assistente medico esperto specializzato nell'analisi di documenti clinici oncologici.
+        Estrai le seguenti caratteristiche mediche dal testo del paziente oncologico e restituisci
+        SOLO un oggetto JSON valido con i campi specificati.
         
-        For each extracted value, include a "source" field with the exact text fragment it was extracted from.
+        # CAMPI DA ESTRARRE
+        - age: età del paziente come numero (o null se non trovata)
+        - gender: "male", "female", o null se non trovato
+        - diagnosis: diagnosi primaria del cancro (o null se non trovata)
+        - stage: stadio del cancro (o null se non trovato)
+        - ecog: stato di performance ECOG come numero (o null se non trovato)
+        - mutations: lista di mutazioni genetiche (lista vuota se nessuna trovata)
+        - metastases: lista di localizzazioni di metastasi (lista vuota se nessuna trovata)
+        - previous_treatments: lista di trattamenti precedenti (lista vuota se nessuna trovata)
+        - lab_values: oggetto con valori di laboratorio come coppie chiave-valore (oggetto vuoto se nessuno trovato)
         
-        Here is the patient text:
+        # ISTRUZIONI IMPORTANTI
+        1. Per ogni valore estratto, includi un campo "source" con l'esatto frammento di testo da cui è stato estratto.
+        2. Restituisci SOLO il JSON senza testo aggiuntivo.
+        3. Se un'informazione non è presente nel testo, usa null per i campi singoli o liste/oggetti vuoti per le collezioni.
+        4. Sii preciso nell'estrazione e utilizza il contesto medico per identificare correttamente le informazioni.
+        
+        # TESTO DEL PAZIENTE
         {text}
         
-        JSON output format (fill with actual values):
+        # FORMATO OUTPUT JSON (esempio da completare con valori effettivi)
         {{
             "age": {{ "value": 65, "source": "65-year-old" }},
             "gender": {{ "value": "female", "source": "female patient" }},
@@ -101,44 +119,82 @@ def extract_with_ollama(text):
             }}
         }}
 
-        Return ONLY the JSON with no additional text.
+        Restituisci SOLO il JSON senza testo aggiuntivo.
         """
         
-        # Try to connect to the Ollama API running locally
+        # Configurazione della richiesta all'API di Ollama
+        request_data = {
+            'model': 'mistral',  # Modello LLM da utilizzare (modificabile in base alla disponibilità)
+            'prompt': prompt,     # Il prompt contenente le istruzioni e il testo del paziente
+            'stream': False       # Non utilizziamo lo streaming per questa operazione
+        }
+        
+        # Timeout più lungo per gestire documenti complessi
+        timeout_seconds = 60
+        
+        # Log per debug
+        logging.debug(f"Inviando richiesta a Ollama API: {ollama_api_url}")
+        
+        # Effettua la richiesta all'API di Ollama
         response = requests.post(
-            'http://localhost:11434/api/generate',
-            json={
-                'model': 'mistral',  # or another available model
-                'prompt': prompt,
-                'stream': False
-            },
-            timeout=60  # timeout in seconds
+            f"{ollama_api_url}/api/generate",
+            json=request_data,
+            timeout=timeout_seconds
         )
         
+        # Verifica se la richiesta ha avuto successo
         if response.status_code == 200:
-            # Extract the generated text
+            # Estrai il testo generato dalla risposta
             result = response.json().get('response', '')
             
-            # Extract only the JSON part from the response
+            # Estrai solo la parte JSON dalla risposta
+            # Questo è importante poiché l'LLM potrebbe includere testo aggiuntivo
             json_match = re.search(r'({[\s\S]*})', result)
             if json_match:
                 json_str = json_match.group(1)
-                return json.loads(json_str)
-            
-        return None
+                try:
+                    # Conversione della stringa JSON in dizionario Python
+                    features = json.loads(json_str)
+                    logging.info("Feature estratte con successo da Ollama LLM")
+                    return features
+                except json.JSONDecodeError as e:
+                    logging.error(f"Errore nella decodifica JSON: {str(e)}")
+                    return None
+            else:
+                logging.warning("Nessun formato JSON valido trovato nella risposta di Ollama")
+                return None
+        else:
+            logging.warning(f"Ollama API ha risposto con codice: {response.status_code}")
+            return None
     except Exception as e:
-        logging.warning(f"Ollama extraction failed: {str(e)}. Falling back to basic extraction.")
+        logging.warning(f"Estrazione con Ollama fallita: {str(e)}. Ritorno all'estrazione di base.")
         return None
 
 def basic_feature_extraction(text):
     """
-    Perform basic feature extraction using regex patterns when LLM is not available.
+    Esegue un'estrazione di base delle feature utilizzando pattern regex quando LLM non è disponibile.
+    
+    Questa funzione implementa un'estrazione di base delle caratteristiche cliniche
+    utilizzando espressioni regolari. Viene utilizzata come fallback quando:
+    1. Non è disponibile una connessione a un modello LLM locale
+    2. L'estrazione con LLM fallisce per qualsiasi motivo
+    
+    Il metodo cerca nel testo i seguenti elementi:
+    - Età del paziente (es. "65-year-old")
+    - Genere (male/female)
+    - Diagnosi di cancro da una lista predefinita
+    - Stadio del cancro (I, II, III, IV con possibili sottoclassificazioni A, B, C)
+    - Stato di performance ECOG (0-4)
+    - Mutazioni genetiche comuni in oncologia
+    - Siti di metastasi comuni
+    - Trattamenti oncologici precedenti
+    - Valori di laboratorio comuni
     
     Args:
-        text: The text to analyze
+        text: Il testo da analizzare
         
     Returns:
-        dict: Basic extracted features
+        dict: Feature estratte con struttura compatibile con l'output dell'LLM
     """
     features = {
         "age": {"value": None, "source": ""},

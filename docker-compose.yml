@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  webapp:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./:/app
+    environment:
+      - FLASK_ENV=production
+    restart: unless-stopped
+
+  # Servizio Ollama opzionale (decommentare se necessario)
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   restart: unless-stopped
+
+# Volumes per persistere i dati di Ollama
+# volumes:
+#   ollama_data:

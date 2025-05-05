@@ -232,9 +232,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // Display matching trials
         displayMatches(data.matches);
         
+        // Display original text
+        displayOriginalText(data.text || data.features.original_text);
+        
         // Scroll to results
         if (resultsSection) {
             resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+    
+    // Display original text/PDF content
+    function displayOriginalText(text) {
+        const pdfTextContainer = document.getElementById('pdf-text');
+        if (pdfTextContainer && text) {
+            pdfTextContainer.textContent = text;
         }
     }
     

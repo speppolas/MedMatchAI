@@ -155,6 +155,8 @@ def extract_with_ollama(text):
                 try:
                     # Conversione della stringa JSON in dizionario Python
                     features = json.loads(json_str)
+                    # Aggiungiamo il testo originale per mostrarlo nella UI
+                    features["original_text"] = text
                     logging.info("Feature estratte con successo da Ollama LLM")
                     return features
                 except json.JSONDecodeError as e:
@@ -207,6 +209,9 @@ def basic_feature_extraction(text):
         "previous_treatments": [],
         "lab_values": {}
     }
+    
+    # Salviamo anche il testo originale per mostrarlo nella UI
+    features["original_text"] = text
     
     # Basic age extraction
     age_match = re.search(r'(\d+)[\s-]*(?:year|yr)s?[\s-]*old', text, re.IGNORECASE)

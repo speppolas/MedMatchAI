@@ -38,7 +38,7 @@ INT_ORGANIZATION_TERMS = [
 ]
 MAX_RESULTS_PER_REQUEST = 1000  # Limite massimo consentito dall'API
 
-def fetch_trials_from_api(page_token: Optional[str] = None) -> Dict[str, Any]:
+def fetch_trials_from_api(page_token: Optional[str] = None) -> tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Recupera i trial clinici da ClinicalTrials.gov utilizzando l'API ufficiale v2.
     
@@ -46,21 +46,26 @@ def fetch_trials_from_api(page_token: Optional[str] = None) -> Dict[str, Any]:
         page_token: Token della pagina per la paginazione (utilizzato dall'API v2)
         
     Returns:
-        Dict: Risposta JSON dall'API
+        tuple[Dict[str, Any], Dict[str, Any]]: (response_adapted, raw_result) - Risposta JSON adattata e risposta originale
     """
     # Nella versione v2 dell'API, dobbiamo utilizzare un formato di query diverso
     # Utilizziamo sia i termini dell'organizzazione che la città (Milano/Milan)
     
     # Parametri per la nuova API v2
+    # Nota: nella v2, i filtri vengono specificati direttamente nella query
+    query_terms = [
+        '"Istituto Nazionale dei Tumori"',
+        'Milan OR Milano',
+        'AREA[LocationCountry]Italy',
+        'AREA[OverallStatus]EXPAND[Term]RANGE[recruiting,not yet recruiting,active not recruiting]'
+    ]
+    
     params = {
         "format": "json",
         "pageSize": 100,  # Numero di risultati per pagina (max 100 per l'API v2)
         "pageToken": page_token,
-        "query.term": '"Istituto Nazionale dei Tumori" AND (Milan OR Milano)',
-        "query.field": ["LocationFacility", "LocationCity"],
-        "countTotal": "true",
-        "filter.recruitment": ["RECRUITING", "NOT_YET_RECRUITING", "ACTIVE_NOT_RECRUITING"],
-        "filter.country": ["IT"],  # Italia
+        "query.term": " AND ".join(query_terms),
+        "countTotal": "true"
     }
     
     # Rimuovi i parametri None
@@ -110,12 +115,13 @@ def fetch_trials_from_api(page_token: Optional[str] = None) -> Dict[str, Any]:
             
             adapted_result["StudyFieldsResponse"]["StudyFields"].append(adapted_study)
         
-        return adapted_result
+        # Restituisci sia la risposta adattata che il risultato originale
+        return (adapted_result, result)
     except requests.exceptions.RequestException as e:
         logger.error(f"Errore nella richiesta all'API: {str(e)}")
         raise
 
-def extract_inclusion_exclusion_criteria(criteria_text: str) -> tuple:
+def extract_inclusion_exclusion_criteria(criteria_text: str) -> tuple[List[Dict[str, str]], List[Dict[str, str]]]:
     """
     Estrae i criteri di inclusione ed esclusione dal testo completo dei criteri di idoneità.
     
@@ -123,7 +129,7 @@ def extract_inclusion_exclusion_criteria(criteria_text: str) -> tuple:
         criteria_text: Testo completo dei criteri di idoneità
         
     Returns:
-        tuple: (criteri di inclusione, criteri di esclusione)
+        tuple[List[Dict[str, str]], List[Dict[str, str]]]: (criteri di inclusione, criteri di esclusione)
     """
     # Normalizza gli a capo
     criteria_text = criteria_text.replace("\r\n", "\n").replace("\r", "\n")
@@ -323,9 +329,9 @@ def fetch_all_int_trials() -> List[Dict[str, Any]]:
         # L'API v2 utilizza un sistema di paginazione diverso
         while True:
             # Recupera un batch di trial (nella prima chiamata next_page_token è None)
-            response_data = fetch_trials_from_api(next_page_token)
+            response_data, raw_result = fetch_trials_from_api(next_page_token)
             
-            # Estrai informazioni sulla paginazione
+            # Estrai informazioni sulla paginazione dalla risposta adattata
             if total_trials is None:
                 total_trials = int(response_data.get("StudyFieldsResponse", {}).get("NStudiesFound", "0"))
                 logger.info(f"Trovati {total_trials} trial clinici attivi all'INT")
@@ -370,8 +376,8 @@ def fetch_all_int_trials() -> List[Dict[str, Any]]:
                     
                     all_trials.append(processed_trial)
             
-            # Ottieni il token per la pagina successiva
-            next_page_token = response_data.get("nextPageToken")
+            # Ottieni il token per la pagina successiva dall'API v2
+            next_page_token = raw_result.get("nextPageToken")
             
             # Se non ci sono altre pagine, esci dal ciclo
             if not next_page_token:
@@ -409,12 +415,12 @@ def fallback_int_trials_fetch() -> List[Dict[str, Any]]:
     
     try:
         # Parametri di base per una query più semplice con l'API v2
+        # Utilizziamo una query molto più semplice per massimizzare la possibilità di successo
         params = {
             "format": "json",
             "pageSize": 50,
-            "query.term": "Istituto Nazionale Tumori Milano",
-            "countTotal": "true",
-            "filter.country": ["IT"],  # Italia
+            "query.term": "Istituto Nazionale Tumori Milano Italy recruiting",
+            "countTotal": "true"
         }
         
         logger.info("Eseguendo query di fallback con API v2...")

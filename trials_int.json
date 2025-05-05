@@ -1,5 +1,82 @@
 [
   {
+    "id": "NCT03102320",
+    "title": "Phase 1b Multi-indication Study of Anetumab Ravtansine (BAY94-9343) in Patients With Mesothelin Expressing Advanced or Recurrent Malignancies",
+    "phase": "PHASE1",
+    "description": "The key purpose of the main part of the study is to assess efficacy and safety of anetumab ravtansine as monotherapy or combination therapy for mesothelin expressing advanced solid tumors.\n\nThe main purpose of the safety lead-in (dose-finding) part of the study is to determine the safety and tolerability of anetumab ravtansine in combination with cisplatin and in combination with gemcitabine, and to determine the MTD of anetumab ravtansine in combination with cisplatin for mesothelin expressing advanced cholangiocarcinoma and in combination with gemcitabine for mesothelin expressing advanced adenocarcinoma of the pancreas.\n\nPatients will receive anetumab ravtansine every three weeks in monotherapy for most indications. In cholangiocarinoma and adenocarinoma of the pancreas, 3-weekly anetumab ravtansine is administered in combination with cisplatin or gemcitabine respectively (both administered in a 2 week on / 1 week off schedule).\n\nTreatment will continue until disease progression or until another criterion for withdrawal is met. .Efficacy will be measured by evaluating the tumor's objective response rate. Radiological tumor assessments will be performed at defined time points until the patient's disease progresses.\n\nBlood samples will be collected for safety, pharmacokinetic and biomarker analysis. Archival or fresh biopsy tissue will also be collected for mesothelin expression testing and biomarker analyses.",
+    "inclusion_criteria": [
+      {
+        "text": "Availability of tumor tissue for mesothelin expression testing and for further biomarker analysis",
+        "type": "mutation"
+      },
+      {
+        "text": "Histologically-confirmed, mesothelin-expressing metastatic or advanced non-metastatic disease (tumour type specific inclusion criteria)",
+        "type": "metastasis"
+      },
+      {
+        "text": "At least one measurable lesion according to Response Evaluation Criteria in Solid Tumors (RECIST 1.1) (or for thymic carcinoma, at least one measurable lesion per International Thymic Malignancy Interest Group (ITMIG) modified RECIST 1.1 criteria",
+        "type": "diagnosis"
+      },
+      {
+        "text": "Adequate bone marrow, liver, renal and coagulation function",
+        "type": "inclusion"
+      },
+      {
+        "text": "Left ventricular ejection fraction (LVEF) \u2265 50% of the lower limit of normal (LLN) according to local institutional ranges",
+        "type": "inclusion"
+      },
+      {
+        "text": "Eastern Cooperative Oncology Group (ECOG) 0 or 1",
+        "type": "performance"
+      }
+    ],
+    "exclusion_criteria": [
+      {
+        "text": "Exposure to more than one prior anti-tubulin/microtubule agent",
+        "type": "treatment"
+      },
+      {
+        "text": "Corneal epitheliopathy or any eye disorder that may predispose the patients to this condition",
+        "type": "exclusion"
+      },
+      {
+        "text": "Symptomatic Central nervous system (CNS) metastases and/or carcinomatous meningitis",
+        "type": "metastasis"
+      },
+      {
+        "text": "Contraindication to both CT and MRI contrast agents",
+        "type": "exclusion"
+      },
+      {
+        "text": "Active hepatitis B or C infection",
+        "type": "exclusion"
+      },
+      {
+        "text": "Pregnant or breast-feeding patients",
+        "type": "exclusion"
+      },
+      {
+        "text": "Tumor type specific exclusion criteria",
+        "type": "diagnosis"
+      }
+    ],
+    "status": "COMPLETED",
+    "start_date": "",
+    "completion_date": "",
+    "sponsor": "",
+    "last_updated": "",
+    "locations": [],
+    "min_age": "",
+    "max_age": "",
+    "gender": "",
+    "org_study_id": "15834",
+    "secondary_ids": [
+      {
+        "id": "2016-004002-33"
+      }
+    ]
+  },
+  {
     "id": "NCT02864992",
     "title": "A Phase II Single-arm Trial to Investigate Tepotinib in Advanced (Locally Advanced or Metastatic) Non-small Cell Lung Cancer With METex14 Skipping Alterations or MET Amplification (VISION)",
     "phase": "PHASE2",
@@ -42,7 +119,7 @@
         "type": "metastasis"
       },
       {
-        "text": "Treatment naïve participant in first-line or pretreated participant with no more than 2 lines of prior therapy",
+        "text": "Treatment na\u00efve participant in first-line or pretreated participant with no more than 2 lines of prior therapy",
         "type": "treatment"
       },
       {
@@ -250,90 +327,13 @@
     "secondary_ids": []
   },
   {
-    "id": "NCT03102320",
-    "title": "Phase 1b Multi-indication Study of Anetumab Ravtansine (BAY94-9343) in Patients With Mesothelin Expressing Advanced or Recurrent Malignancies",
-    "phase": "PHASE1",
-    "description": "The key purpose of the main part of the study is to assess efficacy and safety of anetumab ravtansine as monotherapy or combination therapy for mesothelin expressing advanced solid tumors.\n\nThe main purpose of the safety lead-in (dose-finding) part of the study is to determine the safety and tolerability of anetumab ravtansine in combination with cisplatin and in combination with gemcitabine, and to determine the MTD of anetumab ravtansine in combination with cisplatin for mesothelin expressing advanced cholangiocarcinoma and in combination with gemcitabine for mesothelin expressing advanced adenocarcinoma of the pancreas.\n\nPatients will receive anetumab ravtansine every three weeks in monotherapy for most indications. In cholangiocarinoma and adenocarinoma of the pancreas, 3-weekly anetumab ravtansine is administered in combination with cisplatin or gemcitabine respectively (both administered in a 2 week on / 1 week off schedule).\n\nTreatment will continue until disease progression or until another criterion for withdrawal is met. .Efficacy will be measured by evaluating the tumor's objective response rate. Radiological tumor assessments will be performed at defined time points until the patient's disease progresses.\n\nBlood samples will be collected for safety, pharmacokinetic and biomarker analysis. Archival or fresh biopsy tissue will also be collected for mesothelin expression testing and biomarker analyses.",
-    "inclusion_criteria": [
-      {
-        "text": "Availability of tumor tissue for mesothelin expression testing and for further biomarker analysis",
-        "type": "mutation"
-      },
-      {
-        "text": "Histologically-confirmed, mesothelin-expressing metastatic or advanced non-metastatic disease (tumour type specific inclusion criteria)",
-        "type": "metastasis"
-      },
-      {
-        "text": "At least one measurable lesion according to Response Evaluation Criteria in Solid Tumors (RECIST 1.1) (or for thymic carcinoma, at least one measurable lesion per International Thymic Malignancy Interest Group (ITMIG) modified RECIST 1.1 criteria",
-        "type": "diagnosis"
-      },
-      {
-        "text": "Adequate bone marrow, liver, renal and coagulation function",
-        "type": "inclusion"
-      },
-      {
-        "text": "Left ventricular ejection fraction (LVEF) ≥ 50% of the lower limit of normal (LLN) according to local institutional ranges",
-        "type": "inclusion"
-      },
-      {
-        "text": "Eastern Cooperative Oncology Group (ECOG) 0 or 1",
-        "type": "performance"
-      }
-    ],
-    "exclusion_criteria": [
-      {
-        "text": "Exposure to more than one prior anti-tubulin/microtubule agent",
-        "type": "treatment"
-      },
-      {
-        "text": "Corneal epitheliopathy or any eye disorder that may predispose the patients to this condition",
-        "type": "exclusion"
-      },
-      {
-        "text": "Symptomatic Central nervous system (CNS) metastases and/or carcinomatous meningitis",
-        "type": "metastasis"
-      },
-      {
-        "text": "Contraindication to both CT and MRI contrast agents",
-        "type": "exclusion"
-      },
-      {
-        "text": "Active hepatitis B or C infection",
-        "type": "exclusion"
-      },
-      {
-        "text": "Pregnant or breast-feeding patients",
-        "type": "exclusion"
-      },
-      {
-        "text": "Tumor type specific exclusion criteria",
-        "type": "diagnosis"
-      }
-    ],
-    "status": "COMPLETED",
-    "start_date": "",
-    "completion_date": "",
-    "sponsor": "",
-    "last_updated": "",
-    "locations": [],
-    "min_age": "",
-    "max_age": "",
-    "gender": "",
-    "org_study_id": "15834",
-    "secondary_ids": [
-      {
-        "id": "2016-004002-33"
-      }
-    ]
-  },
-  {
     "id": "NCT06225596",
     "title": "A Randomized Open-Label Phase 2/3 Study of BT8009 as Monotherapy or in Combination in Participants With Locally Advanced or Metastatic Urothelial Cancer (Duravelo-2)",
     "phase": "PHASE2",
-    "description": "This is a global, multicenter, randomized, open-label study, with an adaptive design. The main objective of the study is to measure the efficacy and safety of BT8009 (zelenectide pevedotin) as monotherapy and in combination with pembrolizumab in participants with locally advanced or metastatic urothelial cancer (UC). The study includes a dose selection phase followed by an adaptive design continuation. The study is comprised of 2 cohorts. Cohort 1 will include participants who have not received any prior systemic therapy for locally advanced or metastatic UC and are eligible to receive platinum-based chemotherapy, whereas Cohort 2 will include participants who have received ≥ 1 prior systemic therapy for locally advanced or metastatic UC.",
+    "description": "This is a global, multicenter, randomized, open-label study, with an adaptive design. The main objective of the study is to measure the efficacy and safety of BT8009 (zelenectide pevedotin) as monotherapy and in combination with pembrolizumab in participants with locally advanced or metastatic urothelial cancer (UC). The study includes a dose selection phase followed by an adaptive design continuation. The study is comprised of 2 cohorts. Cohort 1 will include participants who have not received any prior systemic therapy for locally advanced or metastatic UC and are eligible to receive platinum-based chemotherapy, whereas Cohort 2 will include participants who have received \u2265 1 prior systemic therapy for locally advanced or metastatic UC.",
     "inclusion_criteria": [
       {
-        "text": "Life expectancy ≥ 12 weeks.",
+        "text": "Life expectancy \u2265 12 weeks.",
         "type": "inclusion"
       },
       {
@@ -373,7 +373,7 @@
         "type": "treatment"
       },
       {
-        "text": "Cohort 2: Previously Treated: Participants must have received ≥ 1 prior systemic treatment for locally advanced or metastatic UC. This includes neoadjuvant/adjuvant platinum-based chemotherapy if recurrence occurred within 12 months of completing therapy.",
+        "text": "Cohort 2: Previously Treated: Participants must have received \u2265 1 prior systemic treatment for locally advanced or metastatic UC. This includes neoadjuvant/adjuvant platinum-based chemotherapy if recurrence occurred within 12 months of completing therapy.",
         "type": "treatment"
       },
       {
@@ -439,181 +439,6 @@
       },
       {
         "id": "U1111-1300-3791"
-      }
-    ]
-  },
-  {
-    "id": "NCT04929223",
-    "title": "A Phase I/Ib Global, Multicenter, Open-label Umbrella Study Evaluating the Safety and Efficacy of Targeted Therapies in Subpopulations of Patients With Metastatic Colorectal Cancer (INTRINSIC)",
-    "phase": "PHASE1",
-    "description": "This open-label, exploratory study is designed to evaluate the safety and efficacy of targeted therapies or immunotherapy as single agents or combinations, in participants with metastatic colorectal cancer (mCRC) whose tumors are biomarker positive as per treatment arm-specific definition. Eligible participants with mCRC will be enrolled into specific treatment arms based on their biomarker assay results.",
-    "inclusion_criteria": [
-      {
-        "text": "Inclusion Criteria",
-        "type": "inclusion"
-      },
-      {
-        "text": "Signed cohort-specific Informed Consent Form",
-        "type": "inclusion"
-      },
-      {
-        "text": "Age \\>= 18 years at time of signing Informed Consent Form",
-        "type": "age"
-      },
-      {
-        "text": "Biomarker eligibility as determined by:",
-        "type": "inclusion"
-      },
-      {
-        "text": "A validated test approved by local health authorities for detection of the specified biomarkers/mutations.",
-        "type": "inclusion"
-      },
-      {
-        "text": "A validated test performed at a College of American Pathologists/clinical laboratory improvement amendments (CAP/CLIA) -certified or equivalently accredited diagnostic laboratory using a validated test for detection of the specified biomarkers.",
-        "type": "inclusion"
-      },
-      {
-        "text": "Prior test results completed before signing cohort-specific Informed Consent Form or local test results generated prior to or during screening, and availability of a full report of the testing results OR",
-        "type": "treatment"
-      },
-      {
-        "text": "Blood-based FoundationOne Liquid CDx biomarker eligibility test result generated prior to or during screening or, in case of re-enrollment after treatment discontinuation, prior to starting a new anti-cancer therapy.",
-        "type": "treatment"
-      },
-      {
-        "text": "Eastern Cooperative Oncology Group (ECOG) Performance Status of \\<= 1",
-        "type": "performance"
-      },
-      {
-        "text": "Life expectancy \\>= 3 months, as determined by the investigator",
-        "type": "inclusion"
-      },
-      {
-        "text": "Histologically confirmed adenocarcinoma originating from the colon or rectum",
-        "type": "inclusion"
-      },
-      {
-        "text": "Metastatic disease",
-        "type": "metastasis"
-      },
-      {
-        "text": "Prior therapies for metastatic disease",
-        "type": "treatment"
-      },
-      {
-        "text": "Ability to comply with the study protocol, in the investigators judgment",
-        "type": "inclusion"
-      },
-      {
-        "text": "Measurable disease (at least one target lesion) according to Response Evaluation Criteria in Solid Tumors, Version 1.1 (RECIST v1.1)",
-        "type": "inclusion"
-      },
-      {
-        "text": "Baseline tumor tissue samples will be collected from all participants for exploratory biomarker research",
-        "type": "diagnosis"
-      },
-      {
-        "text": "Adequate hematologic and organ function within 14 days prior to initiation of study treatment",
-        "type": "treatment"
-      },
-      {
-        "text": "For women of childbearing potential: agreement to remain abstinent (refrain from heterosexual intercourse) or use contraceptive measures",
-        "type": "inclusion"
-      },
-      {
-        "text": "For men: agreement to remain abstinent or use contraceptive measures, and agreement to refrain from donating sperm",
-        "type": "inclusion"
-      },
-      {
-        "text": "Exclusion Criteria",
-        "type": "inclusion"
-      },
-      {
-        "text": "Current participation or enrollment in another interventional clinical trial. Participants who are participating in the follow-up period of an interventional clinical trial are eligible for the study.",
-        "type": "inclusion"
-      },
-      {
-        "text": "Any systemic anti-cancer treatment within 2 weeks or 5 half-lives (whichever is shorter) prior to start of study treatment",
-        "type": "treatment"
-      },
-      {
-        "text": "Treatment with investigational therapy within 28 days prior to initiation of study treatment",
-        "type": "treatment"
-      },
-      {
-        "text": "Pregnant or breastfeeding, or intending to become pregnant during the study",
-        "type": "inclusion"
-      },
-      {
-        "text": "History of or concurrent serious medical condition or abnormality in clinical laboratory tests that, in the investigator's judgment, precludes the patient's safe participation in and completion of the study or confounds the ability to interpret data from the study",
-        "type": "inclusion"
-      },
-      {
-        "text": "Severe infection within 4 weeks prior to initiation of study treatment or any active infection that, in the opinion of the investigator, could impact patient safety",
-        "type": "treatment"
-      },
-      {
-        "text": "Incomplete recovery from any surgery prior to the start of study treatment that would interfere with the determination of safety or efficacy of study treatment",
-        "type": "treatment"
-      },
-      {
-        "text": "Uncontrolled pleural effusion, pericardial effusion, or ascites requiring recurrent drainage procedures (once monthly or more frequently)",
-        "type": "inclusion"
-      },
-      {
-        "text": "Uncontrolled tumor-related pain",
-        "type": "diagnosis"
-      },
-      {
-        "text": "Uncontrolled or symptomatic hypercalcemia",
-        "type": "inclusion"
-      },
-      {
-        "text": "Clinically significant and active liver disease",
-        "type": "inclusion"
-      },
-      {
-        "text": "Negative HIV test at screening, with the following exception: Participants with a positive HIV test at screening are eligible provided they are stable on anti-retroviral therapy for at least 4 weeks, have a CD4 count greater than or equal to 200/uL, have an undetectable viral load, and have not had a history of opportunistic infection attributable to AIDS within the last 12 months.",
-        "type": "mutation"
-      },
-      {
-        "text": "Symptomatic, untreated, or actively progressing CNS metastases",
-        "type": "metastasis"
-      },
-      {
-        "text": "History of leptomeningeal disease or carcinomatous meningitis",
-        "type": "inclusion"
-      },
-      {
-        "text": "History of malignancy other than CRC within 2 years prior to screening, with the exception of malignancies with a negligible risk of metastasis or death",
-        "type": "treatment"
-      },
-      {
-        "text": "Any other disease, unresolved toxicity from prior therapy, metabolic dysfunction, physical examination finding, or clinical laboratory finding that contraindicates the use of an investigational drug, may affect the interpretation of the results, or may render the participant at high risk from treatment complications",
-        "type": "treatment"
-      },
-      {
-        "text": "Requirement for treatment with any medicinal product that contraindicates the use of any of the study treatments, may interfere with the planned treatment, affects participant compliance, or puts the patient at higher risk for treatment-related complications",
-        "type": "treatment"
-      }
-    ],
-    "exclusion_criteria": [],
-    "status": "RECRUITING",
-    "start_date": "",
-    "completion_date": "",
-    "sponsor": "",
-    "last_updated": "",
-    "locations": [],
-    "min_age": "",
-    "max_age": "",
-    "gender": "",
-    "org_study_id": "WO42758",
-    "secondary_ids": [
-      {
-        "id": "2021-001207-33"
-      },
-      {
-        "id": "2023-505163-37-00"
       }
     ]
   },
@@ -714,7 +539,7 @@
         "type": "exclusion"
       },
       {
-        "text": "Known hypertension, cardiac arrhythmia, conduction abnormalities, ischemic cardiopathy, left ventricular hypertrophy or left ventricular ejection fraction (LVEF) ≤50% at echocardiography.",
+        "text": "Known hypertension, cardiac arrhythmia, conduction abnormalities, ischemic cardiopathy, left ventricular hypertrophy or left ventricular ejection fraction (LVEF) \u226450% at echocardiography.",
         "type": "exclusion"
       },
       {
@@ -764,99 +589,6 @@
     "max_age": "",
     "gender": "",
     "org_study_id": "FIL-RougeBIO",
-    "secondary_ids": []
-  },
-  {
-    "id": "NCT01387503",
-    "title": "Controlled Expansion of Conventional Criteria for Liver Transplantation in Hepatocellular Carcinoma Through Downstaging Procedures: a Randomized Trial (XXL Trial)",
-    "phase": "NA",
-    "description": "1. Downstaging phase\n\n   Patients that will be considered eligible for the study will undergo downstaging procedures according their stage of disease and to Center's policies. Length and intensity of downstaging will be center specific and not centrally pre-determined, but should be inferior to 18 months. Downstaging procedures will be stopped when, according to the Investigators' judgement, the best possible tumor response has been achieved: at this timepoint a radiological evaluation of tumor response according to modified RECIST (mRECIST) criteria will be performed. Patients that have achieved a Complete or Partial Response (PR or CR) will proceed to Bridging Phase, while those with a Stable or Progressive disease (SD or PD) will drop-out from the study.\n2. Bridging phase\n\n   Patients that achieved PR or CR after downstaging will receive systemic therapy with sorafenib for three months. After three months radiological response will be assessed according to mRECIST criteria. If a sustained response will be demonstrated patients will proceed to randomization. PD during bridging phase will cause drop-out from the study.\n3. Randomization and study period\n\nPatients will be randomized in a 1:1 ratio, using computer generated list stratified by Center and by compliance to sorafenib treatment (based on whether ≤50% or \\> 50% of the standard dosage (800 mg/day) has been administered).\n\n1. The experimental group (Group 1 - transplant strategy) will be enlisted for transplantation and will undergo liver transplantation within 8 months unless major medical or oncological contraindications should occur.\n2. The control group (Group 2 - non-transplant strategy) will continue with sorafenib until progression. Then they may be treated with either medical or locoregional/surgical therapies according to best practice and Centers' policy, excluding transplantation.",
-    "inclusion_criteria": [
-      {
-        "text": "Patient's age ≥ 18 yrs and ≤ 65 yrs",
-        "type": "age"
-      },
-      {
-        "text": "Presence of cirrhosis of any etiology",
-        "type": "inclusion"
-      },
-      {
-        "text": "Child-Pugh class ≤ B7",
-        "type": "inclusion"
-      },
-      {
-        "text": "ECOG Performance Status ≤ 1",
-        "type": "performance"
-      },
-      {
-        "text": "Diagnosis of HCC either by biopsy or according to AASLD criteria",
-        "type": "inclusion"
-      },
-      {
-        "text": "HCC exceeding Milan Criteria with a 5-yr estimated survival after transplantation \\>50% according to the Metroticket calculator (http://www.hcc-olt-metroticket.org/calculator)",
-        "type": "inclusion"
-      },
-      {
-        "text": "Women of child bearing potential with a negative serum pregnancy test performed before enrolment",
-        "type": "mutation"
-      },
-      {
-        "text": "Absence of general contraindications to sorafenib/molecular targeted therapies",
-        "type": "inclusion"
-      }
-    ],
-    "exclusion_criteria": [
-      {
-        "text": "Presence of extra-hepatic tumor spread",
-        "type": "diagnosis"
-      },
-      {
-        "text": "Presence of macrovascular invasion",
-        "type": "exclusion"
-      },
-      {
-        "text": "Sorafenib therapy started \\> 2 months before enrolment",
-        "type": "treatment"
-      },
-      {
-        "text": "Concurrent cancer, distinct from HCC (except cervical carcinoma in situ, treated basal cell carcinoma, superficial bladder tumors)",
-        "type": "diagnosis"
-      },
-      {
-        "text": "Previous history of any cancer, even if curatively treated, \\< 5 years prior to entry",
-        "type": "treatment"
-      },
-      {
-        "text": "Active intra-venous or alcohol abusers",
-        "type": "exclusion"
-      },
-      {
-        "text": "HIV infection",
-        "type": "exclusion"
-      },
-      {
-        "text": "History of serious cardiac disease",
-        "type": "exclusion"
-      },
-      {
-        "text": "Severe pulmonary hypertension not treatable by medical therapy",
-        "type": "treatment"
-      },
-      {
-        "text": "Patients with a life expectancy of less than 3 months due to HCC or less than 6 months due to any other disease",
-        "type": "exclusion"
-      }
-    ],
-    "status": "COMPLETED",
-    "start_date": "",
-    "completion_date": "",
-    "sponsor": "",
-    "last_updated": "",
-    "locations": [],
-    "min_age": "",
-    "max_age": "",
-    "gender": "",
-    "org_study_id": "INT 80/09",
     "secondary_ids": []
   },
   {
@@ -1116,6 +848,274 @@
     "secondary_ids": []
   },
   {
+    "id": "NCT04929223",
+    "title": "A Phase I/Ib Global, Multicenter, Open-label Umbrella Study Evaluating the Safety and Efficacy of Targeted Therapies in Subpopulations of Patients With Metastatic Colorectal Cancer (INTRINSIC)",
+    "phase": "PHASE1",
+    "description": "This open-label, exploratory study is designed to evaluate the safety and efficacy of targeted therapies or immunotherapy as single agents or combinations, in participants with metastatic colorectal cancer (mCRC) whose tumors are biomarker positive as per treatment arm-specific definition. Eligible participants with mCRC will be enrolled into specific treatment arms based on their biomarker assay results.",
+    "inclusion_criteria": [
+      {
+        "text": "Inclusion Criteria",
+        "type": "inclusion"
+      },
+      {
+        "text": "Signed cohort-specific Informed Consent Form",
+        "type": "inclusion"
+      },
+      {
+        "text": "Age \\>= 18 years at time of signing Informed Consent Form",
+        "type": "age"
+      },
+      {
+        "text": "Biomarker eligibility as determined by:",
+        "type": "inclusion"
+      },
+      {
+        "text": "A validated test approved by local health authorities for detection of the specified biomarkers/mutations.",
+        "type": "inclusion"
+      },
+      {
+        "text": "A validated test performed at a College of American Pathologists/clinical laboratory improvement amendments (CAP/CLIA) -certified or equivalently accredited diagnostic laboratory using a validated test for detection of the specified biomarkers.",
+        "type": "inclusion"
+      },
+      {
+        "text": "Prior test results completed before signing cohort-specific Informed Consent Form or local test results generated prior to or during screening, and availability of a full report of the testing results OR",
+        "type": "treatment"
+      },
+      {
+        "text": "Blood-based FoundationOne Liquid CDx biomarker eligibility test result generated prior to or during screening or, in case of re-enrollment after treatment discontinuation, prior to starting a new anti-cancer therapy.",
+        "type": "treatment"
+      },
+      {
+        "text": "Eastern Cooperative Oncology Group (ECOG) Performance Status of \\<= 1",
+        "type": "performance"
+      },
+      {
+        "text": "Life expectancy \\>= 3 months, as determined by the investigator",
+        "type": "inclusion"
+      },
+      {
+        "text": "Histologically confirmed adenocarcinoma originating from the colon or rectum",
+        "type": "inclusion"
+      },
+      {
+        "text": "Metastatic disease",
+        "type": "metastasis"
+      },
+      {
+        "text": "Prior therapies for metastatic disease",
+        "type": "treatment"
+      },
+      {
+        "text": "Ability to comply with the study protocol, in the investigators judgment",
+        "type": "inclusion"
+      },
+      {
+        "text": "Measurable disease (at least one target lesion) according to Response Evaluation Criteria in Solid Tumors, Version 1.1 (RECIST v1.1)",
+        "type": "inclusion"
+      },
+      {
+        "text": "Baseline tumor tissue samples will be collected from all participants for exploratory biomarker research",
+        "type": "diagnosis"
+      },
+      {
+        "text": "Adequate hematologic and organ function within 14 days prior to initiation of study treatment",
+        "type": "treatment"
+      },
+      {
+        "text": "For women of childbearing potential: agreement to remain abstinent (refrain from heterosexual intercourse) or use contraceptive measures",
+        "type": "inclusion"
+      },
+      {
+        "text": "For men: agreement to remain abstinent or use contraceptive measures, and agreement to refrain from donating sperm",
+        "type": "inclusion"
+      },
+      {
+        "text": "Exclusion Criteria",
+        "type": "inclusion"
+      },
+      {
+        "text": "Current participation or enrollment in another interventional clinical trial. Participants who are participating in the follow-up period of an interventional clinical trial are eligible for the study.",
+        "type": "inclusion"
+      },
+      {
+        "text": "Any systemic anti-cancer treatment within 2 weeks or 5 half-lives (whichever is shorter) prior to start of study treatment",
+        "type": "treatment"
+      },
+      {
+        "text": "Treatment with investigational therapy within 28 days prior to initiation of study treatment",
+        "type": "treatment"
+      },
+      {
+        "text": "Pregnant or breastfeeding, or intending to become pregnant during the study",
+        "type": "inclusion"
+      },
+      {
+        "text": "History of or concurrent serious medical condition or abnormality in clinical laboratory tests that, in the investigator's judgment, precludes the patient's safe participation in and completion of the study or confounds the ability to interpret data from the study",
+        "type": "inclusion"
+      },
+      {
+        "text": "Severe infection within 4 weeks prior to initiation of study treatment or any active infection that, in the opinion of the investigator, could impact patient safety",
+        "type": "treatment"
+      },
+      {
+        "text": "Incomplete recovery from any surgery prior to the start of study treatment that would interfere with the determination of safety or efficacy of study treatment",
+        "type": "treatment"
+      },
+      {
+        "text": "Uncontrolled pleural effusion, pericardial effusion, or ascites requiring recurrent drainage procedures (once monthly or more frequently)",
+        "type": "inclusion"
+      },
+      {
+        "text": "Uncontrolled tumor-related pain",
+        "type": "diagnosis"
+      },
+      {
+        "text": "Uncontrolled or symptomatic hypercalcemia",
+        "type": "inclusion"
+      },
+      {
+        "text": "Clinically significant and active liver disease",
+        "type": "inclusion"
+      },
+      {
+        "text": "Negative HIV test at screening, with the following exception: Participants with a positive HIV test at screening are eligible provided they are stable on anti-retroviral therapy for at least 4 weeks, have a CD4 count greater than or equal to 200/uL, have an undetectable viral load, and have not had a history of opportunistic infection attributable to AIDS within the last 12 months.",
+        "type": "mutation"
+      },
+      {
+        "text": "Symptomatic, untreated, or actively progressing CNS metastases",
+        "type": "metastasis"
+      },
+      {
+        "text": "History of leptomeningeal disease or carcinomatous meningitis",
+        "type": "inclusion"
+      },
+      {
+        "text": "History of malignancy other than CRC within 2 years prior to screening, with the exception of malignancies with a negligible risk of metastasis or death",
+        "type": "treatment"
+      },
+      {
+        "text": "Any other disease, unresolved toxicity from prior therapy, metabolic dysfunction, physical examination finding, or clinical laboratory finding that contraindicates the use of an investigational drug, may affect the interpretation of the results, or may render the participant at high risk from treatment complications",
+        "type": "treatment"
+      },
+      {
+        "text": "Requirement for treatment with any medicinal product that contraindicates the use of any of the study treatments, may interfere with the planned treatment, affects participant compliance, or puts the patient at higher risk for treatment-related complications",
+        "type": "treatment"
+      }
+    ],
+    "exclusion_criteria": [],
+    "status": "RECRUITING",
+    "start_date": "",
+    "completion_date": "",
+    "sponsor": "",
+    "last_updated": "",
+    "locations": [],
+    "min_age": "",
+    "max_age": "",
+    "gender": "",
+    "org_study_id": "WO42758",
+    "secondary_ids": [
+      {
+        "id": "2021-001207-33"
+      },
+      {
+        "id": "2023-505163-37-00"
+      }
+    ]
+  },
+  {
+    "id": "NCT01387503",
+    "title": "Controlled Expansion of Conventional Criteria for Liver Transplantation in Hepatocellular Carcinoma Through Downstaging Procedures: a Randomized Trial (XXL Trial)",
+    "phase": "NA",
+    "description": "1. Downstaging phase\n\n   Patients that will be considered eligible for the study will undergo downstaging procedures according their stage of disease and to Center's policies. Length and intensity of downstaging will be center specific and not centrally pre-determined, but should be inferior to 18 months. Downstaging procedures will be stopped when, according to the Investigators' judgement, the best possible tumor response has been achieved: at this timepoint a radiological evaluation of tumor response according to modified RECIST (mRECIST) criteria will be performed. Patients that have achieved a Complete or Partial Response (PR or CR) will proceed to Bridging Phase, while those with a Stable or Progressive disease (SD or PD) will drop-out from the study.\n2. Bridging phase\n\n   Patients that achieved PR or CR after downstaging will receive systemic therapy with sorafenib for three months. After three months radiological response will be assessed according to mRECIST criteria. If a sustained response will be demonstrated patients will proceed to randomization. PD during bridging phase will cause drop-out from the study.\n3. Randomization and study period\n\nPatients will be randomized in a 1:1 ratio, using computer generated list stratified by Center and by compliance to sorafenib treatment (based on whether \u226450% or \\> 50% of the standard dosage (800 mg/day) has been administered).\n\n1. The experimental group (Group 1 - transplant strategy) will be enlisted for transplantation and will undergo liver transplantation within 8 months unless major medical or oncological contraindications should occur.\n2. The control group (Group 2 - non-transplant strategy) will continue with sorafenib until progression. Then they may be treated with either medical or locoregional/surgical therapies according to best practice and Centers' policy, excluding transplantation.",
+    "inclusion_criteria": [
+      {
+        "text": "Patient's age \u2265 18 yrs and \u2264 65 yrs",
+        "type": "age"
+      },
+      {
+        "text": "Presence of cirrhosis of any etiology",
+        "type": "inclusion"
+      },
+      {
+        "text": "Child-Pugh class \u2264 B7",
+        "type": "inclusion"
+      },
+      {
+        "text": "ECOG Performance Status \u2264 1",
+        "type": "performance"
+      },
+      {
+        "text": "Diagnosis of HCC either by biopsy or according to AASLD criteria",
+        "type": "inclusion"
+      },
+      {
+        "text": "HCC exceeding Milan Criteria with a 5-yr estimated survival after transplantation \\>50% according to the Metroticket calculator (http://www.hcc-olt-metroticket.org/calculator)",
+        "type": "inclusion"
+      },
+      {
+        "text": "Women of child bearing potential with a negative serum pregnancy test performed before enrolment",
+        "type": "mutation"
+      },
+      {
+        "text": "Absence of general contraindications to sorafenib/molecular targeted therapies",
+        "type": "inclusion"
+      }
+    ],
+    "exclusion_criteria": [
+      {
+        "text": "Presence of extra-hepatic tumor spread",
+        "type": "diagnosis"
+      },
+      {
+        "text": "Presence of macrovascular invasion",
+        "type": "exclusion"
+      },
+      {
+        "text": "Sorafenib therapy started \\> 2 months before enrolment",
+        "type": "treatment"
+      },
+      {
+        "text": "Concurrent cancer, distinct from HCC (except cervical carcinoma in situ, treated basal cell carcinoma, superficial bladder tumors)",
+        "type": "diagnosis"
+      },
+      {
+        "text": "Previous history of any cancer, even if curatively treated, \\< 5 years prior to entry",
+        "type": "treatment"
+      },
+      {
+        "text": "Active intra-venous or alcohol abusers",
+        "type": "exclusion"
+      },
+      {
+        "text": "HIV infection",
+        "type": "exclusion"
+      },
+      {
+        "text": "History of serious cardiac disease",
+        "type": "exclusion"
+      },
+      {
+        "text": "Severe pulmonary hypertension not treatable by medical therapy",
+        "type": "treatment"
+      },
+      {
+        "text": "Patients with a life expectancy of less than 3 months due to HCC or less than 6 months due to any other disease",
+        "type": "exclusion"
+      }
+    ],
+    "status": "COMPLETED",
+    "start_date": "",
+    "completion_date": "",
+    "sponsor": "",
+    "last_updated": "",
+    "locations": [],
+    "min_age": "",
+    "max_age": "",
+    "gender": "",
+    "org_study_id": "INT 80/09",
+    "secondary_ids": []
+  },
+  {
     "id": "NCT02622815",
     "title": "Hypercoagulation Screening as Innovative Tool for Risk Assessment, Early Diagnosis and Prognosis in Cancer",
     "phase": "Not Applicable",
@@ -1297,7 +1297,7 @@
         "type": "exclusion"
       },
       {
-        "text": "ongoing Common Terminology Criteria for Adverse Events(CTCAE) Grade ≥ 2 clinically significant who in the opinion of the investigator could affect the outcome of the study",
+        "text": "ongoing Common Terminology Criteria for Adverse Events(CTCAE) Grade \u2265 2 clinically significant who in the opinion of the investigator could affect the outcome of the study",
         "type": "exclusion"
       },
       {
@@ -1348,5 +1348,85 @@
     "gender": "",
     "org_study_id": "IMCgp100-203",
     "secondary_ids": []
+  },
+  {
+    "id": "NCT03334617",
+    "title": "HUDSON - Targeting Molecular Aberrations in Non-Small Cell Lung Cancer (NSCLC) After Anti-PD-(L)1 Therapy",
+    "phase": "PHASE2",
+    "description": "This is a phase 2, open-label, multi-center, multi-drug umbrella study designed to evaluate the efficacy, safety, and tolerability of the study drugs as monotherapy, or in combination, in participants with metastatic non-small cell lung cancer (NSCLC) determined to harbor molecular aberrations and previously treated with anti-PD-1 or anti-PD-L1 therapy. The study consists of drug specific treatment modules where participants are assigned to a treatment module based on the molecular aberration identified in their tumor.",
+    "inclusion_criteria": [
+      {
+        "text": "Histologically or cytologically documented metastatic non-small cell lung cancer (Stage IV according to the 8th edition of the Tumor-Node-Metastasis (TNM) staging criteria)",
+        "type": "diagnosis"
+      },
+      {
+        "text": "Prior anti-programmed cell death-1 (anti-PD-1) or anti-programmed cell death-ligand 1 (anti-PD-L1) antibody therapy",
+        "type": "treatment"
+      },
+      {
+        "text": "Eastern Cooperative Oncology Group (ECOG) performance status 0-1",
+        "type": "performance"
+      },
+      {
+        "text": "Age 18 years or older at the time of screening",
+        "type": "age"
+      },
+      {
+        "text": "Adequate organ and marrow function",
+        "type": "lab_values"
+      },
+      {
+        "text": "Molecular aberration in tumor tissue or in circulating tumor DNA that meets criteria for enrollment to a specific module",
+        "type": "mutation"
+      }
+    ],
+    "exclusion_criteria": [
+      {
+        "text": "Prior therapy with a treatment specific to the assigned module",
+        "type": "treatment"
+      },
+      {
+        "text": "Symptomatic or unstable brain metastases or leptomeningeal disease",
+        "type": "metastasis"
+      },
+      {
+        "text": "Any unresolved toxicities from prior therapy greater than CTCAE Grade 1",
+        "type": "exclusion"
+      },
+      {
+        "text": "Pregnancy or breastfeeding",
+        "type": "gender"
+      },
+      {
+        "text": "Known hypersensitivity to any of the excipients of the study drug",
+        "type": "exclusion"
+      }
+    ],
+    "status": "Recruiting",
+    "start_date": "2018-02-13",
+    "completion_date": "2025-06-30",
+    "sponsor": "AstraZeneca",
+    "last_updated": "2024-02-02",
+    "locations": [
+      {
+        "name": "Istituto Nazionale dei Tumori",
+        "city": "Milano",
+        "country": "Italy"
+      }
+    ],
+    "min_age": "18 Years",
+    "max_age": "N/A",
+    "gender": "All",
+    "org_study_id": "D5087C00001",
+    "secondary_ids": [
+      {
+        "type": "Protocol ID",
+        "id": "D5087C00001"
+      },
+      {
+        "type": "EudraCT Number",
+        "id": "2017-000930-33"
+      }
+    ]
   }
 ]

@@ -25,18 +25,22 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Costanti
-CLINICALTRIALS_API_URL = "https://clinicaltrials.gov/api/query/study_fields"
+CLINICALTRIALS_API_URL = "https://clinicaltrials.gov/api/v2/studies"
 INT_ORGANIZATION_TERMS = [
     "Istituto Nazionale dei Tumori",
     "Fondazione IRCCS Istituto Nazionale dei Tumori",
     "INT Milano",
-    "INT Milan"
+    "INT Milan",
+    "Fondazione IRCCS - Istituto Nazionale dei Tumori",
+    "Istituto Nazionale Tumori Milano",
+    "National Cancer Institute Milan",
+    "National Cancer Institute, Milan"
 ]
 MAX_RESULTS_PER_REQUEST = 1000  # Limite massimo consentito dall'API
 
 def fetch_trials_from_api(offset: int = 0) -> Dict[str, Any]:
     """
-    Recupera i trial clinici da ClinicalTrials.gov utilizzando l'API ufficiale.
+    Recupera i trial clinici da ClinicalTrials.gov utilizzando l'API ufficiale v2.
     
     Args:
         offset: Posizione di partenza per la paginazione
@@ -44,31 +48,69 @@ def fetch_trials_from_api(offset: int = 0) -> Dict[str, Any]:
     Returns:
         Dict: Risposta JSON dall'API
     """
-    # Crea la lista di termini per l'organizzazione separati da OR
-    org_query = " OR ".join([f'"{term}"' for term in INT_ORGANIZATION_TERMS])
+    # Nella versione v2 dell'API, dobbiamo utilizzare un formato di query diverso
+    # Utilizziamo sia i termini dell'organizzazione che la città (Milano/Milan)
     
-    # Parametri della richiesta
+    # Parametri per la nuova API v2
     params = {
-        "fmt": "json",
-        "min_rnk": offset + 1,
-        "max_rnk": offset + MAX_RESULTS_PER_REQUEST,
-        "expr": f'({org_query}) AND AREA[RecruitmentStatus]EXPAND[Term]RANGE[active,not yet active]',
-        "fields": ",".join([
-            "NCTId", "BriefTitle", "OfficialTitle", "BriefSummary", "DetailedDescription",
-            "Phase", "StudyType", "OverallStatus", "StartDate", "PrimaryCompletionDate",
-            "CompletionDate", "StudyFirstSubmitDate", "LastUpdateSubmitDate",
-            "EligibilityCriteria", "HealthyVolunteers", "Gender", "MinimumAge", "MaximumAge",
-            "LeadSponsorName", "CollaboratorName", "LocationFacility", "LocationCity",
-            "LeadSponsorClass", "CollaboratorClass"
-        ])
+        "format": "json",
+        "pageSize": 100,  # Numero di risultati per pagina (max 100 per l'API v2)
+        "pageToken": str(offset) if offset > 0 else None,
+        "query.term": '"Istituto Nazionale dei Tumori" AND (Milan OR Milano)',
+        "query.field": ["LocationFacility", "LocationCity"],
+        "countTotal": "true",
+        "filter.recruitment": ["RECRUITING", "NOT_YET_RECRUITING", "ACTIVE_NOT_RECRUITING"],
+        "filter.country": ["IT"],  # Italia
     }
     
-    logger.info(f"Richiesta all'API di ClinicalTrials.gov con offset {offset}")
+    # Rimuovi i parametri None
+    params = {k: v for k, v in params.items() if v is not None}
+    
+    logger.info(f"Richiesta all'API v2 di ClinicalTrials.gov con offset {offset}")
+    logger.info(f"Parametri: {params}")
     
     try:
         response = requests.get(CLINICALTRIALS_API_URL, params=params)
         response.raise_for_status()  # Solleva un'eccezione per risposte HTTP non riuscite
-        return response.json()
+        result = response.json()
+        
+        # Converti il risultato della v2 nel formato che si aspetta il resto del codice
+        adapted_result = {
+            "StudyFieldsResponse": {
+                "NStudiesFound": result.get("totalCount", 0),
+                "StudyFields": []
+            }
+        }
+        
+        # Adatta ogni studio al formato precedente
+        for study in result.get("studies", []):
+            adapted_study = {
+                "NCTId": [study.get("protocolSection", {}).get("identificationModule", {}).get("nctId", "")],
+                "BriefTitle": [study.get("protocolSection", {}).get("identificationModule", {}).get("briefTitle", "")],
+                "OfficialTitle": [study.get("protocolSection", {}).get("identificationModule", {}).get("officialTitle", "")],
+                "Phase": [study.get("protocolSection", {}).get("designModule", {}).get("phases", [""])[0] if study.get("protocolSection", {}).get("designModule", {}).get("phases") else ""],
+                "BriefSummary": [study.get("protocolSection", {}).get("descriptionModule", {}).get("briefSummary", "")],
+                "DetailedDescription": [study.get("protocolSection", {}).get("descriptionModule", {}).get("detailedDescription", "")],
+                "EligibilityCriteria": [study.get("protocolSection", {}).get("eligibilityModule", {}).get("eligibilityCriteria", "")],
+                "OverallStatus": [study.get("protocolSection", {}).get("statusModule", {}).get("overallStatus", "")],
+                "LocationFacility": [],
+                "LocationCity": [],
+                "Gender": [study.get("protocolSection", {}).get("eligibilityModule", {}).get("sex", "")],
+                "MinimumAge": [study.get("protocolSection", {}).get("eligibilityModule", {}).get("minimumAge", "")],
+                "MaximumAge": [study.get("protocolSection", {}).get("eligibilityModule", {}).get("maximumAge", "")],
+            }
+            
+            # Gestisci la lista di locations
+            locations = study.get("protocolSection", {}).get("contactsLocationsModule", {}).get("locations", [])
+            for location in locations:
+                facility = location.get("facility", "")
+                city = location.get("city", "")
+                adapted_study["LocationFacility"].append(facility)
+                adapted_study["LocationCity"].append(city)
+            
+            adapted_result["StudyFieldsResponse"]["StudyFields"].append(adapted_study)
+        
+        return adapted_result
     except requests.exceptions.RequestException as e:
         logger.error(f"Errore nella richiesta all'API: {str(e)}")
         raise
@@ -273,52 +315,149 @@ def fetch_all_int_trials() -> List[Dict[str, Any]]:
         List: Lista di trial clinici elaborati
     """
     all_trials = []
-    offset = 0
+    next_page_token = None  # Per l'API v2 usiamo i page token invece degli offset
     total_trials = None
     
-    while True:
-        # Recupera un batch di trial
-        response_data = fetch_trials_from_api(offset)
-        
-        # Estrai informazioni sulla paginazione
-        if total_trials is None:
-            total_trials = int(response_data.get("StudyFieldsResponse", {}).get("NStudiesFound", "0"))
-            logger.info(f"Trovati {total_trials} trial clinici attivi all'INT")
-        
-        # Estrai i dati dei trial
-        studies = response_data.get("StudyFieldsResponse", {}).get("StudyFields", [])
-        
-        if not studies:
-            logger.info("Nessun altro trial trovato")
-            break
-        
-        # Elabora ogni trial
-        for study in studies:
-            processed_trial = process_trial_data(study)
+    # Tentiamo di recuperare i dati dall'API
+    try:
+        # L'API v2 utilizza un sistema di paginazione diverso
+        while True:
+            # Recupera un batch di trial (nella prima chiamata next_page_token è None)
+            response_data = fetch_trials_from_api(next_page_token)
             
-            # Verifica che il trial sia associato all'INT
-            is_int_trial = False
-            for location in study.get("LocationFacility", []):
-                if any(term.lower() in location.lower() for term in INT_ORGANIZATION_TERMS):
-                    is_int_trial = True
+            # Estrai informazioni sulla paginazione
+            if total_trials is None:
+                total_trials = int(response_data.get("StudyFieldsResponse", {}).get("NStudiesFound", "0"))
+                logger.info(f"Trovati {total_trials} trial clinici attivi all'INT")
+            
+            # Estrai i dati dei trial
+            studies = response_data.get("StudyFieldsResponse", {}).get("StudyFields", [])
+            
+            if not studies:
+                logger.info("Nessun altro trial trovato")
+                break
+            
+            # Elabora ogni trial
+            for study in studies:
+                processed_trial = process_trial_data(study)
+                
+                # Assicuriamoci che il trial sia associato all'INT e a Milano
+                is_int_trial = False
+                is_milan_location = False
+                
+                # Verifica la città (Milano/Milan)
+                cities = study.get("LocationCity", [])
+                for city in cities:
+                    if isinstance(city, str) and city.lower() in ["milan", "milano"]:
+                        is_milan_location = True
+                        break
+                
+                # Verifica l'istituto
+                facilities = study.get("LocationFacility", [])
+                for facility in facilities:
+                    if isinstance(facility, str) and any(term.lower() in facility.lower() for term in INT_ORGANIZATION_TERMS):
+                        is_int_trial = True
+                        break
+                
+                # Se è verificato che il trial è dell'INT a Milano, aggiungilo
+                if is_int_trial and is_milan_location:
+                    # Aggiungi informazioni aggiuntive se disponibili
+                    if "ConditionName" in study:
+                        processed_trial["conditions"] = study.get("ConditionName", [])
+                    
+                    if "InterventionName" in study:
+                        processed_trial["interventions"] = study.get("InterventionName", [])
+                    
+                    all_trials.append(processed_trial)
+            
+            # Ottieni il token per la pagina successiva
+            next_page_token = response_data.get("nextPageToken")
+            
+            # Se non ci sono altre pagine, esci dal ciclo
+            if not next_page_token:
+                break
+            
+            # Pausa per evitare di sovraccaricare l'API
+            time.sleep(1)
+        
+        logger.info(f"Recuperati {len(all_trials)} trial clinici attivi all'INT")
+        
+        # Se non abbiamo trovato trial, probabile che ci sia un problema con l'API
+        if len(all_trials) == 0:
+            logger.warning("Nessun trial trovato. Potrebbe esserci un problema con la query o con l'API.")
+            # Proviamo una query più semplice come backup
+            logger.info("Tentativo con una query più semplice...")
+            return fallback_int_trials_fetch()
+            
+        return all_trials
+        
+    except Exception as e:
+        logger.error(f"Errore durante il recupero dei trial: {str(e)}")
+        logger.info("Tentativo con una query più semplice...")
+        return fallback_int_trials_fetch()
+
+
+def fallback_int_trials_fetch() -> List[Dict[str, Any]]:
+    """
+    Metodo di fallback che utilizza una query più semplice per recuperare i trial con l'API v2.
+    Viene utilizzato in caso di errore con la query principale.
+    
+    Returns:
+        List: Lista di trial clinici elaborati
+    """
+    all_trials = []
+    
+    try:
+        # Parametri di base per una query più semplice con l'API v2
+        params = {
+            "format": "json",
+            "pageSize": 50,
+            "query.term": "Istituto Nazionale Tumori Milano",
+            "countTotal": "true",
+            "filter.country": ["IT"],  # Italia
+        }
+        
+        logger.info("Eseguendo query di fallback con API v2...")
+        
+        response = requests.get(CLINICALTRIALS_API_URL, params=params)
+        response.raise_for_status()
+        
+        result = response.json()
+        
+        # Adatta ed elabora ogni studio
+        for study in result.get("studies", []):
+            # Verifica se il trial è effettivamente in Milano
+            locations = study.get("protocolSection", {}).get("contactsLocationsModule", {}).get("locations", [])
+            is_milan = False
+            
+            for loc in locations:
+                if loc.get("city", "").lower() in ["milan", "milano"]:
+                    is_milan = True
                     break
             
-            # Aggiungi solo i trial associati all'INT
-            if is_int_trial:
-                all_trials.append(processed_trial)
+            if not is_milan:
+                continue  # Salta i trial che non sono a Milano
+            
+            adapted_study = {
+                "NCTId": [study.get("protocolSection", {}).get("identificationModule", {}).get("nctId", "")],
+                "BriefTitle": [study.get("protocolSection", {}).get("identificationModule", {}).get("briefTitle", "")],
+                "OfficialTitle": [study.get("protocolSection", {}).get("identificationModule", {}).get("officialTitle", "")],
+                "Phase": [study.get("protocolSection", {}).get("designModule", {}).get("phases", [""])[0] if study.get("protocolSection", {}).get("designModule", {}).get("phases") else ""],
+                "BriefSummary": [study.get("protocolSection", {}).get("descriptionModule", {}).get("briefSummary", "")],
+                "DetailedDescription": [study.get("protocolSection", {}).get("descriptionModule", {}).get("detailedDescription", "")],
+                "EligibilityCriteria": [study.get("protocolSection", {}).get("eligibilityModule", {}).get("eligibilityCriteria", "")],
+                "OverallStatus": [study.get("protocolSection", {}).get("statusModule", {}).get("overallStatus", "")]
+            }
+            
+            processed_trial = process_trial_data(adapted_study)
+            all_trials.append(processed_trial)
         
-        # Aggiorna l'offset per la prossima richiesta
-        offset += len(studies)
-        
-        # Verifica se abbiamo recuperato tutti i trial
-        if offset >= total_trials:
-            break
-        
-        # Pausa per evitare di sovraccaricare l'API
-        time.sleep(1)
+        logger.info(f"Recuperati {len(all_trials)} trial clinici con la query di fallback")
+        return all_trials
     
-    logger.info(f"Recuperati {len(all_trials)} trial clinici attivi all'INT")
-    return all_trials
+    except Exception as e:
+        logger.error(f"Anche la query di fallback ha fallito: {str(e)}")
+        return []
 
 def save_trials_to_json(trials: List[Dict[str, Any]], output_file: str = "trials_int.json") -> None:
     """

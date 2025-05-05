@@ -261,13 +261,41 @@ def basic_feature_extraction(text):
         "PD-L1", "MSI-H", "dMMR", "NTRK", "RET", "MET"
     ]
     
+    # Tracciamo le mutazioni già trovate per evitare duplicati
+    found_mutations = set()
+    
     for mutation in mutations:
+        # Se la mutazione è già stata trovata, saltiamo
+        if mutation in found_mutations:
+            continue
+            
         pattern = r'([^.]*\b' + re.escape(mutation) + r'\b[^.]*\.)'
+        best_match = None
+        best_match_text = ""
+        
+        # Cerchiamo tutte le occorrenze e manteniamo la migliore (quella con più informazioni)
         for match in re.finditer(pattern, text, re.IGNORECASE):
+            match_text = match.group(0).strip()
+            
+            # Se è la prima occorrenza o è più informativa della precedente
+            if best_match is None or len(match_text) > len(best_match_text):
+                # Controlliamo se contiene termini specifici come "mutazione" o "mut" che indicano informazioni più specifiche
+                specificity_terms = ["mutazione", "mut ", "mut:", "mutation", "alterazione", "delezione", "inserzione", "traslocazione"]
+                current_specificity = any(term in match_text.lower() for term in specificity_terms)
+                previous_specificity = any(term in best_match_text.lower() for term in specificity_terms) if best_match_text else False
+                
+                # Se la nuova è più specifica o la precedente non era specifica
+                if current_specificity or not previous_specificity:
+                    best_match = match
+                    best_match_text = match_text
+        
+        # Se abbiamo trovato almeno un'occorrenza per questa mutazione
+        if best_match is not None:
             features["mutations"].append({
                 "value": mutation,
-                "source": match.group(0).strip()
+                "source": best_match_text
             })
+            found_mutations.add(mutation)
     
     # Common metastasis sites
     metastasis_sites = [
@@ -275,13 +303,34 @@ def basic_feature_extraction(text):
         "peritoneal", "pleural", "skin"
     ]
     
+    # Tracciamo i siti metastatici già trovati per evitare duplicati
+    found_metastases = set()
+    
     for site in metastasis_sites:
+        # Se il sito è già stato trovato, saltiamo
+        if site in found_metastases:
+            continue
+            
         pattern = r'([^.]*\b' + re.escape(site) + r'(?:\s+metastases|\s+metastasis|\s+lesions|\s+mets|\s+spread)[^.]*\.)'
+        best_match = None
+        best_match_text = ""
+        
+        # Cerchiamo tutte le occorrenze e manteniamo la migliore (quella con più informazioni)
         for match in re.finditer(pattern, text, re.IGNORECASE):
+            match_text = match.group(0).strip()
+            
+            # Se è la prima occorrenza o è più informativa della precedente
+            if best_match is None or len(match_text) > len(best_match_text):
+                best_match = match
+                best_match_text = match_text
+        
+        # Se abbiamo trovato almeno un'occorrenza per questo sito metastatico
+        if best_match is not None:
             features["metastases"].append({
                 "value": site,
-                "source": match.group(0).strip()
+                "source": best_match_text
             })
+            found_metastases.add(site)
     
     # Common treatments
     treatments = [
@@ -291,13 +340,41 @@ def basic_feature_extraction(text):
         "erlotinib", "gefitinib", "crizotinib", "alectinib", "cetuximab"
     ]
     
+    # Tracciamo i trattamenti già trovati per evitare duplicati
+    found_treatments = set()
+    
     for treatment in treatments:
+        # Se il trattamento è già stato trovato, saltiamo
+        if treatment in found_treatments:
+            continue
+            
         pattern = r'([^.]*\b(?:previous|prior|received|treated with|therapy with)\s[^.]*\b' + re.escape(treatment) + r'\b[^.]*\.)'
+        best_match = None
+        best_match_text = ""
+        
+        # Cerchiamo tutte le occorrenze e manteniamo la migliore
         for match in re.finditer(pattern, text, re.IGNORECASE):
+            match_text = match.group(0).strip()
+            
+            # Se è la prima occorrenza o è più informativa della precedente
+            if best_match is None or len(match_text) > len(best_match_text):
+                # Controlliamo se contiene termini specifici come "cicli" o "dosaggio" che indicano informazioni più specifiche
+                specificity_terms = ["cicli", "ciclo", "dose", "dosaggio", "mg", "gr", "effetti collaterali", "tossicità"]
+                current_specificity = any(term in match_text.lower() for term in specificity_terms)
+                previous_specificity = any(term in best_match_text.lower() for term in specificity_terms) if best_match_text else False
+                
+                # Se la nuova è più specifica o la precedente non era specifica
+                if current_specificity or not previous_specificity:
+                    best_match = match
+                    best_match_text = match_text
+        
+        # Se abbiamo trovato almeno un'occorrenza per questo trattamento
+        if best_match is not None:
             features["previous_treatments"].append({
                 "value": treatment,
-                "source": match.group(0).strip()
+                "source": best_match_text
             })
+            found_treatments.add(treatment)
     
     # Common lab values
     lab_tests = {

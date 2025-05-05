@@ -260,25 +260,82 @@ crontab -e
 0 3 * * * cd /percorso/completo/a/medmatchint && /percorso/completo/a/medmatchint/venv/bin/python update_trials.py >> /var/log/medmatchint_update.log 2>&1
 ```
 
+## Architettura dell'Approccio Ibrido
+
+MedMatchINT implementa un approccio ibrido innovativo per il matching dei trial clinici, combinando le capacità di PostgreSQL e di un modello LLM locale:
+
+### 1. Filtro Rapido con PostgreSQL
+
+Il sistema inizia con un filtro rapido utilizzando PostgreSQL per verificare criteri oggettivi:
+- Età del paziente (min/max)
+- Genere
+- Stato del trial (attivo/reclutante)
+- Parole chiave della diagnosi
+- Presenza di mutazioni specifiche
+
+Questa fase è altamente efficiente e riduce significativamente il numero di trial da valutare in dettaglio.
+
+### 2. Valutazione Semantica con LLM Locale
+
+I trial preselezionati vengono poi valutati in profondità utilizzando un LLM locale:
+- Analisi dei criteri testuali complessi
+- Comprensione del contesto medico e delle relazioni tra termini
+- Valutazione di criteri di inclusione/esclusione non strutturati
+- Generazione di spiegazioni dettagliate sul perché un paziente corrisponde o meno a un criterio
+
+### 3. Sistema di Fallback Automatico
+
+L'applicazione include un sofisticato sistema di fallback:
+- Se l'LLM non è disponibile, l'estrazione utilizza analisi basata su pattern
+- Se llama.cpp non è installato, il matching utilizza solo il filtro PostgreSQL
+- Tentativi multipli con diversi approcci garantiscono che l'applicazione funzioni sempre
+
+### Diagramma dell'Architettura Ibrida
+
+```
+Documento PDF del Paziente
+        ↓
+Estrazione Caratteristiche <-- [LLM locale (se disponibile)]
+        ↓                     [Fallback: analisi con pattern]
+        ↓
+  [Caratteristiche Paziente]
+        ↓
+        ↓
+Filtro PostgreSQL (criteri oggettivi) 
+        ↓
+  [Trial Preselezionati]
+        ↓
+        ↓
+Valutazione Semantica <-- [LLM locale (se disponibile)]
+        ↓                  [Fallback: analisi con pattern]
+        ↓
+  [Trial Compatibili con Spiegazioni]
+        ↓
+Presentazione all'Utente
+```
+
 ## Struttura del Progetto
 
 ```
 medmatchint/
-├── app/                 # Pacchetto principale dell'applicazione
-│   ├── __init__.py      # Inizializzazione dell'app Flask
-│   ├── routes.py        # Route e controller dell'app
-│   └── utils.py         # Funzioni di utilità
-├── static/              # File statici (CSS, JS, immagini)
-├── templates/           # Template HTML
-├── uploads/             # Directory temporanea per i PDF caricati
-├── .env.example         # Esempio di file di configurazione
-├── db_init.py           # Script di inizializzazione del database
-├── fetch_trial_by_id.py # Script per recuperare trial per ID
-├── fetch_trials.py      # Script per recuperare trial da ClinicalTrials.gov
-├── main.py              # Punto di ingresso dell'applicazione
-├── models.py            # Modelli del database
-├── requirements.txt     # Dipendenze Python
-└── update_trials.py     # Script di aggiornamento trial
+├── app/                    # Pacchetto principale dell'applicazione
+│   ├── __init__.py         # Inizializzazione dell'app Flask
+│   ├── routes.py           # Route e controller dell'app
+│   ├── utils.py            # Funzioni di utilità generale
+│   ├── hybrid_query.py     # Implementazione dell'approccio ibrido PostgreSQL + LLM
+│   └── llm_processor.py    # Gestione dell'interazione con LLM locale
+├── static/                 # File statici (CSS, JS, immagini)
+├── templates/              # Template HTML
+├── uploads/                # Directory temporanea per i PDF caricati
+├── .env.example            # Esempio di file di configurazione
+├── db_init.py              # Script di inizializzazione del database
+├── fetch_trial_by_id.py    # Script per recuperare trial per ID
+├── fetch_trials.py         # Script per recuperare trial da ClinicalTrials.gov
+├── main.py                 # Punto di ingresso dell'applicazione
+├── models.py               # Modelli del database
+├── requirements.txt        # Dipendenze Python
+├── update_trials.py        # Script di aggiornamento trial
+└── llama_cpp_config.md     # Istruzioni dettagliate per configurare llama.cpp
 ```
 
 ## Configurazione dell'Approccio Ibrido con LLM Locale

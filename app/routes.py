@@ -505,11 +505,19 @@ def match_trials_db(patient_features):
     try:
         logging.info("Avvio ricerca trial con approccio ibrido PostgreSQL + LLM")
         
-        # Istanzia il processore di query ibrido
+        # Istanzia il processore di query ibrido e verifica lo stato dell'LLM
         try:
+            from app.llm_processor import LLM_AVAILABLE, LLM_ERROR_MESSAGE
+            
             hybrid_searcher = get_hybrid_query()
             use_hybrid = True
-            logging.info("Utilizzando approccio ibrido con LLM")
+            
+            if LLM_AVAILABLE:
+                logging.info("Utilizzando approccio ibrido PostgreSQL + LLM")
+            else:
+                logging.info(f"LLM non disponibile: {LLM_ERROR_MESSAGE}")
+                logging.info("Utilizzando approccio ibrido con fallback a PostgreSQL")
+            
         except Exception as hybrid_error:
             logging.warning(f"Errore nell'inizializzazione dell'approccio ibrido: {str(hybrid_error)}")
             logging.info("Fallback all'approccio tradizionale senza LLM")

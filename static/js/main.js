@@ -282,14 +282,34 @@ document.addEventListener('DOMContentLoaded', function() {
         
         featuresContainer.innerHTML = '';
         
-        // Create feature items
-        addFeatureItem(featuresContainer, 'Age', features.age);
-        addFeatureItem(featuresContainer, 'Gender', features.gender);
-        addFeatureItem(featuresContainer, 'Diagnosis', features.diagnosis);
-        addFeatureItem(featuresContainer, 'Stage', features.stage);
-        addFeatureItem(featuresContainer, 'ECOG Status', features.ecog);
+        // Create feature items (simple values)
+        const simpleFeatures = {
+            'Age': features.age && features.age.value ? `${features.age.value} anni` : 'Non rilevato',
+            'Gender': features.gender && features.gender.value ? features.gender.value : 'Non rilevato',
+            'Diagnosis': features.diagnosis && features.diagnosis.value ? features.diagnosis.value : 'Non rilevato',
+            'Stage': features.stage && features.stage.value ? features.stage.value : 'Non rilevato',
+            'ECOG Status': features.ecog && features.ecog.value !== null ? features.ecog.value : 'Non rilevato'
+        };
         
-        // Add mutations
+        // Aggiungi le feature semplici
+        for (const [label, value] of Object.entries(simpleFeatures)) {
+            const featureDiv = document.createElement('div');
+            featureDiv.className = 'feature-item';
+            
+            const featureLabel = document.createElement('div');
+            featureLabel.className = 'feature-label';
+            featureLabel.textContent = label;
+            
+            const featureValue = document.createElement('div');
+            featureValue.className = 'feature-value';
+            featureValue.textContent = value;
+            
+            featureDiv.appendChild(featureLabel);
+            featureDiv.appendChild(featureValue);
+            featuresContainer.appendChild(featureDiv);
+        }
+        
+        // Add mutations - formato conciso
         if (features.mutations && features.mutations.length > 0) {
             const mutationsDiv = document.createElement('div');
             mutationsDiv.className = 'feature-item';
@@ -302,16 +322,12 @@ document.addEventListener('DOMContentLoaded', function() {
             mutationsValue.className = 'feature-value';
             
             features.mutations.forEach(mutation => {
-                const mutationItem = document.createElement('div');
-                mutationItem.className = 'mb-2';
-                
                 // Creiamo un testo più conciso per la mutazione
-                const mutationText = document.createElement('div');
                 let conciseValue = mutation.value;
                 
-                // Estrai informazioni più specifiche sul tipo di mutazione, se presenti
+                // Estrai informazioni più specifiche sul tipo di mutazione
                 if (mutation.source && mutation.source.toLowerCase().includes(mutation.value.toLowerCase())) {
-                    // Cerca pattern comuni di mutazione come "KRAS G12C" o "PD-L1 90%"
+                    // Cerca pattern specifici
                     const pdl1Match = mutation.source.match(new RegExp(mutation.value + '\\s+([0-9]+)\\s*%', 'i'));
                     const mutationMatch = mutation.source.match(new RegExp(mutation.value + '\\s+([A-Z][0-9]+[A-Z])', 'i'));
                     const statusMatch = mutation.source.match(/(positive|negative|mutato|wild.?type)/i);
@@ -325,16 +341,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
+                const mutationText = document.createElement('div');
                 mutationText.textContent = conciseValue;
-                
-                // Manteniamo anche il testo originale come fonte di contesto
-                const mutationSource = document.createElement('div');
-                mutationSource.className = 'feature-source';
-                mutationSource.textContent = mutation.source;
-                
-                mutationItem.appendChild(mutationText);
-                mutationItem.appendChild(mutationSource);
-                mutationsValue.appendChild(mutationItem);
+                mutationsValue.appendChild(mutationText);
             });
             
             mutationsDiv.appendChild(mutationsLabel);
@@ -342,7 +351,7 @@ document.addEventListener('DOMContentLoaded', function() {
             featuresContainer.appendChild(mutationsDiv);
         }
         
-        // Add metastases
+        // Add metastases - formato conciso
         if (features.metastases && features.metastases.length > 0) {
             const metastasesDiv = document.createElement('div');
             metastasesDiv.className = 'feature-item';
@@ -355,16 +364,11 @@ document.addEventListener('DOMContentLoaded', function() {
             metastasesValue.className = 'feature-value';
             
             features.metastases.forEach(metastasis => {
-                const metastasisItem = document.createElement('div');
-                metastasisItem.className = 'mb-2';
-                
                 // Creiamo un testo più conciso per la metastasi
-                const metastasisText = document.createElement('div');
                 let conciseValue = metastasis.value;
                 
-                // Estrai informazioni più specifiche sulle metastasi, se presenti
-                if (metastasis.source && metastasis.source.toLowerCase().includes(metastasis.value.toLowerCase())) {
-                    // Cerca descrittori comuni come "multiple" o "singular"
+                // Estrai informazioni significative come numero e dimensioni
+                if (metastasis.source) {
                     const countMatch = metastasis.source.match(/(multiple|singular|numerose|singole|solitarie?)\s+/i);
                     const sizeMatch = metastasis.source.match(/(\d+(?:\.\d+)?)\s*(?:mm|cm)/i);
                     
@@ -379,16 +383,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
+                const metastasisText = document.createElement('div');
                 metastasisText.textContent = conciseValue;
-                
-                // Manteniamo anche il testo originale come fonte di contesto
-                const metastasisSource = document.createElement('div');
-                metastasisSource.className = 'feature-source';
-                metastasisSource.textContent = metastasis.source;
-                
-                metastasisItem.appendChild(metastasisText);
-                metastasisItem.appendChild(metastasisSource);
-                metastasesValue.appendChild(metastasisItem);
+                metastasesValue.appendChild(metastasisText);
             });
             
             metastasesDiv.appendChild(metastasesLabel);
@@ -396,7 +393,7 @@ document.addEventListener('DOMContentLoaded', function() {
             featuresContainer.appendChild(metastasesDiv);
         }
         
-        // Add previous treatments
+        // Add previous treatments - formato conciso
         if (features.previous_treatments && features.previous_treatments.length > 0) {
             const treatmentsDiv = document.createElement('div');
             treatmentsDiv.className = 'feature-item';
@@ -409,16 +406,11 @@ document.addEventListener('DOMContentLoaded', function() {
             treatmentsValue.className = 'feature-value';
             
             features.previous_treatments.forEach(treatment => {
-                const treatmentItem = document.createElement('div');
-                treatmentItem.className = 'mb-2';
-                
                 // Creiamo un testo più conciso per il trattamento
-                const treatmentText = document.createElement('div');
                 let conciseValue = treatment.value;
                 
-                // Estrai informazioni più specifiche sul trattamento, se presenti
-                if (treatment.source && treatment.source.toLowerCase().includes(treatment.value.toLowerCase())) {
-                    // Cerca informazioni sul numero di cicli o dosaggio
+                // Estrai informazioni sui cicli, dosaggio o date
+                if (treatment.source) {
                     const cyclesMatch = treatment.source.match(/(\d+)\s*(?:cicli|ciclo|cycles|cycle)/i);
                     const doseMatch = treatment.source.match(/(\d+(?:\.\d+)?)\s*(?:mg\/m2|mg|g\/m2|g|ml)/i);
                     const dateMatch = treatment.source.match(/((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})/i);
@@ -433,16 +425,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
+                const treatmentText = document.createElement('div');
                 treatmentText.textContent = conciseValue;
-                
-                // Manteniamo anche il testo originale come fonte di contesto
-                const treatmentSource = document.createElement('div');
-                treatmentSource.className = 'feature-source';
-                treatmentSource.textContent = treatment.source;
-                
-                treatmentItem.appendChild(treatmentText);
-                treatmentItem.appendChild(treatmentSource);
-                treatmentsValue.appendChild(treatmentItem);
+                treatmentsValue.appendChild(treatmentText);
             });
             
             treatmentsDiv.appendChild(treatmentsLabel);
@@ -450,7 +435,7 @@ document.addEventListener('DOMContentLoaded', function() {
             featuresContainer.appendChild(treatmentsDiv);
         }
         
-        // Add lab values
+        // Add lab values - formato conciso
         if (features.lab_values && Object.keys(features.lab_values).length > 0) {
             const labValuesDiv = document.createElement('div');
             labValuesDiv.className = 'feature-item';
@@ -463,54 +448,15 @@ document.addEventListener('DOMContentLoaded', function() {
             labValuesValue.className = 'feature-value';
             
             for (const [key, value] of Object.entries(features.lab_values)) {
-                const labValueItem = document.createElement('div');
-                labValueItem.className = 'mb-2';
-                
                 const labValueText = document.createElement('div');
                 labValueText.textContent = `${key}: ${value.value}`;
-                
-                const labValueSource = document.createElement('div');
-                labValueSource.className = 'feature-source';
-                labValueSource.textContent = value.source;
-                
-                labValueItem.appendChild(labValueText);
-                labValueItem.appendChild(labValueSource);
-                labValuesValue.appendChild(labValueItem);
+                labValuesValue.appendChild(labValueText);
             }
             
             labValuesDiv.appendChild(labValuesLabel);
             labValuesDiv.appendChild(labValuesValue);
             featuresContainer.appendChild(labValuesDiv);
         }
-    }
-    
-    // Helper function to add a feature item
-    function addFeatureItem(container, label, feature) {
-        if (!feature || feature.value === null) return;
-        
-        const featureDiv = document.createElement('div');
-        featureDiv.className = 'feature-item';
-        
-        const featureLabel = document.createElement('div');
-        featureLabel.className = 'feature-label';
-        featureLabel.textContent = label;
-        
-        const featureValue = document.createElement('div');
-        featureValue.className = 'feature-value';
-        
-        const valueText = document.createElement('div');
-        valueText.textContent = feature.value;
-        
-        const sourceText = document.createElement('div');
-        sourceText.className = 'feature-source';
-        sourceText.textContent = feature.source;
-        
-        featureValue.appendChild(valueText);
-        featureValue.appendChild(sourceText);
-        featureDiv.appendChild(featureLabel);
-        featureDiv.appendChild(featureValue);
-        
-        container.appendChild(featureDiv);
     }
     
     // Display matching trials

@@ -3,12 +3,111 @@
  * Handles functionality for displaying active clinical trials at INT
  */
 
+// Function to display alert messages
+function showAlert(message, type) {
+    // Create alert element
+    const alertEl = document.createElement('div');
+    alertEl.className = `alert alert-${type} alert-dismissible fade show`;
+    alertEl.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Find or create alerts container
+    let alertsContainer = document.getElementById('alerts-container');
+    if (!alertsContainer) {
+        alertsContainer = document.createElement('div');
+        alertsContainer.id = 'alerts-container';
+        alertsContainer.className = 'position-fixed top-0 end-0 p-3';
+        alertsContainer.style.zIndex = '9999';
+        document.body.appendChild(alertsContainer);
+    }
+    
+    // Add alert to container
+    alertsContainer.appendChild(alertEl);
+    
+    // Auto dismiss alert after 5 seconds
+    setTimeout(() => {
+        alertEl.classList.remove('show');
+        setTimeout(() => {
+            alertEl.remove();
+        }, 150);
+    }, 5000);
+}
+
+// Add CSS for rotating icon animation
+// Add CSS for rotating icon animation
+document.head.insertAdjacentHTML('beforeend', `
+<style>
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .rotate {
+        animation: rotate 1.5s linear infinite;
+    }
+</style>
+`);
+
 document.addEventListener('DOMContentLoaded', function() {
     // Get DOM elements
     const searchInput = document.getElementById('search-input');
     const phaseFilter = document.getElementById('phase-filter');
     const cancerTypeFilter = document.getElementById('cancer-type-filter');
     const trialsContainer = document.getElementById('trials-container');
+    const filtersContainer = document.getElementById('filters-container');
+    
+    // Aggiungi un bottone di aggiornamento per i trial
+    const updateButton = document.createElement('button');
+    updateButton.className = 'btn btn-outline-primary mb-3 me-3';
+    updateButton.innerHTML = '<i data-feather="refresh-cw"></i> Aggiorna trial da ClinicalTrials.gov';
+    updateButton.onclick = function() {
+        // Cambia lo stato del pulsante durante l'aggiornamento
+        updateButton.disabled = true;
+        updateButton.innerHTML = '<i data-feather="refresh-cw" class="rotate"></i> Aggiornamento in corso...';
+        feather.replace();
+        
+        // Mostra un messaggio di attesa
+        showAlert('Aggiornamento dei trial clinici in corso. Questa operazione potrebbe richiedere alcuni minuti...', 'info');
+        
+        // Chiama l'API con il parametro di aggiornamento
+        fetch('/api/trials?update=true')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to update trials data');
+                }
+                return response.json();
+            })
+            .then(data => {
+                trials = data;
+                displayTrials(trials);
+                
+                // Ripristina lo stato del pulsante
+                updateButton.disabled = false;
+                updateButton.innerHTML = '<i data-feather="refresh-cw"></i> Aggiorna trial da ClinicalTrials.gov';
+                feather.replace();
+                
+                // Mostra un messaggio di successo
+                showAlert('Trial clinici aggiornati con successo!', 'success');
+            })
+            .catch(error => {
+                console.error('Error updating trials:', error);
+                
+                // Ripristina lo stato del pulsante
+                updateButton.disabled = false;
+                updateButton.innerHTML = '<i data-feather="refresh-cw"></i> Aggiorna trial da ClinicalTrials.gov';
+                feather.replace();
+                
+                // Mostra un messaggio di errore
+                showAlert('Errore durante l\'aggiornamento dei trial clinici: ' + error.message, 'danger');
+            });
+    };
+    
+    // Inserisci il pulsante prima dei filtri
+    if (filtersContainer) {
+        filtersContainer.parentNode.insertBefore(updateButton, filtersContainer);
+        feather.replace();
+    }
     
     // Initialize trials data
     let trials = [];

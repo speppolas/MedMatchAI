@@ -21,6 +21,22 @@ def trials():
 def api_trials():
     """API endpoint to get all available trials."""
     try:
+        # Ottieni il parametro di aggiornamento dalla query string
+        update_param = request.args.get('update', 'false').lower()
+        
+        # Se è richiesto un aggiornamento
+        if update_param == 'true':
+            try:
+                from update_trials import update_trials
+                success = update_trials()
+                if success:
+                    logging.info("Aggiornamento dei trial clinici completato con successo")
+                else:
+                    logging.error("Aggiornamento dei trial clinici non riuscito")
+            except Exception as update_err:
+                logging.error(f"Errore durante l'aggiornamento dei trial: {str(update_err)}")
+        
+        # Recupera i trial dal database
         trials = get_all_trials_db()
         return jsonify(trials)
     except Exception as e:

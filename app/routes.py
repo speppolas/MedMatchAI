@@ -130,12 +130,15 @@ def process():
         # Extract features using local LLM
         features = extract_features(text)
         
+        # Format features in a concise way for display
+        concise_features = format_features_concise(features)
+        
         # Match with clinical trials
         trial_matches = match_trials_db(features)
         
         # Return extracted features and matching trials
         return jsonify({
-            'features': features,
+            'features': concise_features,
             'matches': trial_matches,
             'text': text,
             'pdf_filename': pdf_filename

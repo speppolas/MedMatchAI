@@ -53,6 +53,129 @@ def extract_features(text):
         logging.error(f"Error extracting features: {str(e)}")
         # Fallback to basic extraction in case of any error
         return basic_feature_extraction(text)
+        
+def format_features_concise(features):
+    """
+    Formatta le caratteristiche estratte in modo conciso per la visualizzazione.
+    
+    Questa funzione elabora le caratteristiche estratte dal testo del paziente
+    per renderle più concise e leggibili nell'interfaccia utente. Rimuove le informazioni
+    di contesto e il testo sorgente completo, mantenendo solo i valori essenziali.
+    
+    Args:
+        features: Dizionario delle caratteristiche estratte
+        
+    Returns:
+        dict: Caratteristiche formattate in modo conciso
+    """
+    concise_features = {
+        'original_text': features.get('original_text', '')
+    }
+    
+    # Copia le caratteristiche semplici
+    for key in ['age', 'gender', 'diagnosis', 'stage', 'ecog']:
+        if key in features and features[key]:
+            concise_features[key] = features[key]
+    
+    # Elabora le mutazioni per renderle concise
+    if 'mutations' in features and features['mutations']:
+        concise_mutations = []
+        for mutation in features['mutations']:
+            if not mutation or not isinstance(mutation, dict):
+                continue
+                
+            concise_value = mutation.get('value', '')
+            source = mutation.get('source', '')
+            
+            # Cerca pattern specifici per estrarre informazioni più precise
+            if source and concise_value and concise_value.lower() in source.lower():
+                # Cerca pattern come "KRAS G12C" o "PD-L1 90%"
+                pdl1_match = re.search(r'{}\s+([0-9]+)\s*%'.format(re.escape(concise_value)), source, re.I)
+                mutation_match = re.search(r'{}\s+([A-Z][0-9]+[A-Z])'.format(re.escape(concise_value)), source, re.I)
+                status_match = re.search(r'(positive|negative|mutato|wild.?type)', source, re.I)
+                
+                if pdl1_match:
+                    concise_value = f"{concise_value} {pdl1_match.group(1)}%"
+                elif mutation_match:
+                    concise_value = f"{concise_value} {mutation_match.group(1)}"
+                elif status_match:
+                    concise_value = f"{concise_value} {status_match.group(1)}"
+            
+            concise_mutations.append({'value': concise_value})
+        
+        concise_features['mutations'] = concise_mutations
+    
+    # Elabora le metastasi per renderle concise
+    if 'metastases' in features and features['metastases']:
+        concise_metastases = []
+        for metastasis in features['metastases']:
+            if not metastasis or not isinstance(metastasis, dict):
+                continue
+                
+            concise_value = metastasis.get('value', '')
+            source = metastasis.get('source', '')
+            
+            # Estrai informazioni significative come numero e dimensioni
+            if source and concise_value:
+                count_match = re.search(r'(multiple|singular|numerose|singole|solitarie?)\s+', source, re.I)
+                size_match = re.search(r'(\d+(?:\.\d+)?)\s*(?:mm|cm)', source, re.I)
+                
+                description = ""
+                if count_match:
+                    description += count_match.group(1) + " "
+                if size_match:
+                    description += size_match.group(0) + " "
+                
+                if description:
+                    concise_value = description + concise_value
+                else:
+                    concise_value = concise_value + " metastasis"
+            
+            concise_metastases.append({'value': concise_value})
+        
+        concise_features['metastases'] = concise_metastases
+    
+    # Elabora i trattamenti precedenti per renderli concisi
+    if 'previous_treatments' in features and features['previous_treatments']:
+        concise_treatments = []
+        for treatment in features['previous_treatments']:
+            if not treatment or not isinstance(treatment, dict):
+                continue
+                
+            concise_value = treatment.get('value', '')
+            source = treatment.get('source', '')
+            
+            # Estrai informazioni sui cicli, dosaggio o date
+            if source and concise_value:
+                cycles_match = re.search(r'(\d+)\s*(?:cicli|ciclo|cycles|cycle)', source, re.I)
+                dose_match = re.search(r'(\d+(?:\.\d+)?)\s*(?:mg\/m2|mg|g\/m2|g|ml)', source, re.I)
+                date_match = re.search(r'((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})', source, re.I)
+                
+                info = []
+                if cycles_match:
+                    info.append(cycles_match.group(0))
+                if dose_match:
+                    info.append(dose_match.group(0))
+                if date_match:
+                    info.append(date_match.group(0))
+                
+                if info:
+                    concise_value = f"{concise_value} ({', '.join(info)})"
+            
+            concise_treatments.append({'value': concise_value})
+        
+        concise_features['previous_treatments'] = concise_treatments
+    
+    # Elabora i valori di laboratorio per renderli concisi
+    if 'lab_values' in features and features['lab_values']:
+        concise_lab_values = {}
+        for key, value in features['lab_values'].items():
+            if isinstance(value, dict) and 'value' in value:
+                concise_lab_values[key] = {'value': value['value']}
+        
+        concise_features['lab_values'] = concise_lab_values
+    
+    return concise_features
 
 def extract_with_ollama(text):
     """

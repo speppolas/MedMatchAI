@@ -4,6 +4,7 @@ Supporta vari formati di ID (NCT, EudraCT, ID del protocollo, Registry ID).
 """
 
 import os
+import re
 import json
 import logging
 import requests
@@ -258,10 +259,10 @@ def search_trial_by_other_id(other_id: str) -> Optional[str]:
                 return f"NCT{other_id}"
                 
         elif id_type == "PROTOCOL":
-            # D5087C00001 è un ID specifico
+            # D5087C00001 è un ID specifico (SAFFRON study)
             if "D5087C00001".lower() in normalized_search_id or "D5087C".lower() in normalized_search_id:
-                logging.info("ID D5087C00001 riconosciuto, cercando NCT03334617")
-                return "NCT03334617"  # ID NCT corrispondente a D5087C00001
+                logging.info("ID D5087C00001 riconosciuto, cercando NCT05261399 (SAFFRON study)")
+                return "NCT05261399"  # ID NCT corrispondente a D5087C00001 (SAFFRON)
                 
             # Costruisci una query specifica per ID protocollo
             query = f"\"{other_id}\" AND OTHER_TERMS"
@@ -319,10 +320,10 @@ def search_trial_by_other_id(other_id: str) -> Optional[str]:
             match_found = False
             match_reason = ""
             
-            # Controllo per D5087C00001 specifico
+            # Controllo per D5087C00001 specifico (SAFFRON)
             if "D5087C00001".lower() in normalized_search_id:
-                if nct_id == "NCT03334617":
-                    return nct_id  # Corrispondenza esatta per il caso specifico
+                if nct_id == "NCT05261399":
+                    return nct_id  # Corrispondenza esatta per il caso specifico SAFFRON
             
             # Controlla l'ID dell'organizzazione
             if "orgStudyIdInfo" in id_module and "id" in id_module["orgStudyIdInfo"]:

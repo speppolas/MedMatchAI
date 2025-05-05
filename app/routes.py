@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 from flask import render_template, request, jsonify, current_app, send_from_directory, session, abort
 from app import bp
-from app.utils import extract_text_from_pdf, extract_features, clean_expired_files
+from app.utils import extract_text_from_pdf, extract_features, clean_expired_files, format_features_concise
 from models import ClinicalTrial, db
 
 @bp.route('/')

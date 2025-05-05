@@ -104,8 +104,9 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     // Inserisci il pulsante prima dei filtri
-    if (filtersContainer) {
-        filtersContainer.parentNode.insertBefore(updateButton, filtersContainer);
+    const cardHeader = document.querySelector('.card-header');
+    if (cardHeader) {
+        cardHeader.appendChild(updateButton);
         feather.replace();
     }
     

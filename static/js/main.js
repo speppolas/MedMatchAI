@@ -278,9 +278,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 const mutationItem = document.createElement('div');
                 mutationItem.className = 'mb-2';
                 
+                // Creiamo un testo più conciso per la mutazione
                 const mutationText = document.createElement('div');
-                mutationText.textContent = mutation.value;
+                let conciseValue = mutation.value;
                 
+                // Estrai informazioni più specifiche sul tipo di mutazione, se presenti
+                if (mutation.source && mutation.source.toLowerCase().includes(mutation.value.toLowerCase())) {
+                    // Cerca pattern comuni di mutazione come "KRAS G12C" o "PD-L1 90%"
+                    const pdl1Match = mutation.source.match(new RegExp(mutation.value + '\\s+([0-9]+)\\s*%', 'i'));
+                    const mutationMatch = mutation.source.match(new RegExp(mutation.value + '\\s+([A-Z][0-9]+[A-Z])', 'i'));
+                    const statusMatch = mutation.source.match(/(positive|negative|mutato|wild.?type)/i);
+                    
+                    if (pdl1Match) {
+                        conciseValue = `${mutation.value} ${pdl1Match[1]}%`;
+                    } else if (mutationMatch) {
+                        conciseValue = `${mutation.value} ${mutationMatch[1]}`;
+                    } else if (statusMatch) {
+                        conciseValue = `${mutation.value} ${statusMatch[1]}`;
+                    }
+                }
+                
+                mutationText.textContent = conciseValue;
+                
+                // Manteniamo anche il testo originale come fonte di contesto
                 const mutationSource = document.createElement('div');
                 mutationSource.className = 'feature-source';
                 mutationSource.textContent = mutation.source;
@@ -311,9 +331,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 const metastasisItem = document.createElement('div');
                 metastasisItem.className = 'mb-2';
                 
+                // Creiamo un testo più conciso per la metastasi
                 const metastasisText = document.createElement('div');
-                metastasisText.textContent = metastasis.value;
+                let conciseValue = metastasis.value;
                 
+                // Estrai informazioni più specifiche sulle metastasi, se presenti
+                if (metastasis.source && metastasis.source.toLowerCase().includes(metastasis.value.toLowerCase())) {
+                    // Cerca descrittori comuni come "multiple" o "singular"
+                    const countMatch = metastasis.source.match(/(multiple|singular|numerose|singole|solitarie?)\s+/i);
+                    const sizeMatch = metastasis.source.match(/(\d+(?:\.\d+)?)\s*(?:mm|cm)/i);
+                    
+                    let description = "";
+                    if (countMatch) description += countMatch[1] + " ";
+                    if (sizeMatch) description += sizeMatch[0] + " ";
+                    
+                    if (description) {
+                        conciseValue = description + metastasis.value;
+                    } else {
+                        conciseValue = metastasis.value + " metastasis";
+                    }
+                }
+                
+                metastasisText.textContent = conciseValue;
+                
+                // Manteniamo anche il testo originale come fonte di contesto
                 const metastasisSource = document.createElement('div');
                 metastasisSource.className = 'feature-source';
                 metastasisSource.textContent = metastasis.source;
@@ -344,9 +385,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 const treatmentItem = document.createElement('div');
                 treatmentItem.className = 'mb-2';
                 
+                // Creiamo un testo più conciso per il trattamento
                 const treatmentText = document.createElement('div');
-                treatmentText.textContent = treatment.value;
+                let conciseValue = treatment.value;
                 
+                // Estrai informazioni più specifiche sul trattamento, se presenti
+                if (treatment.source && treatment.source.toLowerCase().includes(treatment.value.toLowerCase())) {
+                    // Cerca informazioni sul numero di cicli o dosaggio
+                    const cyclesMatch = treatment.source.match(/(\d+)\s*(?:cicli|ciclo|cycles|cycle)/i);
+                    const doseMatch = treatment.source.match(/(\d+(?:\.\d+)?)\s*(?:mg\/m2|mg|g\/m2|g|ml)/i);
+                    const dateMatch = treatment.source.match(/((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})/i);
+                    
+                    let info = [];
+                    if (cyclesMatch) info.push(cyclesMatch[0]);
+                    if (doseMatch) info.push(doseMatch[0]);
+                    if (dateMatch) info.push(dateMatch[0]);
+                    
+                    if (info.length > 0) {
+                        conciseValue = `${treatment.value} (${info.join(", ")})`;
+                    }
+                }
+                
+                treatmentText.textContent = conciseValue;
+                
+                // Manteniamo anche il testo originale come fonte di contesto
                 const treatmentSource = document.createElement('div');
                 treatmentSource.className = 'feature-source';
                 treatmentSource.textContent = treatment.source;

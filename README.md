@@ -46,14 +46,10 @@ Clonare il repository e creare un ambiente virtuale:
 git clone https://github.com/tuorepositorio/medmatchint.git
 cd medmatchint
 
-# Creare e attivare un ambiente virtuale
 python3 -m venv venv
 
-# Su Linux/MacOS
 source venv/bin/activate
 
-# Su Windows
-venv\Scripts\activate
 ```
 
 ### 2. Installazione delle Dipendenze
@@ -63,7 +59,7 @@ venv\Scripts\activate
 pip install --upgrade pip
 
 # Installare le dipendenze
-pip install -r requirements.txt
+pip install -r requirements-docker.txt
 ```
 
 Se il file `requirements.txt` non è presente, puoi generarlo con:

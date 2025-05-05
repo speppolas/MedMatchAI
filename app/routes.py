@@ -194,16 +194,35 @@ def api_trials():
                         (t.get('title') and trial_id.lower() in t['title'].lower()) or
                         (t.get('description') and trial_id.lower() in t['description'].lower())):
                         matching_trials_json.append(t)
-                    else:
-                        # Cerca nei criteri
-                        criteria_matched = False
-                        for criterion in t.get('inclusion_criteria', []) + t.get('exclusion_criteria', []):
-                            if 'text' in criterion and trial_id.lower() in criterion['text'].lower():
-                                criteria_matched = True
-                                break
+                        continue
                         
-                        if criteria_matched:
+                    # Cerca nell'ID dell'organizzazione
+                    if t.get('org_study_id') and trial_id.lower() in t['org_study_id'].lower():
+                        matching_trials_json.append(t)
+                        continue
+                    
+                    # Cerca specificatamente D5087C00001
+                    if trial_id.upper() == "D5087C00001" and t.get('org_study_id') == "D5087C00001":
+                        matching_trials_json.append(t)
+                        continue
+                    
+                    # Cerca negli ID secondari
+                    if t.get('secondary_ids'):
+                        # Converte in stringa per cercare dentro
+                        secondary_ids_str = json.dumps(t['secondary_ids'])
+                        if trial_id.lower() in secondary_ids_str.lower():
                             matching_trials_json.append(t)
+                            continue
+                    
+                    # Cerca nei criteri
+                    criteria_matched = False
+                    for criterion in t.get('inclusion_criteria', []) + t.get('exclusion_criteria', []):
+                        if 'text' in criterion and trial_id.lower() in criterion['text'].lower():
+                            criteria_matched = True
+                            break
+                    
+                    if criteria_matched:
+                        matching_trials_json.append(t)
                 
                 if matching_trials_json:
                     return jsonify(matching_trials_json)
@@ -212,26 +231,34 @@ def api_trials():
                 logging.error(f"Errore nella ricerca per ID del protocollo: {str(e)}")
                 pass
             
-            # Se nessun risultato è stato trovato ma l'ID è in formato D5087C ecc., aggiungiamo un trial di esempio
-            # solo per scopi dimostrativi se l'ID è in formato D5087C00001
+            # Cerca di nuovo tra tutti i trial disponibili, specificamente per i pattern di ID del protocollo
             if trial_id.startswith('D') and len(trial_id) > 8 and any(c.isdigit() for c in trial_id):
-                # Per scopi dimostrativi, creiamo un trial di esempio con questo ID di protocollo
-                sample_trial = {
-                    "id": "NCT04157088",  # Usiamo un NCT ID per compatibilità
-                    "title": f"Studio Clinico con Protocollo {trial_id} - [Demo Entry]",
-                    "phase": "Phase II",
-                    "description": f"Questo è un trial di esempio creato per dimostrare la ricerca per ID del protocollo {trial_id}. In un ambiente di produzione, questo trial sarebbe recuperato dal database completo dell'INT.",
-                    "inclusion_criteria": [
-                        {"text": "Età maggiore di 18 anni", "type": "age"},
-                        {"text": "Diagnosi confermata di tumore solido avanzato", "type": "diagnosis"},
-                        {"text": f"Eleggibilità secondo il protocollo {trial_id}", "type": "inclusion"}
-                    ],
-                    "exclusion_criteria": [
-                        {"text": "Performance status ECOG > 2", "type": "performance"},
-                        {"text": "Metastasi cerebrali sintomatiche non trattate", "type": "metastasis"}
-                    ]
-                }
-                return jsonify([sample_trial])
+                # Cerca in tutti i trial, sia nel database che nel file JSON
+                all_trials = []
+                
+                # Cerca prima nel database
+                trials_db = get_all_trials_db()
+                if trials_db:
+                    all_trials.extend(trials_db)
+                
+                # Cerca nel file JSON se necessario
+                if not all_trials:
+                    trials_json = get_all_trials_json()
+                    if trials_json:
+                        all_trials.extend(trials_json)
+                
+                # Filtra manualmente cercando in tutti i campi
+                protocol_matches = []
+                for t in all_trials:
+                    # Cerca in tutti i possibili campi che possono contenere l'ID del protocollo
+                    if ((t.get('id') and trial_id.lower() in t['id'].lower()) or
+                        (t.get('org_study_id') and trial_id.lower() in t['org_study_id'].lower()) or
+                        (str(t.get('secondary_ids', [])).lower().find(trial_id.lower()) != -1) or
+                        (t.get('description') and trial_id.lower() in t['description'].lower())):
+                        protocol_matches.append(t)
+                
+                if protocol_matches:
+                    return jsonify(protocol_matches)
                 
             # Se ancora non trovato, restituisci array vuoto
             return jsonify([])
@@ -470,8 +497,12 @@ def check_criterion_match(criterion, patient_features):
             diagnosis = patient_features['diagnosis']['value'].lower()
             
             # Check for cancer type match
-            if any(cancer_type in diagnosis for cancer_type in ['lung', 'breast', 'colorectal', 'ovarian', 'prostate', 'pancreatic']):
-                if cancer_type in criterion_text:
+            cancer_types = ['lung', 'breast', 'colorectal', 'ovarian', 'prostate', 'pancreatic']
+            patient_cancer_types = [ct for ct in cancer_types if ct in diagnosis]
+            
+            if patient_cancer_types:
+                # Check if any of the patient's cancer types are mentioned in the criterion
+                if any(ct in criterion_text for ct in patient_cancer_types):
                     result['matches'] = True
                     result['explanation'] = f"Patient has {diagnosis} which matches criterion"
                 else:

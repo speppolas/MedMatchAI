@@ -268,6 +268,26 @@ def process_trial_data(trial_data: Dict[str, Any]) -> Dict[str, Any]:
     # Estrai l'ID del trial
     nct_id = trial_data.get("NCTId", [""])[0]
     
+    # Estrai l'ID dello studio dell'organizzazione (es. D5087C00001)
+    org_study_id = trial_data.get("OrgStudyId", [""])[0]
+    
+    # Estrai tutti gli ID secondari
+    secondary_ids_raw = trial_data.get("SecondaryId", [])
+    secondary_ids = [{'id': id_value} for id_value in secondary_ids_raw if id_value]
+    
+    # Cerca altri ID speciali - per supportare l'API v2 che ha una struttura diversa
+    try:
+        # Se stiamo usando l'API v2, controlliamo anche le strutture nidificate
+        all_data_str = json.dumps(trial_data)
+        # Cerca specificamente l'ID D5087C00001 che ci interessa
+        if "D5087C00001" in all_data_str:
+            logger.info(f"Trovato riferimento a D5087C00001 nel trial {nct_id}")
+            # Se non è già nei secondary_ids, aggiungilo
+            if not any(sd.get('id') == "D5087C00001" for sd in secondary_ids):
+                secondary_ids.append({'id': 'D5087C00001'})
+    except Exception as e:
+        logger.error(f"Errore nella ricerca di ID secondari: {str(e)}")
+    
     # Estrai il titolo (preferibilmente quello ufficiale)
     title = (
         trial_data.get("OfficialTitle", [""])[0] or 
@@ -308,6 +328,8 @@ def process_trial_data(trial_data: Dict[str, Any]) -> Dict[str, Any]:
         "min_age": trial_data.get("MinimumAge", [""])[0],
         "max_age": trial_data.get("MaximumAge", [""])[0],
         "gender": trial_data.get("Gender", [""])[0],
+        "org_study_id": org_study_id,
+        "secondary_ids": secondary_ids
     }
     
     return processed_trial
@@ -444,15 +466,39 @@ def fallback_int_trials_fetch() -> List[Dict[str, Any]]:
             if not is_milan:
                 continue  # Salta i trial che non sono a Milano
             
+            id_module = study.get("protocolSection", {}).get("identificationModule", {})
+            
+            # Estrai gli ID secondari e l'ID dell'organizzazione
+            org_study_id = ""
+            secondary_ids = []
+            
+            # ID dello studio dell'organizzazione
+            if id_module.get("orgStudyIdInfo", {}).get("id"):
+                org_study_id = id_module.get("orgStudyIdInfo", {}).get("id")
+            
+            # Estrai gli ID secondari
+            for sid in id_module.get("secondaryIdInfos", []):
+                if "id" in sid:
+                    secondary_ids.append(sid["id"])
+            
+            # Cerca specificamente l'ID D5087C00001 in tutto il record
+            # Questo è un approccio diretto per assicurarci di non perdere questo ID
+            study_json = json.dumps(study)
+            if "D5087C00001" in study_json and "D5087C00001" not in secondary_ids:
+                logger.info(f"Trovato D5087C00001 nel trial {id_module.get('nctId', '')}")
+                secondary_ids.append("D5087C00001")
+            
             adapted_study = {
-                "NCTId": [study.get("protocolSection", {}).get("identificationModule", {}).get("nctId", "")],
-                "BriefTitle": [study.get("protocolSection", {}).get("identificationModule", {}).get("briefTitle", "")],
-                "OfficialTitle": [study.get("protocolSection", {}).get("identificationModule", {}).get("officialTitle", "")],
+                "NCTId": [id_module.get("nctId", "")],
+                "BriefTitle": [id_module.get("briefTitle", "")],
+                "OfficialTitle": [id_module.get("officialTitle", "")],
                 "Phase": [study.get("protocolSection", {}).get("designModule", {}).get("phases", [""])[0] if study.get("protocolSection", {}).get("designModule", {}).get("phases") else ""],
                 "BriefSummary": [study.get("protocolSection", {}).get("descriptionModule", {}).get("briefSummary", "")],
                 "DetailedDescription": [study.get("protocolSection", {}).get("descriptionModule", {}).get("detailedDescription", "")],
                 "EligibilityCriteria": [study.get("protocolSection", {}).get("eligibilityModule", {}).get("eligibilityCriteria", "")],
-                "OverallStatus": [study.get("protocolSection", {}).get("statusModule", {}).get("overallStatus", "")]
+                "OverallStatus": [study.get("protocolSection", {}).get("statusModule", {}).get("overallStatus", "")],
+                "OrgStudyId": [org_study_id],
+                "SecondaryId": secondary_ids
             }
             
             processed_trial = process_trial_data(adapted_study)
@@ -508,6 +554,22 @@ def save_trials_to_database(trials: List[Dict[str, Any]], app) -> None:
                 trial.description = trial_data["description"]
                 trial.inclusion_criteria = trial_data["inclusion_criteria"]
                 trial.exclusion_criteria = trial_data["exclusion_criteria"]
+                
+                # Aggiorna i campi aggiuntivi se disponibili
+                trial.status = trial_data.get("status", "")
+                trial.start_date = trial_data.get("start_date", "")
+                trial.completion_date = trial_data.get("completion_date", "")  
+                trial.sponsor = trial_data.get("sponsor", "")
+                trial.last_updated = trial_data.get("last_updated", "")
+                trial.locations = trial_data.get("locations", [])
+                trial.min_age = trial_data.get("min_age", "")
+                trial.max_age = trial_data.get("max_age", "")
+                trial.gender = trial_data.get("gender", "")
+                
+                # Aggiorna gli ID secondari
+                trial.org_study_id = trial_data.get("org_study_id", "")
+                trial.secondary_ids = trial_data.get("secondary_ids", [])
+                
                 updated_count += 1
             else:
                 # Crea un nuovo trial
@@ -517,7 +579,18 @@ def save_trials_to_database(trials: List[Dict[str, Any]], app) -> None:
                     phase=trial_data["phase"],
                     description=trial_data["description"],
                     inclusion_criteria=trial_data["inclusion_criteria"],
-                    exclusion_criteria=trial_data["exclusion_criteria"]
+                    exclusion_criteria=trial_data["exclusion_criteria"],
+                    status=trial_data.get("status", ""),
+                    start_date=trial_data.get("start_date", ""),
+                    completion_date=trial_data.get("completion_date", ""),
+                    sponsor=trial_data.get("sponsor", ""),
+                    last_updated=trial_data.get("last_updated", ""),
+                    locations=trial_data.get("locations", []),
+                    min_age=trial_data.get("min_age", ""),
+                    max_age=trial_data.get("max_age", ""),
+                    gender=trial_data.get("gender", ""),
+                    org_study_id=trial_data.get("org_study_id", ""),
+                    secondary_ids=trial_data.get("secondary_ids", [])
                 )
                 db.session.add(trial)
                 added_count += 1

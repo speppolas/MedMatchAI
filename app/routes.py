@@ -3,12 +3,27 @@ import json
 import logging
 from flask import render_template, request, jsonify, current_app
 from app import app
-from app.utils import extract_text_from_pdf, extract_features, match_trials
+from app.utils import extract_text_from_pdf, extract_features, match_trials, get_all_trials
 
 @app.route('/')
 def index():
     """Render the main application page."""
     return render_template('index.html')
+
+@app.route('/trials')
+def trials():
+    """Render the trials listing page."""
+    return render_template('trials.html')
+
+@app.route('/api/trials')
+def api_trials():
+    """API endpoint to get all available trials."""
+    try:
+        trials = get_all_trials()
+        return jsonify(trials)
+    except Exception as e:
+        logging.error(f"Error fetching trials: {str(e)}")
+        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
 
 @app.route('/process', methods=['POST'])
 def process():

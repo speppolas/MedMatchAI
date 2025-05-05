@@ -343,6 +343,21 @@ def match_trials(patient_features):
         # Return empty list in case of error
         return []
 
+def get_all_trials():
+    """
+    Get all available clinical trials from the JSON file.
+    
+    Returns:
+        list: All clinical trials
+    """
+    try:
+        with open('trials_int.json', 'r') as f:
+            trials = json.load(f)
+        return trials
+    except Exception as e:
+        logging.error(f"Error loading trials: {str(e)}")
+        return []
+
 def check_criterion_match(criterion, patient_features):
     """
     Check if a patient matches a specific clinical trial criterion.

@@ -159,15 +159,34 @@ document.addEventListener('DOMContentLoaded', function() {
         const phaseValue = phaseFilter ? phaseFilter.value : '';
         const cancerTypeValue = cancerTypeFilter ? cancerTypeFilter.value : '';
         
-        // Se stiamo cercando un ID di protocollo specifico,
-        // usa l'API del server per la ricerca più accurata
-        // Riconosce formati come D5087C00001, D5087C, NCT12345678, o altri ID di protocollo
-        const isSpecificID = searchTerm === "d5087c00001" || searchTerm === "d5087c" || searchTerm.startsWith("d5087"); // Per il caso specifico richiesto
+        // Se stiamo cercando un ID di protocollo specifico, usa l'API del server per la ricerca più accurata
+        // Riconosce vari formati di ID utilizzati in ambito clinico
         
-        if (isSpecificID || 
-            searchTerm.match(/^[a-zA-Z][0-9]{4}[a-zA-Z][0-9]{5}/) || 
-            searchTerm.match(/^[dD][0-9]+[a-zA-Z][0-9]+/) || 
-            searchTerm.match(/^NCT[0-9]+/)) {
+        // Funzione helper per verificare se un termine ha un pattern che assomiglia a un ID di protocollo o registro
+        function isLikelyProtocolId(term) {
+            term = term.trim().toLowerCase();
+            
+            // Controlli speciali per casi noti
+            if (term === "d5087c00001" || term === "d5087c" || term.startsWith("d5087")) {
+                return true;
+            }
+            
+            // Pattern per i vari tipi di ID
+            const patterns = [
+                /^nct\d{6,}/,                         // NCT ID: NCT seguito da numeri (ClinicalTrials.gov)
+                /^d\d+c\d+/,                          // Formato D5087C00001
+                /^[a-z][0-9]{4}[a-z][0-9]{5}/,        // Altri ID alfanumerici di protocollo
+                /^\d{4}-\d{6}-\d{2}/,                 // EudraCT Number: YYYY-NNNNNN-CC
+                /^\d{4}-\d{6}-\d{2}-\d{2}/,           // Registry Identifier: YYYY-NNNNNN-CC-DD
+                /^[a-z]\d{4,}[a-z0-9]/i,              // ID generici alfanumerici di studi
+                /^\d{4,}-\d{4,}/                      // Numeri con trattini (vari formati di ID)
+            ];
+            
+            // Verifica se uno qualsiasi dei pattern corrisponde
+            return patterns.some(pattern => term.match(pattern));
+        }
+        
+        if (isLikelyProtocolId(searchTerm)) {
             // Mostra un indicatore di caricamento
             trialsContainer.innerHTML = `
                 <div class="text-center py-4">

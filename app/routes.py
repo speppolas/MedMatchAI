@@ -109,40 +109,82 @@ def api_trials():
                     
                 # 2. Cerca corrispondenza in tutti gli ID possibili (ID principale, ID organizzazione e ID secondari)
                 from sqlalchemy.sql import or_, cast
-                from sqlalchemy import String, JSON
+                from sqlalchemy import String, JSON, func
                 from sqlalchemy.sql.expression import literal
                 
-                # Per cercare in org_study_id (stringa semplice)
+                # Normalizza l'ID di ricerca rimuovendo trattini e spazi
+                normalized_trial_id = trial_id.lower().replace('-', '').replace(' ', '')
+                
+                # Prima cerca usando i campi diretti del database
                 trials_db = ClinicalTrial.query.filter(
                     or_(
                         ClinicalTrial.id.ilike(f"%{trial_id}%"),
                         ClinicalTrial.title.ilike(f"%{trial_id}%"),
                         ClinicalTrial.org_study_id.ilike(f"%{trial_id}%"),
-                        # Ricerca speciale per D5087C00001
+                        # Ricerca per formati speciali come EudraCT e D5087C00001
+                        func.lower(ClinicalTrial.org_study_id).contains(trial_id.lower()),
+                        # Ricerca specifica per D5087C00001
                         ClinicalTrial.org_study_id == "D5087C00001" if trial_id.upper() == "D5087C00001" else False
                     )
                 ).all()
                 
-                # Se non abbiamo trovato corrispondenze, prova a cercare negli ID secondari
+                # Se non abbiamo trovato corrispondenze o per sicurezza (per gli ID secondari)
+                # Consulta tutti i trial e filtra manualmente
+                all_trials_db = ClinicalTrial.query.all()
+                
+                # Se la ricerca precedente non ha trovato risultati, inizializza una lista vuota
+                # altrimenti mantieni i risultati già trovati
                 if not trials_db:
-                    # Purtroppo SQLAlchemy con PostgreSQL richiede una query più complessa per cercare dentro JSONB
-                    # Consulta tutti i trial e filtra manualmente
-                    all_trials_db = ClinicalTrial.query.all()
                     trials_db = []
                     
-                    for trial in all_trials_db:
-                        # Verifica se c'è l'ID nei secondary_ids
-                        if trial.secondary_ids:
-                            secondary_ids_str = json.dumps(trial.secondary_ids)
-                            if trial_id.lower() in secondary_ids_str.lower():
-                                trials_db.append(trial)
-                                
-                        # Verifica speciale per D5087C00001
-                        if trial_id.upper() == "D5087C00001":
-                            secondary_ids_str = json.dumps(trial.secondary_ids)
-                            if "D5087C00001" in secondary_ids_str:
-                                if trial not in trials_db:
-                                    trials_db.append(trial)
+                # Converti in un set per evitare duplicati
+                trials_db_set = set(trials_db)
+                
+                for trial in all_trials_db:
+                    # Salta i trial già trovati
+                    if trial in trials_db_set:
+                        continue
+                        
+                    # ID dell'organizzazione, prova con formati normalizzati
+                    if trial.org_study_id:
+                        normalized_org_id = trial.org_study_id.lower().replace('-', '').replace(' ', '')
+                        if normalized_trial_id in normalized_org_id:
+                            trials_db.append(trial)
+                            trials_db_set.add(trial)
+                            continue
+                    
+                    # Verifica negli ID secondari
+                    if trial.secondary_ids:
+                        # Confronto semplice in stringa JSON
+                        secondary_ids_str = json.dumps(trial.secondary_ids).lower()
+                        if trial_id.lower() in secondary_ids_str:
+                            trials_db.append(trial)
+                            trials_db_set.add(trial)
+                            continue
+                            
+                        # Confronto specifico e normalizzato con ogni ID secondario
+                        found_in_secondary = False
+                        for sec_id in trial.secondary_ids:
+                            if 'id' in sec_id:
+                                sec_id_value = sec_id['id'].lower()
+                                # Confronto esatto
+                                if trial_id.lower() == sec_id_value:
+                                    found_in_secondary = True
+                                    break
+                                # Confronto parziale
+                                if trial_id.lower() in sec_id_value:
+                                    found_in_secondary = True
+                                    break
+                                # Confronto normalizzato (senza trattini/spazi)
+                                norm_sec_id = sec_id_value.replace('-', '').replace(' ', '')
+                                if normalized_trial_id in norm_sec_id:
+                                    found_in_secondary = True
+                                    break
+                                    
+                        if found_in_secondary:
+                            trials_db.append(trial)
+                            trials_db_set.add(trial)
+                            continue
                 
                 if trials_db:
                     return jsonify([trial.to_dict() for trial in trials_db])
@@ -249,12 +291,58 @@ def api_trials():
                 
                 # Filtra manualmente cercando in tutti i campi
                 protocol_matches = []
+                # Normalizza l'ID ricercato rimuovendo trattini e spazi
+                normalized_trial_id = trial_id.lower().replace('-', '').replace(' ', '')
+                
                 for t in all_trials:
-                    # Cerca in tutti i possibili campi che possono contenere l'ID del protocollo
-                    if ((t.get('id') and trial_id.lower() in t['id'].lower()) or
-                        (t.get('org_study_id') and trial_id.lower() in t['org_study_id'].lower()) or
-                        (str(t.get('secondary_ids', [])).lower().find(trial_id.lower()) != -1) or
-                        (t.get('description') and trial_id.lower() in t['description'].lower())):
+                    # ID NCT principale
+                    if t.get('id') and trial_id.lower() in t['id'].lower():
+                        protocol_matches.append(t)
+                        continue
+                        
+                    # ID dell'organizzazione (es. D5087C00001)
+                    if t.get('org_study_id'):
+                        org_id = t['org_study_id'].lower()
+                        # Confronto semplice
+                        if trial_id.lower() in org_id:
+                            protocol_matches.append(t)
+                            continue
+                        # Confronto normalizzato (senza trattini/spazi)
+                        if normalized_trial_id in org_id.replace('-', '').replace(' ', ''):
+                            protocol_matches.append(t)
+                            continue
+                    
+                    # ID secondari (es. EudraCT Number, Registry Identifier)
+                    if t.get('secondary_ids'):
+                        secondary_ids_str = json.dumps(t['secondary_ids']).lower()
+                        # Confronto semplice nelle stringhe JSON
+                        if trial_id.lower() in secondary_ids_str:
+                            protocol_matches.append(t)
+                            continue
+                        
+                        # Confronto specifico con ogni ID secondario
+                        for sec_id in t['secondary_ids']:
+                            if 'id' in sec_id:
+                                sec_id_value = sec_id['id'].lower()
+                                # Confronto esatto
+                                if trial_id.lower() == sec_id_value:
+                                    protocol_matches.append(t)
+                                    break
+                                # Confronto parziale
+                                if trial_id.lower() in sec_id_value:
+                                    protocol_matches.append(t)
+                                    break
+                                # Confronto normalizzato (senza trattini/spazi)
+                                if normalized_trial_id in sec_id_value.replace('-', '').replace(' ', ''):
+                                    protocol_matches.append(t)
+                                    break
+                        
+                        # Se l'ID è già stato trovato, continua con il prossimo trial
+                        if t in protocol_matches:
+                            continue
+                    
+                    # Cerca nella descrizione
+                    if t.get('description') and trial_id.lower() in t['description'].lower():
                         protocol_matches.append(t)
                 
                 if protocol_matches:

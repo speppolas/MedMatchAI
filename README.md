@@ -47,7 +47,7 @@ git clone https://github.com/tuorepositorio/medmatchint.git
 cd medmatchint
 
 # Creare e attivare un ambiente virtuale
-python -m venv venv
+python3 -m venv venv
 
 # Su Linux/MacOS
 source venv/bin/activate

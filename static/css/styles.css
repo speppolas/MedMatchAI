@@ -191,9 +191,20 @@ body {
 /* Aggiungiamo stili specifici per le select per evitare il taglio del testo */
 select.form-control {
   white-space: nowrap;
-  overflow: hidden;
+  overflow: visible;
   text-overflow: ellipsis;
   padding-right: 2rem; /* Spazio per l'icona di dropdown */
+  min-width: 150px; /* Larghezza minima */
+}
+
+/* Assicuriamoci che le label sotto i select siano visibili */
+.form-select-label {
+  display: block;
+  overflow: visible;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  margin-top: 0.25rem;
 }
 
 .form-control:focus {

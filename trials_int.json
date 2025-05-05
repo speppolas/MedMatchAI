@@ -136,7 +136,13 @@
     "locations": [],
     "min_age": "",
     "max_age": "",
-    "gender": ""
+    "gender": "",
+    "org_study_id": "MS200095-0022",
+    "secondary_ids": [
+      {
+        "id": "2015-005696-24"
+      }
+    ]
   },
   {
     "id": "NCT03465982",
@@ -239,7 +245,9 @@
     "locations": [],
     "min_age": "",
     "max_age": "",
-    "gender": ""
+    "gender": "",
+    "org_study_id": "1/18",
+    "secondary_ids": []
   },
   {
     "id": "NCT03102320",
@@ -310,7 +318,13 @@
     "locations": [],
     "min_age": "",
     "max_age": "",
-    "gender": ""
+    "gender": "",
+    "org_study_id": "15834",
+    "secondary_ids": [
+      {
+        "id": "2016-004002-33"
+      }
+    ]
   },
   {
     "id": "NCT06225596",
@@ -417,7 +431,16 @@
     "locations": [],
     "min_age": "",
     "max_age": "",
-    "gender": ""
+    "gender": "",
+    "org_study_id": "BT8009-230",
+    "secondary_ids": [
+      {
+        "id": "2023-504231-41"
+      },
+      {
+        "id": "U1111-1300-3791"
+      }
+    ]
   },
   {
     "id": "NCT04929223",
@@ -583,7 +606,16 @@
     "locations": [],
     "min_age": "",
     "max_age": "",
-    "gender": ""
+    "gender": "",
+    "org_study_id": "WO42758",
+    "secondary_ids": [
+      {
+        "id": "2021-001207-33"
+      },
+      {
+        "id": "2023-505163-37-00"
+      }
+    ]
   },
   {
     "id": "NCT05066555",
@@ -730,7 +762,9 @@
     "locations": [],
     "min_age": "",
     "max_age": "",
-    "gender": ""
+    "gender": "",
+    "org_study_id": "FIL-RougeBIO",
+    "secondary_ids": []
   },
   {
     "id": "NCT01387503",
@@ -821,7 +855,9 @@
     "locations": [],
     "min_age": "",
     "max_age": "",
-    "gender": ""
+    "gender": "",
+    "org_study_id": "INT 80/09",
+    "secondary_ids": []
   },
   {
     "id": "NCT03016819",
@@ -1075,7 +1111,9 @@
     "locations": [],
     "min_age": "",
     "max_age": "",
-    "gender": ""
+    "gender": "",
+    "org_study_id": "AL3818-US-004",
+    "secondary_ids": []
   },
   {
     "id": "NCT02622815",
@@ -1166,7 +1204,9 @@
     "locations": [],
     "min_age": "",
     "max_age": "",
-    "gender": ""
+    "gender": "",
+    "org_study_id": "AIRC5xmille - 12237",
+    "secondary_ids": []
   },
   {
     "id": "NCT05549297",
@@ -1305,6 +1345,8 @@
     "locations": [],
     "min_age": "",
     "max_age": "",
-    "gender": ""
+    "gender": "",
+    "org_study_id": "IMCgp100-203",
+    "secondary_ids": []
   }
 ]

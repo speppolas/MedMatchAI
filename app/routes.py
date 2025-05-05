@@ -107,11 +107,42 @@ def api_trials():
                 if trials_db_exact:
                     return jsonify([trial.to_dict() for trial in trials_db_exact])
                     
-                # 2. Cerca corrispondenza parziale nell'ID (più flessibile)
+                # 2. Cerca corrispondenza in tutti gli ID possibili (ID principale, ID organizzazione e ID secondari)
+                from sqlalchemy.sql import or_, cast
+                from sqlalchemy import String, JSON
+                from sqlalchemy.sql.expression import literal
+                
+                # Per cercare in org_study_id (stringa semplice)
                 trials_db = ClinicalTrial.query.filter(
-                    (ClinicalTrial.id.ilike(f"%{trial_id}%")) | 
-                    (ClinicalTrial.title.ilike(f"%{trial_id}%"))
+                    or_(
+                        ClinicalTrial.id.ilike(f"%{trial_id}%"),
+                        ClinicalTrial.title.ilike(f"%{trial_id}%"),
+                        ClinicalTrial.org_study_id.ilike(f"%{trial_id}%"),
+                        # Ricerca speciale per D5087C00001
+                        ClinicalTrial.org_study_id == "D5087C00001" if trial_id.upper() == "D5087C00001" else False
+                    )
                 ).all()
+                
+                # Se non abbiamo trovato corrispondenze, prova a cercare negli ID secondari
+                if not trials_db:
+                    # Purtroppo SQLAlchemy con PostgreSQL richiede una query più complessa per cercare dentro JSONB
+                    # Consulta tutti i trial e filtra manualmente
+                    all_trials_db = ClinicalTrial.query.all()
+                    trials_db = []
+                    
+                    for trial in all_trials_db:
+                        # Verifica se c'è l'ID nei secondary_ids
+                        if trial.secondary_ids:
+                            secondary_ids_str = json.dumps(trial.secondary_ids)
+                            if trial_id.lower() in secondary_ids_str.lower():
+                                trials_db.append(trial)
+                                
+                        # Verifica speciale per D5087C00001
+                        if trial_id.upper() == "D5087C00001":
+                            secondary_ids_str = json.dumps(trial.secondary_ids)
+                            if "D5087C00001" in secondary_ids_str:
+                                if trial not in trials_db:
+                                    trials_db.append(trial)
                 
                 if trials_db:
                     return jsonify([trial.to_dict() for trial in trials_db])

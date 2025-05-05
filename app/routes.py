@@ -89,7 +89,39 @@ def api_trials():
             except Exception as update_err:
                 logging.error(f"Errore durante l'aggiornamento dei trial: {str(update_err)}")
         
-        # Recupera i trial dal database
+        # Verifica se è richiesto un ID specifico
+        trial_id = request.args.get('id')
+        
+        if trial_id:
+            # Ricerca per ID del protocollo (sia per NCT che per ID interno come D5087C00001)
+            trial = None
+            
+            # Cerca nel modello ClinicalTrial
+            trials_db = ClinicalTrial.query.filter(
+                (ClinicalTrial.id.ilike(f"%{trial_id}%")) | 
+                (ClinicalTrial.title.ilike(f"%{trial_id}%"))
+            ).all()
+            
+            if trials_db:
+                return jsonify([trial.to_dict() for trial in trials_db])
+            
+            # Se non trovato nel DB, cerca nel JSON (fallback)
+            trials_json = get_all_trials_json()
+            matching_trials = []
+            
+            for t in trials_json:
+                # Cerca corrispondenza nell'ID o nel titolo
+                if (t['id'] and trial_id.lower() in t['id'].lower()) or \
+                   (t['title'] and trial_id.lower() in t['title'].lower()):
+                    matching_trials.append(t)
+            
+            if matching_trials:
+                return jsonify(matching_trials)
+                
+            # Se ancora non trovato, restituisci array vuoto
+            return jsonify([])
+        
+        # Altrimenti recupera tutti i trial dal database
         trials = get_all_trials_db()
         return jsonify(trials)
     except Exception as e:

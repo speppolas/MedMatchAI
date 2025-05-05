@@ -61,7 +61,8 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="search-input" class="form-label">Search</label>
-                            <input type="text" id="search-input" class="form-control" placeholder="Search by keyword...">
+                            <input type="text" id="search-input" class="form-control" placeholder="Search by keyword or protocol ID (e.g., D5087C00001)...">
+                            <div class="form-select-label text-muted">Cerca per parola chiave, ID protocollo o NCT ID</div>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -116,14 +117,16 @@
             <div class="match-card-body">
                 <p class="match-description trial-description"></p>
                 
-                <div class="match-criteria-section">
-                    <h6 class="match-criteria-title">Inclusion Criteria</h6>
-                    <div class="inclusion-criteria-container"></div>
-                </div>
-                
-                <div class="match-criteria-section">
-                    <h6 class="match-criteria-title">Exclusion Criteria</h6>
-                    <div class="exclusion-criteria-container"></div>
+                <div class="match-criteria-container">
+                    <div class="match-criteria-section">
+                        <h6 class="match-criteria-title">Inclusion Criteria</h6>
+                        <div class="inclusion-criteria-container"></div>
+                    </div>
+                    
+                    <div class="match-criteria-section">
+                        <h6 class="match-criteria-title">Exclusion Criteria</h6>
+                        <div class="exclusion-criteria-container"></div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -160,10 +160,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const cancerTypeValue = cancerTypeFilter ? cancerTypeFilter.value : '';
         
         const filteredTrials = trials.filter(trial => {
-            // Search term filter
+            // Search term filter (ora include anche l'ID del protocollo)
             const matchesSearch = searchTerm === '' || 
                 trial.title.toLowerCase().includes(searchTerm) || 
-                trial.description.toLowerCase().includes(searchTerm);
+                trial.description.toLowerCase().includes(searchTerm) ||
+                (trial.id && trial.id.toLowerCase().includes(searchTerm));
             
             // Phase filter
             const matchesPhase = phaseValue === '' || trial.phase === phaseValue;
@@ -230,22 +231,68 @@ document.addEventListener('DOMContentLoaded', function() {
                 phaseEl.classList.add('bg-success');
             }
             
-            // Add inclusion criteria
-            const inclusionContainer = trialCard.querySelector('.inclusion-criteria-container');
-            trial.inclusion_criteria.forEach(criterion => {
-                const criterionEl = document.createElement('div');
-                criterionEl.className = 'match-criterion criterion-matched mb-2 p-2';
-                criterionEl.innerHTML = `<p class="criterion-text mb-0">${criterion.text}</p>`;
-                inclusionContainer.appendChild(criterionEl);
-            });
+            // Nascondi i criteri all'inizio
+            const criteriaContainer = trialCard.querySelector('.match-criteria-container');
+            if (criteriaContainer) {
+                criteriaContainer.style.display = 'none';
+            }
             
-            // Add exclusion criteria
-            const exclusionContainer = trialCard.querySelector('.exclusion-criteria-container');
-            trial.exclusion_criteria.forEach(criterion => {
-                const criterionEl = document.createElement('div');
-                criterionEl.className = 'match-criterion criterion-not-matched mb-2 p-2';
-                criterionEl.innerHTML = `<p class="criterion-text mb-0">${criterion.text}</p>`;
-                exclusionContainer.appendChild(criterionEl);
+            // Aggiungi un pulsante "Mostra dettagli"
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'text-center mt-3';
+            const toggleButton = document.createElement('button');
+            toggleButton.className = 'btn btn-outline-primary btn-sm';
+            toggleButton.innerHTML = '<i data-feather="chevron-down"></i> Mostra criteri';
+            toggleButton.dataset.expanded = 'false';
+            buttonContainer.appendChild(toggleButton);
+            
+            // Inserisci il pulsante prima del container dei criteri
+            if (criteriaContainer) {
+                criteriaContainer.parentNode.insertBefore(buttonContainer, criteriaContainer);
+            }
+            
+            // Aggiungi evento click al pulsante
+            toggleButton.addEventListener('click', function() {
+                const isExpanded = this.dataset.expanded === 'true';
+                
+                if (isExpanded) {
+                    // Nascondi i criteri
+                    criteriaContainer.style.display = 'none';
+                    this.innerHTML = '<i data-feather="chevron-down"></i> Mostra criteri';
+                    this.dataset.expanded = 'false';
+                } else {
+                    // Mostra i criteri e caricali se non sono ancora stati caricati
+                    criteriaContainer.style.display = 'block';
+                    this.innerHTML = '<i data-feather="chevron-up"></i> Nascondi criteri';
+                    this.dataset.expanded = 'true';
+                    
+                    // Carica i criteri solo la prima volta che vengono visualizzati
+                    const inclusionContainer = trialCard.querySelector('.inclusion-criteria-container');
+                    const exclusionContainer = trialCard.querySelector('.exclusion-criteria-container');
+                    
+                    if (inclusionContainer && inclusionContainer.children.length === 0) {
+                        // Add inclusion criteria
+                        trial.inclusion_criteria.forEach(criterion => {
+                            const criterionEl = document.createElement('div');
+                            criterionEl.className = 'match-criterion criterion-matched mb-2 p-2';
+                            criterionEl.innerHTML = `<p class="criterion-text mb-0">${criterion.text}</p>`;
+                            inclusionContainer.appendChild(criterionEl);
+                        });
+                    }
+                    
+                    if (exclusionContainer && exclusionContainer.children.length === 0) {
+                        // Add exclusion criteria
+                        trial.exclusion_criteria.forEach(criterion => {
+                            const criterionEl = document.createElement('div');
+                            criterionEl.className = 'match-criterion criterion-not-matched mb-2 p-2';
+                            criterionEl.innerHTML = `<p class="criterion-text mb-0">${criterion.text}</p>`;
+                            exclusionContainer.appendChild(criterionEl);
+                        });
+                    }
+                }
+                
+                // Reinizializza le icone feather
+                feather.replace();
             });
             
             trialsContainer.appendChild(trialCard);

@@ -185,6 +185,15 @@ body {
   border: 1px solid var(--gray-400);
   border-radius: 0.375rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  text-overflow: ellipsis;
+}
+
+/* Aggiungiamo stili specifici per le select per evitare il taglio del testo */
+select.form-control {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 2rem; /* Spazio per l'icona di dropdown */
 }
 
 .form-control:focus {

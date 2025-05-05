@@ -1,5 +1,43 @@
 [
   {
+    "id": "BO44426",
+    "title": "Fase Ib/II BO44426 (KRASCENDO LUNG 170)",
+    "phase": "Phase Ib/II",
+    "description": "Studio di Fase Ib/II, multicentrico, in aperto per valutare la sicurezza, la farmacocinetica, la farmacodinamica e l'attività clinica preliminare di MRTX849 in associazione ai farmaci standard di trattamento in pazienti con adenocarcinoma polmonare non a piccole cellule con mutazioni di KRAS G12C avanzato o metastatico.",
+    "inclusion_criteria": [
+      {
+        "type": "age",
+        "text": "Adulti di età pari o superiore a 18 anni"
+      },
+      {
+        "type": "diagnosis",
+        "text": "Adenocarcinoma polmonare non a piccole cellule con mutazione di KRAS G12C avanzato o metastatico"
+      },
+      {
+        "type": "performance",
+        "text": "ECOG performance status di 0 o 1"
+      },
+      {
+        "type": "general",
+        "text": "Malattia misurabile secondo i criteri RECIST 1.1"
+      }
+    ],
+    "exclusion_criteria": [
+      {
+        "type": "mutation",
+        "text": "Alterazioni genomiche attivanti EGFR o ALK"
+      },
+      {
+        "type": "condition",
+        "text": "Metastasi cerebrali non trattate o sintomatiche"
+      },
+      {
+        "type": "condition",
+        "text": "Qualsiasi tossicità attiva di grado ≥ 2 derivante da precedente terapia antitumorale"
+      }
+    ]
+  },
+  {
     "id": "NCT04294810",
     "title": "Study of Pembrolizumab in Biomarker-positive Metastatic Non-small Cell Lung Cancer",
     "phase": "Phase II",

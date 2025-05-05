@@ -104,6 +104,26 @@ def api_trials():
                     ClinicalTrial.id == trial_id
                 ).all()
                 
+                # Se il trial non esiste nel database locale con corrispondenza esatta,
+                # prova a cercarlo direttamente su ClinicalTrials.gov
+                if not trials_db_exact:
+                    # Importa il modulo per il recupero diretto da ClinicalTrials.gov
+                    from fetch_trial_by_id import fetch_and_save_trial_by_id
+                    
+                    logging.info(f"Cercando il trial con ID '{trial_id}' su ClinicalTrials.gov")
+                    
+                    # Recupera il trial da ClinicalTrials.gov
+                    fetched_trial = fetch_and_save_trial_by_id(trial_id, current_app._get_current_object())
+                    
+                    if fetched_trial:
+                        logging.info(f"Trial trovato su ClinicalTrials.gov e salvato localmente: {fetched_trial['id']}")
+                        return jsonify([fetched_trial])
+                    
+                    # Se non è possibile recuperare il trial da ClinicalTrials.gov,
+                    # continua con la ricerca locale standard
+                    logging.info(f"Impossibile trovare il trial su ClinicalTrials.gov, continuando con la ricerca locale")
+                
+                # Se abbiamo trovato un risultato esatto, restituiscilo subito
                 if trials_db_exact:
                     return jsonify([trial.to_dict() for trial in trials_db_exact])
                     
@@ -273,8 +293,32 @@ def api_trials():
                 logging.error(f"Errore nella ricerca per ID del protocollo: {str(e)}")
                 pass
             
+            # Fai un ultimo tentativo di cercare su ClinicalTrials.gov prima di usare i metodi di ricerca locali
+            try:
+                # Importa il modulo per il recupero diretto da ClinicalTrials.gov
+                from fetch_trial_by_id import fetch_and_save_trial_by_id
+                
+                logging.info(f"Ultimo tentativo di cercare il trial con ID '{trial_id}' su ClinicalTrials.gov")
+                
+                # Recupera il trial da ClinicalTrials.gov
+                fetched_trial = fetch_and_save_trial_by_id(trial_id, current_app._get_current_object())
+                
+                if fetched_trial:
+                    logging.info(f"Trial trovato su ClinicalTrials.gov e salvato localmente: {fetched_trial['id']}")
+                    return jsonify([fetched_trial])
+            except Exception as e:
+                logging.error(f"Errore nel tentativo finale di cercare il trial su ClinicalTrials.gov: {str(e)}")
+            
             # Cerca di nuovo tra tutti i trial disponibili, specificamente per i pattern di ID del protocollo
-            if trial_id.startswith('D') and len(trial_id) > 8 and any(c.isdigit() for c in trial_id):
+            # Riconosce vari formati di ID (NCT, D5087C00001, EudraCT, Registry)
+            has_pattern = any([
+                trial_id.upper().startswith('NCT'),
+                trial_id.startswith('D') and any(c.isdigit() for c in trial_id), 
+                bool(re.match(r'^\d{4}-\d{6}-\d{2}', trial_id)),  # EudraCT pattern
+                len(trial_id.replace('-', '').replace(' ', '')) > 8 and any(c.isdigit() for c in trial_id)
+            ])
+            
+            if has_pattern:
                 # Cerca in tutti i trial, sia nel database che nel file JSON
                 all_trials = []
                 

@@ -1,6 +1,8 @@
 # Configurazione di llama.cpp per MedMatchINT
 
-Questo documento descrive come configurare e installare llama.cpp per l'utilizzo con MedMatchINT. L'approccio ibrido PostgreSQL + LLM locale offre una soluzione privacy-preserving per l'abbinamento tra pazienti oncologici e trial clinici.
+> **NOTA**: Per una documentazione più dettagliata e aggiornata, consultare [docs/llama_cpp_setup.md](docs/llama_cpp_setup.md)
+
+Questo documento descrive come configurare e installare llama.cpp per l'utilizzo con MedMatchINT. L'approccio ibrido PostgreSQL + LLM locale offre una soluzione privacy-preserving per l'abbinamento tra pazienti oncologici e trial clinici. Per maggiori dettagli sull'approccio ibrido, consultare [docs/hybrid_approach.md](docs/hybrid_approach.md).
 
 ## Prerequisiti
 

@@ -1,508 +1,519 @@
 """
-Modulo per l'elaborazione dei dati tramite LLM locale utilizzando llama.cpp.
-Questo modulo fornisce funzionalità per valutare la compatibilità semantica
-tra i dati del paziente e i trial clinici preselezionati dal database PostgreSQL.
-
-Gestisce l'interazione con il modello LLM locale (Mistral/LLaMA) per garantire
-che tutti i dati sensibili rimangano in locale, preservando la privacy.
+Modulo per l'integrazione con modelli LLM locali tramite llama.cpp.
+Questo modulo fornisce funzionalità per l'utilizzo di modelli LLM locali (come Mistral, LLaMA)
+per l'elaborazione di testo e l'analisi semantica in MedMatchINT.
 """
 
 import os
-import json
 import logging
 import subprocess
-from typing import Dict, List, Any, Optional, Tuple, Union
+import json
+import tempfile
+import threading
+from typing import Dict, Any, List, Optional, Tuple, Union
 
-# Configurazione del logging
-logging.basicConfig(level=logging.INFO)
+from config import (
+    LLAMA_CPP_PATH, LLM_MODEL_PATH, LLM_CONTEXT_SIZE,
+    LLM_TEMPERATURE, LLM_MAX_TOKENS, LLM_TIMEOUT,
+    LLM_EXTRA_PARAMS
+)
+
 logger = logging.getLogger(__name__)
 
-# Percorsi del modello e dell'eseguibile llama.cpp
-LLAMA_CPP_PATH = os.environ.get("LLAMA_CPP_PATH", "./llama.cpp")
-MODEL_PATH = os.environ.get("LLM_MODEL_PATH", "./models/mistral-7b-instruct-v0.2.Q4_K_M.gguf")
-DEFAULT_CONTEXT_SIZE = 4096
-DEFAULT_TEMP = 0.7
-MAX_TOKENS = 2048
+# Variabile globale per tracciare la disponibilità dell'LLM
+LLM_AVAILABLE = False
+_llm_availability_checked = False
+_llm_availability_lock = threading.Lock()
 
-# Gestione dello stato globale dell'LLM
-LLM_AVAILABLE = False  # Sarà impostato a True se il modello e l'eseguibile sono disponibili
-LLM_ERROR_MESSAGE = ""  # Memorizza l'errore specifico se l'LLM non è disponibile
+# Messaggio di errore standard per quando l'LLM non è disponibile
+LLM_ERROR_MESSAGE = "Il modello LLM non è disponibile. Utilizzando metodi alternativi per l'analisi."
+
 
 class LLMProcessor:
     """
-    Classe per l'elaborazione di dati tramite LLM locale utilizzando llama.cpp.
-    Fornisce funzionalità per analizzare semanticamente il testo e valutare
-    la compatibilità tra i dati del paziente e i trial clinici.
+    Classe per l'elaborazione di testo utilizzando un LLM locale tramite llama.cpp.
+    Fornisce metodi per generare risposte, analizzare testo e estrarre dati strutturati
+    utilizzando un modello LLM installato localmente.
     """
     
-    def __init__(self, 
-                 model_path: Optional[str] = None, 
-                 llama_cpp_path: Optional[str] = None,
-                 context_size: int = DEFAULT_CONTEXT_SIZE,
-                 temperature: float = DEFAULT_TEMP):
-        """
-        Inizializza il processore LLM.
+    def __init__(self):
+        """Inizializza il processore LLM."""
+        self.llama_cpp_path = LLAMA_CPP_PATH
+        self.model_path = LLM_MODEL_PATH
+        self.context_size = LLM_CONTEXT_SIZE
+        self.temperature = LLM_TEMPERATURE
+        self.max_tokens = LLM_MAX_TOKENS
+        self.timeout = LLM_TIMEOUT
+        self.extra_params = LLM_EXTRA_PARAMS
         
-        Args:
-            model_path: Percorso al file del modello GGUF
-            llama_cpp_path: Percorso alla directory di llama.cpp
-            context_size: Dimensione del contesto per il modello
-            temperature: Temperatura per la generazione (0.0-1.0)
-        """
-        self.model_path = model_path or MODEL_PATH
-        self.llama_cpp_path = llama_cpp_path or LLAMA_CPP_PATH
-        self.context_size = context_size
-        self.temperature = temperature
-        self.main_exe = os.path.join(self.llama_cpp_path, "main")
+        # Verifica la disponibilità dell'LLM
+        self._check_llm_availability()
         
-        # Verifica che il modello esista
-        if not os.path.exists(self.model_path):
-            logger.warning(f"Modello LLM non trovato in: {self.model_path}")
-            logger.info("L'applicazione funzionerà in modalità fallback senza LLM")
-        
-        # Verifica che l'eseguibile llama.cpp esista
-        if not os.path.exists(self.main_exe):
-            logger.warning(f"Eseguibile llama.cpp non trovato in: {self.main_exe}")
-            logger.info("L'applicazione funzionerà in modalità fallback senza LLM")
-
-    def _is_llm_available(self) -> bool:
+    def _check_llm_availability(self) -> bool:
         """
-        Verifica se il LLM è disponibile per l'uso.
+        Verifica se l'LLM è disponibile per l'uso.
         
         Returns:
-            bool: True se il LLM è disponibile, False altrimenti
+            bool: True se l'LLM è disponibile, False altrimenti
         """
-        return os.path.exists(self.model_path) and os.path.exists(self.main_exe)
-
-    def _run_llama_cpp(self, prompt: str, max_tokens: int = MAX_TOKENS) -> str:
+        global LLM_AVAILABLE, _llm_availability_checked
+        
+        # Se abbiamo già verificato, usa il valore memorizzato
+        if _llm_availability_checked:
+            return LLM_AVAILABLE
+            
+        with _llm_availability_lock:
+            # Controllo doppio per evitare verifiche multiple in parallelo
+            if _llm_availability_checked:
+                return LLM_AVAILABLE
+                
+            # Verifica se i percorsi necessari sono configurati
+            if not self.llama_cpp_path or not self.model_path:
+                logger.warning("LLM non configurato: percorsi mancanti")
+                LLM_AVAILABLE = False
+                _llm_availability_checked = True
+                return False
+                
+            # Verifica se il modello esiste
+            if not os.path.exists(self.model_path):
+                logger.warning(f"Modello LLM non trovato: {self.model_path}")
+                LLM_AVAILABLE = False
+                _llm_availability_checked = True
+                return False
+                
+            # Verifica se l'eseguibile esiste
+            llama_exec = os.path.join(self.llama_cpp_path, "build/bin/main")
+            if not os.path.exists(llama_exec):
+                # Prova percorso alternativo
+                llama_exec = os.path.join(self.llama_cpp_path, "main")
+                if not os.path.exists(llama_exec):
+                    logger.warning(f"Eseguibile llama.cpp non trovato in: {self.llama_cpp_path}")
+                    LLM_AVAILABLE = False
+                    _llm_availability_checked = True
+                    return False
+                    
+            # Test rapido dell'LLM
+            try:
+                logger.info("Verifico disponibilità LLM con test rapido...")
+                cmd = [
+                    llama_exec,
+                    "-m", self.model_path,
+                    "-p", "test",
+                    "-n", "1",
+                    "--temp", "0",
+                ]
+                
+                result = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                
+                if result.returncode == 0:
+                    logger.info("LLM disponibile e funzionante")
+                    LLM_AVAILABLE = True
+                    _llm_availability_checked = True
+                    return True
+                else:
+                    logger.warning(f"Test LLM fallito con codice: {result.returncode}")
+                    logger.debug(f"Stderr: {result.stderr}")
+                    LLM_AVAILABLE = False
+                    _llm_availability_checked = True
+                    return False
+                    
+            except (subprocess.SubprocessError, OSError, Exception) as e:
+                logger.warning(f"Errore durante il test dell'LLM: {str(e)}")
+                LLM_AVAILABLE = False
+                _llm_availability_checked = True
+                return False
+    
+    def generate_response(self, prompt: str, 
+                         temperature: Optional[float] = None,
+                         max_tokens: Optional[int] = None) -> str:
         """
-        Esegue llama.cpp con il prompt specificato.
+        Genera una risposta testuale utilizzando l'LLM locale.
         
         Args:
-            prompt: Il prompt da inviare al modello
-            max_tokens: Numero massimo di token da generare
+            prompt: Il prompt da inviare all'LLM
+            temperature: Temperatura per la generazione (opzionale)
+            max_tokens: Numero massimo di token da generare (opzionale)
             
         Returns:
-            str: Il testo generato dal modello
+            str: La risposta generata dall'LLM
         """
-        if not self._is_llm_available():
-            return self._fallback_response(prompt)
+        if not self._check_llm_availability():
+            logger.warning("LLM non disponibile per generate_response")
+            return "[LLM non disponibile]"
+            
+        temp = temperature if temperature is not None else self.temperature
+        tokens = max_tokens if max_tokens is not None else self.max_tokens
         
+        # Prepara il comando
+        llama_exec = os.path.join(self.llama_cpp_path, "build/bin/main")
+        if not os.path.exists(llama_exec):
+            llama_exec = os.path.join(self.llama_cpp_path, "main")
+            
+        cmd = [
+            llama_exec,
+            "-m", self.model_path,
+            "-c", str(self.context_size),
+            "-n", str(tokens),
+            "--temp", str(temp),
+            "--repeat_penalty", "1.1",
+        ]
+        
+        # Aggiungi parametri extra se specificati
+        if self.extra_params:
+            cmd.extend(self.extra_params.split())
+            
         try:
-            # Prepara il comando per eseguire llama.cpp
-            cmd = [
-                self.main_exe,
-                "-m", self.model_path,
-                "-c", str(self.context_size),
-                "--temp", str(self.temperature),
-                "-n", str(max_tokens),
-                "-p", prompt,
-                "--log-disable"
-            ]
+            # Usa un file temporaneo per il prompt per gestire prompt lunghi
+            with tempfile.NamedTemporaryFile(mode='w+', encoding='utf-8', delete=False) as f:
+                prompt_file = f.name
+                f.write(prompt)
+                
+            cmd.extend(["-f", prompt_file])
             
-            # Esegui il comando e cattura l'output
+            # Esegui llama.cpp
+            logger.debug(f"Esecuzione comando LLM: {' '.join(cmd)}")
             result = subprocess.run(
-                cmd, 
-                capture_output=True, 
-                text=True, 
-                check=True
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=self.timeout
             )
             
-            # Estrai e restituisci la risposta
-            return result.stdout.strip()
+            # Pulisci il file temporaneo
+            try:
+                os.unlink(prompt_file)
+            except:
+                pass
+                
+            if result.returncode != 0:
+                logger.error(f"Errore nell'esecuzione dell'LLM (codice {result.returncode})")
+                logger.debug(f"Stderr: {result.stderr}")
+                return "[Errore LLM]"
+                
+            # Estrai la risposta (rimuovendo il prompt iniziale)
+            output = result.stdout
+            prompt_end_index = output.find(prompt)
+            if prompt_end_index != -1:
+                prompt_end_index += len(prompt)
+                response = output[prompt_end_index:].strip()
+            else:
+                response = output.strip()
+                
+            return response
             
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Errore nell'esecuzione di llama.cpp: {e}")
-            logger.error(f"Stderr: {e.stderr}")
-            return self._fallback_response(prompt)
+        except subprocess.TimeoutExpired:
+            logger.error(f"Timeout durante l'esecuzione dell'LLM ({self.timeout}s)")
+            return "[Timeout LLM]"
+            
         except Exception as e:
-            logger.error(f"Errore generico nell'esecuzione di llama.cpp: {e}")
-            return self._fallback_response(prompt)
-
-    def _fallback_response(self, prompt: str) -> str:
+            logger.error(f"Errore durante l'uso dell'LLM: {str(e)}")
+            return "[Errore LLM]"
+    
+    def extract_structured_data(self, text: str, 
+                              schema: Dict[str, Any],
+                              system_instruction: str = "") -> Dict[str, Any]:
         """
-        Genera una risposta di fallback quando il LLM non è disponibile.
+        Estrae dati strutturati da un testo utilizzando l'LLM.
         
         Args:
-            prompt: Il prompt originale
+            text: Il testo da analizzare
+            schema: Lo schema dei dati da estrarre
+            system_instruction: Istruzioni di sistema per l'LLM
             
         Returns:
-            str: Una risposta di fallback
+            Dict[str, Any]: I dati strutturati estratti
         """
-        logger.warning("Utilizzo modalità fallback: il LLM non è disponibile")
-        return ("MODALITÀ FALLBACK: Modello LLM non disponibile. "
-                "I risultati sono basati solo sulla ricerca nel database. "
-                "Per risultati più precisi, configura correttamente il modello LLM locale.")
+        if not self._check_llm_availability():
+            logger.warning("LLM non disponibile per extract_structured_data")
+            return {"error": "LLM non disponibile"}
+            
+        # Crea un prompt specifico per l'estrazione di dati strutturati
+        schema_str = json.dumps(schema, ensure_ascii=False, indent=2)
+        
+        prompt = f"""
+{system_instruction}
 
-    def extract_patient_features(self, pdf_text: str) -> Dict[str, Any]:
+Analizza il seguente testo e estrai le informazioni richieste secondo lo schema JSON specificato.
+Rispondi SOLO con un oggetto JSON valido, senza testo aggiuntivo prima o dopo.
+
+SCHEMA JSON:
+{schema_str}
+
+TESTO DA ANALIZZARE:
+{text}
+
+JSON ESTRATTO:
+"""
+
+        # Genera la risposta
+        response = self.generate_response(prompt, temperature=0.1)
+        
+        # Estrai il JSON dalla risposta
+        try:
+            # Cerca di identificare il blocco JSON
+            json_start = response.find('{')
+            json_end = response.rfind('}')
+            
+            if json_start != -1 and json_end != -1 and json_end > json_start:
+                json_str = response[json_start:json_end+1]
+                return json.loads(json_str)
+            else:
+                logger.warning("Impossibile trovare JSON valido nella risposta dell'LLM")
+                return {"error": "Formato risposta non valido", "raw_response": response}
+                
+        except json.JSONDecodeError as e:
+            logger.warning(f"Errore nel parsing JSON dalla risposta LLM: {str(e)}")
+            return {"error": "JSON non valido", "raw_response": response}
+    
+    def extract_patient_features(self, document_text: str) -> Dict[str, Any]:
         """
-        Estrae caratteristiche cliniche del paziente dal testo del PDF.
+        Estrae le caratteristiche del paziente da un documento di testo utilizzando l'LLM.
         
         Args:
-            pdf_text: Testo estratto dal PDF del paziente
+            document_text: Testo del documento paziente
             
         Returns:
             Dict[str, Any]: Caratteristiche estratte del paziente
         """
-        if not self._is_llm_available():
-            # Fallback a un'estrazione di base quando il LLM non è disponibile
-            return self._basic_feature_extraction(pdf_text)
-        
-        # Prompt per l'estrazione delle caratteristiche
-        prompt = f"""
-Analizza il seguente testo medico di un paziente oncologico ed estrai le informazioni cliniche rilevanti in formato strutturato.
-Restituisci solo un oggetto JSON con le seguenti chiavi (se presenti nel testo):
-- diagnosis: diagnosi principale
-- age: età del paziente
-- gender: genere del paziente
-- ecog: stato performance ECOG
-- mutations: mutazioni genetiche rilevanti
-- lab_values: valori di laboratorio significativi
-- treatments: trattamenti precedenti o in corso
-- metastasis: presenza e localizzazione di metastasi
-- stage: stadio del tumore
-
-Testo del paziente:
-{pdf_text}
-
-Restituisci solo l'oggetto JSON, senza testo aggiuntivo. Se un'informazione non è presente nel testo, ometti la chiave corrispondente.
-JSON: 
-"""
-        # Esegui il modello e ottieni la risposta
-        response = self._run_llama_cpp(prompt)
-        
-        # Cerca di estrarre il JSON dalla risposta
-        try:
-            # Cerca di individuare il JSON nella risposta
-            json_start = response.find('{')
-            json_end = response.rfind('}') + 1
+        if not self._check_llm_availability():
+            logger.warning("LLM non disponibile per extract_patient_features")
+            return {"error": "LLM non disponibile"}
             
-            if json_start >= 0 and json_end > json_start:
-                json_str = response[json_start:json_end]
-                return json.loads(json_str)
-            else:
-                logger.warning("Impossibile trovare un oggetto JSON valido nella risposta del LLM")
-                return self._basic_feature_extraction(pdf_text)
+        # Crea uno schema per i dati da estrarre
+        schema = {
+            "age": "integer or null",
+            "gender": "string (male/female/unknown)",
+            "diagnosis": "string (primary tumor diagnosis)",
+            "stage": "string (cancer stage if applicable)",
+            "ecog": "integer or null (ECOG performance status 0-5)",
+            "mutations": ["string (list of genetic mutations)"],
+            "metastases": ["string (list of metastasis sites)"],
+            "previous_treatments": ["string (list of previous treatments)"],
+            "lab_values": {"key": "value pairs of relevant lab tests"}
+        }
+        
+        # Istruzioni specifiche per il contesto oncologico
+        system_instruction = """
+        Sei un assistente oncologico specializzato nell'estrazione di informazioni cliniche.
+        Analizza il documento di seguito per estrarre caratteristiche rilevanti del paziente
+        per il matching con trial clinici oncologici. Concentrati sui seguenti aspetti:
+        
+        1. Dati demografici: età, genere
+        2. Diagnosi oncologica: tipo di tumore, stadio, grado
+        3. Stato di performance: ECOG, Karnofsky
+        4. Profilo genetico: mutazioni, marcatori
+        5. Metastasi: siti e caratteristiche
+        6. Trattamenti precedenti: chirurgia, radioterapia, chemioterapia
+        7. Valori di laboratorio: conta ematica, funzionalità renale/epatica
+        
+        Estrai solo informazioni presenti esplicitamente nel documento. Non inventare o inferire.
+        Se un'informazione non è presente, indica null o lista vuota dove appropriato.
+        """
+        
+        # Estrai i dati utilizzando l'LLM
+        extracted_data = self.extract_structured_data(
+            document_text,
+            schema,
+            system_instruction
+        )
+        
+        # Normalizza i dati estratti
+        normalized_data = {}
+        
+        # Gestisci il caso in cui l'estrazione fallisca
+        if "error" in extracted_data:
+            logger.warning(f"Errore nell'estrazione dei dati: {extracted_data['error']}")
+            return {"error": extracted_data["error"]}
+            
+        # Normalizza età
+        if "age" in extracted_data:
+            try:
+                normalized_data["age"] = int(extracted_data["age"]) if extracted_data["age"] else None
+            except (ValueError, TypeError):
+                normalized_data["age"] = None
                 
-        except json.JSONDecodeError:
-            logger.warning("Errore nel parsing del JSON dalla risposta del LLM")
-            return self._basic_feature_extraction(pdf_text)
-        except Exception as e:
-            logger.error(f"Errore nell'elaborazione della risposta del LLM: {e}")
-            return self._basic_feature_extraction(pdf_text)
-
-    def _basic_feature_extraction(self, text: str) -> Dict[str, Any]:
-        """
-        Implementazione base di estrazione caratteristiche per fallback.
-        
-        Args:
-            text: Testo da analizzare
+        # Normalizza genere
+        if "gender" in extracted_data:
+            gender = str(extracted_data["gender"]).lower() if extracted_data["gender"] else "unknown"
+            if gender in ["m", "male", "uomo", "maschio"]:
+                normalized_data["gender"] = "male"
+            elif gender in ["f", "female", "donna", "femmina"]:
+                normalized_data["gender"] = "female"
+            else:
+                normalized_data["gender"] = "unknown"
+                
+        # Normalizza diagnosi
+        if "diagnosis" in extracted_data:
+            normalized_data["diagnosis"] = str(extracted_data["diagnosis"]) if extracted_data["diagnosis"] else ""
             
-        Returns:
-            Dict[str, Any]: Caratteristiche estratte dal testo
+        # Normalizza stadio
+        if "stage" in extracted_data:
+            normalized_data["stage"] = str(extracted_data["stage"]) if extracted_data["stage"] else ""
+            
+        # Normalizza ECOG
+        if "ecog" in extracted_data:
+            try:
+                ecog_value = int(extracted_data["ecog"]) if extracted_data["ecog"] is not None else None
+                if ecog_value is not None and 0 <= ecog_value <= 5:
+                    normalized_data["ecog"] = ecog_value
+                else:
+                    normalized_data["ecog"] = None
+            except (ValueError, TypeError):
+                normalized_data["ecog"] = None
+                
+        # Normalizza mutazioni
+        if "mutations" in extracted_data:
+            if isinstance(extracted_data["mutations"], list):
+                normalized_data["mutations"] = [str(m) for m in extracted_data["mutations"] if m]
+            else:
+                normalized_data["mutations"] = []
+                
+        # Normalizza metastasi
+        if "metastases" in extracted_data:
+            if isinstance(extracted_data["metastases"], list):
+                normalized_data["metastases"] = [str(m) for m in extracted_data["metastases"] if m]
+            else:
+                normalized_data["metastases"] = []
+                
+        # Normalizza trattamenti precedenti
+        if "previous_treatments" in extracted_data:
+            if isinstance(extracted_data["previous_treatments"], list):
+                normalized_data["previous_treatments"] = [str(t) for t in extracted_data["previous_treatments"] if t]
+            else:
+                normalized_data["previous_treatments"] = []
+                
+        # Normalizza valori di laboratorio
+        if "lab_values" in extracted_data and isinstance(extracted_data["lab_values"], dict):
+            normalized_data["lab_values"] = {
+                str(k): str(v) for k, v in extracted_data["lab_values"].items() if k and v
+            }
+        else:
+            normalized_data["lab_values"] = {}
+            
+        return normalized_data
+        
+    def evaluate_patient_trial_match(self, 
+                                   patient_features: Dict[str, Any],
+                                   trial: Dict[str, Any]) -> Dict[str, Any]:
         """
-        # Implementazione semplificata basata su regole/keyword per il fallback
-        features = {}
-        
-        # Cerca l'età (pattern semplice)
-        import re
-        age_patterns = [
-            r'(\d{1,2})\s*(?:anni|year[s]?)',
-            r'age[\s:]+(\d{1,2})',
-            r'(?:patient|paziente)[\s:]*(\d{1,2})[\s-]*(?:anni|year[s]?)'
-        ]
-        
-        for pattern in age_patterns:
-            age_match = re.search(pattern, text, re.IGNORECASE)
-            if age_match:
-                features['age'] = int(age_match.group(1))
-                break
-        
-        # Estrai genere (cerca keywords)
-        if re.search(r'\b(?:male|uomo|maschio)\b', text, re.IGNORECASE):
-            features['gender'] = 'male'
-        elif re.search(r'\b(?:female|donna|femmina)\b', text, re.IGNORECASE):
-            features['gender'] = 'female'
-        
-        # Cerca stato ECOG (0-5)
-        ecog_match = re.search(r'ECOG[\s:]*([0-5])', text, re.IGNORECASE)
-        if ecog_match:
-            features['ecog'] = int(ecog_match.group(1))
-        
-        # Cerca diagnosi (pattern generico per tumori comuni)
-        cancer_patterns = [
-            r'(?:carcinoma|tumore|cancro|cancer|adenocarcinoma)[\s\w]*(?:del|della|dello|dell\'|of the)[\s\w]*(polmon|colon|mammell|prostat|pancrea|gastric|stomc|ret|ovaio|uter|cervice|testicol|linfoma|leucemia|melanoma|tiroide)',
-            r'(NSCLC|CRC|HCC|AML|CLL|ALL|DLBCL|SCLC)'
-        ]
-        
-        for pattern in cancer_patterns:
-            cancer_match = re.search(pattern, text, re.IGNORECASE)
-            if cancer_match:
-                features['diagnosis'] = cancer_match.group(0)
-                break
-        
-        # Cerca mutazioni comuni (pattern generico)
-        mutation_patterns = [
-            r'(EGFR|ALK|ROS1|BRAF|KRAS|NRAS|HER2|MET|NTRK|RET|PIK3CA|BRCA[12]|TP53|PD-L1)[\s:]*(?:mutation|mutazione|positivo|positive|\+)',
-            r'mutation[\s:]*(?:in)?[\s:]*(EGFR|ALK|ROS1|BRAF|KRAS|NRAS|HER2|MET|NTRK|RET|PIK3CA|BRCA[12]|TP53|PD-L1)'
-        ]
-        
-        mutations = []
-        for pattern in mutation_patterns:
-            for match in re.finditer(pattern, text, re.IGNORECASE):
-                mutations.append(match.group(1))
-        
-        if mutations:
-            features['mutations'] = list(set(mutations))  # Rimuove duplicati
-        
-        return features
-
-    def evaluate_trial_match(self, 
-                           patient_features: Dict[str, Any], 
-                           trial: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Valuta la compatibilità tra il paziente e un trial clinico.
+        Valuta la compatibilità tra un paziente e un trial clinico usando l'LLM.
         
         Args:
             patient_features: Caratteristiche del paziente
             trial: Dati del trial clinico
             
         Returns:
-            Dict[str, Any]: Risultato della valutazione con spiegazione
+            Dict[str, Any]: Risultato della valutazione
         """
-        if not self._is_llm_available():
-            # Ritorna una valutazione di base senza LLM
+        if not self._check_llm_availability():
+            logger.warning("LLM non disponibile per evaluate_patient_trial_match")
             return {
-                "match": None,  # None indica che non c'è una valutazione semantica
-                "explanation": "La valutazione semantica dettagliata richiede il modello LLM configurato localmente.",
-                "score": None
+                "match": "unknown",
+                "score": 0,
+                "explanation": "LLM non disponibile per la valutazione semantica.",
+                "criteria_met": [],
+                "criteria_not_met": []
             }
+            
+        # Prepara il prompt con i dati del paziente e del trial
+        patient_json = json.dumps(patient_features, ensure_ascii=False, indent=2)
         
-        # Formatta le caratteristiche del paziente come testo
-        patient_text = self._format_patient_features(patient_features)
+        # Semplifica il trial per il prompt (includi solo le informazioni rilevanti)
+        simplified_trial = {
+            "id": trial.get("id", ""),
+            "title": trial.get("title", ""),
+            "phase": trial.get("phase", ""),
+            "inclusion_criteria": trial.get("inclusion_criteria", []),
+            "exclusion_criteria": trial.get("exclusion_criteria", [])
+        }
         
-        # Formatta i criteri del trial come testo
-        trial_text = self._format_trial_criteria(trial)
+        trial_json = json.dumps(simplified_trial, ensure_ascii=False, indent=2)
         
-        # Crea il prompt per il LLM
         prompt = f"""
-Sei un sistema esperto di oncologia che deve valutare la compatibilità di un paziente con un trial clinico.
+Sei un assistente specializzato in oncologia che valuta la compatibilità tra pazienti e trial clinici.
+Esamina attentamente le caratteristiche del paziente e i criteri del trial clinico forniti.
 
-PAZIENTE:
-{patient_text}
+CARATTERISTICHE DEL PAZIENTE:
+{patient_json}
 
-TRIAL CLINICO ID {trial['id']}:
-Titolo: {trial['title']}
-{trial_text}
+DATI DEL TRIAL CLINICO:
+{trial_json}
 
-Valuta con attenzione se il paziente soddisfa i criteri di inclusione e non rientra nei criteri di esclusione.
-Analizza ogni criterio rilevante e fornisci una spiegazione dettagliata.
+ISTRUZIONI:
+1. Valuta se il paziente soddisfa i criteri di inclusione del trial
+2. Verifica se il paziente presenta criteri di esclusione
+3. Considera tutti gli aspetti: età, genere, diagnosi, stadio, ECOG, mutazioni, ecc.
+4. Valuta i casi "borderline" dove mancano informazioni con cautela
 
-Restituisci la tua valutazione in formato JSON con la seguente struttura:
+Fornisci una valutazione nel seguente formato JSON:
 {{
-  "match": true/false/maybe,
-  "score": [punteggio da 0 a 100, dove 0 è incompatibile e 100 è perfettamente compatibile],
-  "explanation": [spiegazione dettagliata della valutazione con riferimenti specifici a criteri soddisfatti e non soddisfatti],
-  "matching_criteria": [lista di criteri soddisfatti],
-  "conflicting_criteria": [lista di criteri non soddisfatti]
+  "match": "match/no_match/maybe",
+  "score": punteggio da 0 a 100,
+  "explanation": "Spiegazione dettagliata della valutazione",
+  "criteria_met": ["Criterio 1 soddisfatto", "Criterio 2 soddisfatto", ...],
+  "criteria_not_met": ["Criterio 1 non soddisfatto", "Criterio 2 non soddisfatto", ...]
 }}
 
-Basati solo sulle informazioni fornite. Se mancano dati essenziali per valutare criteri specifici, indica "maybe" nel campo match e spiega quali informazioni sarebbero necessarie.
+Rispondi SOLO con il JSON, senza testo aggiuntivo prima o dopo.
 """
+
+        # Genera la valutazione
+        response = self.generate_response(prompt, temperature=0.2)
         
-        # Esegui il modello e ottieni la risposta
-        response = self._run_llama_cpp(prompt)
-        
-        # Cerca di estrarre il JSON dalla risposta
+        # Estrai il JSON dalla risposta
         try:
-            # Cerca di individuare il JSON nella risposta
+            # Cerca di identificare il blocco JSON
             json_start = response.find('{')
-            json_end = response.rfind('}') + 1
+            json_end = response.rfind('}')
             
-            if json_start >= 0 and json_end > json_start:
-                json_str = response[json_start:json_end]
-                result = json.loads(json_str)
+            if json_start != -1 and json_end != -1 and json_end > json_start:
+                json_str = response[json_start:json_end+1]
+                evaluation = json.loads(json_str)
                 
                 # Assicurati che i campi richiesti siano presenti
-                if "match" not in result or "explanation" not in result:
-                    raise ValueError("Risposta del LLM mancante di campi obbligatori")
+                required_fields = ["match", "score", "explanation"]
+                for field in required_fields:
+                    if field not in evaluation:
+                        evaluation[field] = "" if field == "explanation" else 0 if field == "score" else "unknown"
+                
+                # Normalizza i campi di lista se mancanti
+                if "criteria_met" not in evaluation:
+                    evaluation["criteria_met"] = []
+                if "criteria_not_met" not in evaluation:
+                    evaluation["criteria_not_met"] = []
                     
-                return result
+                return evaluation
             else:
-                logger.warning("Impossibile trovare un oggetto JSON valido nella risposta del LLM")
+                logger.warning("Impossibile trovare JSON valido nella risposta dell'LLM")
                 return {
-                    "match": None,
-                    "explanation": "Errore nell'analisi semantica. Verificare la configurazione del modello LLM.",
-                    "score": None
+                    "match": "unknown",
+                    "score": 0,
+                    "explanation": "Errore nell'analisi della risposta dell'LLM.",
+                    "criteria_met": [],
+                    "criteria_not_met": []
                 }
                 
-        except (json.JSONDecodeError, ValueError) as e:
-            logger.warning(f"Errore nel parsing del JSON dalla risposta del LLM: {e}")
+        except json.JSONDecodeError as e:
+            logger.warning(f"Errore nel parsing JSON dalla risposta LLM: {str(e)}")
             return {
-                "match": None,
-                "explanation": "Errore nell'analisi della compatibilità. Verificare manualmente i criteri.",
-                "score": None
+                "match": "unknown",
+                "score": 0,
+                "explanation": f"Errore nel formato della risposta dell'LLM: {str(e)}",
+                "criteria_met": [],
+                "criteria_not_met": []
             }
 
-    def _format_patient_features(self, features: Dict[str, Any]) -> str:
-        """
-        Formatta le caratteristiche del paziente come testo strutturato.
-        
-        Args:
-            features: Dizionario con le caratteristiche del paziente
-            
-        Returns:
-            str: Testo formattato delle caratteristiche
-        """
-        text = []
-        
-        # Aggiungi ogni caratteristica al testo
-        if 'diagnosis' in features:
-            text.append(f"Diagnosi: {features['diagnosis']}")
-            
-        if 'age' in features:
-            text.append(f"Età: {features['age']} anni")
-            
-        if 'gender' in features:
-            gender_map = {'male': 'Maschio', 'female': 'Femmina'}
-            text.append(f"Genere: {gender_map.get(features['gender'].lower(), features['gender'])}")
-            
-        if 'ecog' in features:
-            text.append(f"Stato ECOG: {features['ecog']}")
-            
-        if 'mutations' in features:
-            if isinstance(features['mutations'], list):
-                text.append(f"Mutazioni: {', '.join(features['mutations'])}")
-            else:
-                text.append(f"Mutazioni: {features['mutations']}")
-                
-        if 'treatments' in features:
-            if isinstance(features['treatments'], list):
-                text.append(f"Trattamenti: {', '.join(features['treatments'])}")
-            else:
-                text.append(f"Trattamenti: {features['treatments']}")
-                
-        if 'metastasis' in features:
-            if isinstance(features['metastasis'], list):
-                text.append(f"Metastasi: {', '.join(features['metastasis'])}")
-            else:
-                text.append(f"Metastasi: {features['metastasis']}")
-                
-        if 'stage' in features:
-            text.append(f"Stadio: {features['stage']}")
-            
-        if 'lab_values' in features:
-            if isinstance(features['lab_values'], dict):
-                labs = [f"{k}: {v}" for k, v in features['lab_values'].items()]
-                text.append(f"Valori di laboratorio: {', '.join(labs)}")
-            else:
-                text.append(f"Valori di laboratorio: {features['lab_values']}")
-        
-        return "\n".join(text)
 
-    def _format_trial_criteria(self, trial: Dict[str, Any]) -> str:
-        """
-        Formatta i criteri del trial come testo strutturato.
-        
-        Args:
-            trial: Dizionario con i dati del trial
-            
-        Returns:
-            str: Testo formattato dei criteri
-        """
-        text = []
-        
-        # Aggiungi la descrizione del trial
-        if 'description' in trial and trial['description']:
-            text.append(f"Descrizione: {trial['description']}")
-        
-        # Aggiungi i criteri di inclusione
-        if 'inclusion_criteria' in trial and trial['inclusion_criteria']:
-            text.append("\nCRITERI DI INCLUSIONE:")
-            for i, criterion in enumerate(trial['inclusion_criteria'], 1):
-                if isinstance(criterion, dict) and 'text' in criterion:
-                    text.append(f"{i}. {criterion['text']}")
-                else:
-                    text.append(f"{i}. {criterion}")
-        
-        # Aggiungi i criteri di esclusione
-        if 'exclusion_criteria' in trial and trial['exclusion_criteria']:
-            text.append("\nCRITERI DI ESCLUSIONE:")
-            for i, criterion in enumerate(trial['exclusion_criteria'], 1):
-                if isinstance(criterion, dict) and 'text' in criterion:
-                    text.append(f"{i}. {criterion['text']}")
-                else:
-                    text.append(f"{i}. {criterion}")
-        
-        # Aggiungi altre informazioni rilevanti
-        if 'phase' in trial and trial['phase']:
-            text.append(f"\nFase: {trial['phase']}")
-            
-        if 'status' in trial and trial['status']:
-            text.append(f"Stato: {trial['status']}")
-            
-        if 'min_age' in trial and trial['min_age']:
-            text.append(f"Età minima: {trial['min_age']}")
-            
-        if 'max_age' in trial and trial['max_age']:
-            text.append(f"Età massima: {trial['max_age']}")
-            
-        if 'gender' in trial and trial['gender']:
-            text.append(f"Genere: {trial['gender']}")
-        
-        return "\n".join(text)
-
-# Funzione di comodo per creare un'istanza del processore
 def get_llm_processor() -> LLMProcessor:
     """
-    Crea e restituisce un'istanza di LLMProcessor con la configurazione di default.
-    Aggiorna anche lo stato globale dell'LLM per tracciare la disponibilità.
+    Restituisce un'istanza del processore LLM.
     
     Returns:
-        LLMProcessor: Un'istanza del processore LLM
+        LLMProcessor: Una nuova istanza del processore LLM
     """
-    global LLM_AVAILABLE, LLM_ERROR_MESSAGE
-    
-    processor = LLMProcessor()
-    
-    # Verifica e aggiorna lo stato globale dell'LLM
-    if processor._is_llm_available():
-        LLM_AVAILABLE = True
-        LLM_ERROR_MESSAGE = ""
-        logger.info("LLM disponibile e configurato correttamente")
-    else:
-        LLM_AVAILABLE = False
-        
-        if not os.path.exists(processor.model_path):
-            LLM_ERROR_MESSAGE = f"Il file del modello LLM non esiste: {processor.model_path}"
-            logger.warning(LLM_ERROR_MESSAGE)
-        elif not os.path.exists(processor.main_exe):
-            LLM_ERROR_MESSAGE = f"L'eseguibile llama.cpp non esiste: {processor.main_exe}"
-            logger.warning(LLM_ERROR_MESSAGE)
-        else:
-            LLM_ERROR_MESSAGE = "Configurazione LLM incompleta"
-            logger.warning(LLM_ERROR_MESSAGE)
-            
-        logger.info("LLM non disponibile. L'applicazione utilizzerà il fallback basato su PostgreSQL.")
-    
-    return processor
-
-# Esempio di utilizzo
-if __name__ == "__main__":
-    # Test dell'estrazione di caratteristiche da un testo di esempio
-    test_text = """
-    Paziente: Mario Rossi
-    Età: 65 anni
-    Genere: Maschio
-    Diagnosi: Adenocarcinoma polmonare
-    Stadio: IV
-    ECOG: 1
-    Mutazioni: EGFR T790M positivo
-    Metastasi: Cerebrali e ossee
-    Trattamenti precedenti: Osimertinib (fallimento), radioterapia cerebrale
-    """
-    
-    processor = get_llm_processor()
-    features = processor.extract_patient_features(test_text)
-    print("Caratteristiche estratte:")
-    print(json.dumps(features, indent=2, ensure_ascii=False))
+    return LLMProcessor()

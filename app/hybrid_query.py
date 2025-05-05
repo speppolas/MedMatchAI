@@ -4,20 +4,22 @@ Questo modulo fornisce funzionalità per il filtraggio iniziale tramite SQL
 e la successiva valutazione semantica tramite LLM.
 """
 
-import os
-import json
-import logging
 import re
-from typing import Dict, List, Any, Tuple, Optional
-from sqlalchemy import or_, and_, func, cast, String, Float, Integer
-from sqlalchemy.sql.expression import literal
+import logging
+import json
+from typing import Dict, Any, List, Optional, Set
+import random
+from datetime import datetime
+
+import sqlalchemy as sa
+from sqlalchemy.sql.expression import text
 
 from models import ClinicalTrial, db
 from app.llm_processor import get_llm_processor, LLM_AVAILABLE, LLM_ERROR_MESSAGE
+from config import MIN_KEYWORD_MATCH_SCORE, MAX_TRIALS_TO_EVALUATE
 
-# Configurazione del logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 class HybridQuery:
     """
@@ -26,11 +28,10 @@ class HybridQuery:
     1. Filtro rapido con PostgreSQL per criteri oggettivi
     2. Valutazione semantica con LLM per criteri soggettivi e complessi
     """
-    
+
     def __init__(self):
         """Inizializza il processore di query ibrido."""
         self.llm = get_llm_processor()
-        logger.info("Inizializzazione del sistema di query ibrido")
         
     def filter_trials_by_criteria(self, 
                                 patient_features: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -43,66 +44,27 @@ class HybridQuery:
         Returns:
             List[Dict[str, Any]]: Lista di trial clinici corrispondenti con valutazione
         """
-        # Fase 1: Filtraggio basato su database per criteri oggettivi
-        db_filtered_trials = self._filter_with_database(patient_features)
+        logger.info("Inizio filtraggio trial con approccio ibrido")
         
-        logger.info(f"Filtro PostgreSQL: trovati {len(db_filtered_trials)} trial potenziali")
+        # Fase 1: Filtro iniziale con PostgreSQL
+        filtered_trials = self._filter_with_database(patient_features)
         
-        if not db_filtered_trials:
-            logger.warning("Nessun trial potenziale trovato con il filtro PostgreSQL")
+        if not filtered_trials:
+            logger.warning("Nessun trial trovato con il filtro PostgreSQL iniziale")
             return []
+            
+        logger.info(f"Filtro iniziale completato: {len(filtered_trials)} trial trovati")
         
-        # Verifica se l'LLM è disponibile globalmente
-        if not LLM_AVAILABLE:
-            logger.info(f"LLM non disponibile: {LLM_ERROR_MESSAGE}")
-            logger.info("Aggiunta delle informazioni di fallback ai risultati PostgreSQL")
-            
-            # Aggiungi informazioni di fallback ai trial filtrati
-            semantic_fallback_results = []
-            for trial in db_filtered_trials:
-                trial_with_fallback = {
-                    **trial,
-                    "semantic_match": None,  # None indica che non c'è una valutazione semantica
-                    "match_score": 70,  # Punteggio predefinito per i risultati del filtro PostgreSQL
-                    "match_explanation": "Valutazione semantica non disponibile. I risultati si basano solo sul filtro database.",
-                    "matching_criteria": [],
-                    "conflicting_criteria": []
-                }
-                semantic_fallback_results.append(trial_with_fallback)
-            
-            # Ordina per rilevanza della diagnosi
-            if patient_features.get('diagnosis'):
-                diagnosis = patient_features.get('diagnosis')
-                if isinstance(diagnosis, dict) and 'value' in diagnosis:
-                    diagnosis = diagnosis['value']
-                
-                if diagnosis and isinstance(diagnosis, str):
-                    # Estrai parole chiave dalla diagnosi per il punteggio
-                    keywords = self._extract_diagnosis_keywords(diagnosis)
-                    if keywords:
-                        for trial in semantic_fallback_results:
-                            score = 70  # Punteggio base
-                            for keyword in keywords:
-                                if len(keyword) > 3 and keyword.lower() in trial.get('description', '').lower():
-                                    score += 5
-                            trial['match_score'] = min(score, 95)  # Capped at 95
-            
-            # Ordina per punteggio
-            semantic_fallback_results.sort(key=lambda x: x.get('match_score', 0), reverse=True)
-            return semantic_fallback_results
-            
-        # Fase 2: Valutazione semantica con LLM per criteri complessi
-        logger.info("Esecuzione valutazione semantica con LLM")
-        semantic_results = self._evaluate_with_llm(patient_features, db_filtered_trials)
+        # Fase 2: Valutazione semantica con LLM
+        evaluated_trials = self._evaluate_with_llm(patient_features, filtered_trials)
         
-        # Verifica se ci sono risultati dalla valutazione semantica
-        if not semantic_results:
-            logger.warning("Nessun risultato ottenuto dalla valutazione semantica LLM")
-        else:
-            logger.info(f"Valutazione semantica LLM completata: {len(semantic_results)} trial analizzati")
+        # Ordina i trial per punteggio di compatibilità
+        evaluated_trials.sort(key=lambda x: x.get('evaluation', {}).get('score', 0), reverse=True)
         
-        return semantic_results
-    
+        logger.info(f"Valutazione semantica completata: {len(evaluated_trials)} trial valutati")
+        
+        return evaluated_trials
+        
     def _filter_with_database(self, 
                              patient_features: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
@@ -114,107 +76,119 @@ class HybridQuery:
         Returns:
             List[Dict[str, Any]]: Lista di trial clinici che soddisfano i criteri di base
         """
-        # Prepara le condizioni SQL in base alle caratteristiche del paziente
-        conditions = []
+        logger.debug("Esecuzione filtro database")
         
-        # Filtro per età (se disponibile)
-        if 'age' in patient_features and patient_features['age'] is not None:
-            if isinstance(patient_features['age'], dict) and 'value' in patient_features['age']:
-                age = patient_features['age']['value']
-            else:
-                age = patient_features['age']
-                
-            if age and isinstance(age, (int, float)):
-                # Filtra per età minima (se specificata nel trial)
-                min_age_cond = or_(
-                    ClinicalTrial.min_age.is_(None),  # No age restriction
-                    ClinicalTrial.min_age == "",      # Empty string
-                    func.regexp_replace(ClinicalTrial.min_age, r'[^0-9]', '', 'g').cast(Integer) <= age
-                )
-                conditions.append(min_age_cond)
-                
-                # Filtra per età massima (se specificata nel trial)
-                max_age_cond = or_(
-                    ClinicalTrial.max_age.is_(None),  # No age restriction
-                    ClinicalTrial.max_age == "",      # Empty string
-                    func.regexp_replace(ClinicalTrial.max_age, r'[^0-9]', '', 'g').cast(Integer) >= age
-                )
-                conditions.append(max_age_cond)
+        # Estrai i dati del paziente
+        age = patient_features.get('age')
+        gender = patient_features.get('gender', '').lower()
+        diagnosis = patient_features.get('diagnosis', '')
+        is_pediatric = age is not None and age < 18
         
-        # Filtro per genere (se disponibile)
-        if 'gender' in patient_features and patient_features['gender'] is not None:
-            if isinstance(patient_features['gender'], dict) and 'value' in patient_features['gender']:
-                gender = patient_features['gender']['value']
-            else:
-                gender = patient_features['gender']
-                
-            if gender:
-                # Map gender values to database format
-                gender_map = {
-                    'male': 'Male',
-                    'female': 'Female',
-                    'm': 'Male',
-                    'f': 'Female'
-                }
-                mapped_gender = gender_map.get(gender.lower(), gender)
-                
-                gender_cond = or_(
-                    ClinicalTrial.gender.is_(None),           # No gender restriction
-                    ClinicalTrial.gender == "",               # Empty string
-                    ClinicalTrial.gender == "All",            # All genders
-                    ClinicalTrial.gender.ilike("both"),       # Both genders
-                    ClinicalTrial.gender.ilike(f"%{mapped_gender}%")  # Specific gender
-                )
-                conditions.append(gender_cond)
+        # Costruisci la query base
+        query = db.session.query(ClinicalTrial)
         
-        # Filtro per diagnosi (se disponibile)
-        # Questo è più complesso e potrebbe richiedere un'analisi semantica,
-        # ma possiamo fare un filtro preliminare basato su corrispondenze di parole chiave
-        if 'diagnosis' in patient_features and patient_features['diagnosis'] is not None:
-            if isinstance(patient_features['diagnosis'], dict) and 'value' in patient_features['diagnosis']:
-                diagnosis = patient_features['diagnosis']['value']
-            else:
-                diagnosis = patient_features['diagnosis']
-                
-            if diagnosis and isinstance(diagnosis, str):
-                # Estrai parole chiave dalla diagnosi
-                keywords = self._extract_diagnosis_keywords(diagnosis)
-                
-                if keywords:
-                    # Cerca le parole chiave nella descrizione del trial o nei criteri
-                    diagnosis_conditions = []
-                    for keyword in keywords:
-                        if len(keyword) > 3:  # Ignora parole troppo corte
-                            keyword_cond = or_(
-                                ClinicalTrial.description.ilike(f"%{keyword}%"),
-                                cast(ClinicalTrial.inclusion_criteria, String).ilike(f"%{keyword}%")
-                            )
-                            diagnosis_conditions.append(keyword_cond)
-                    
-                    if diagnosis_conditions:
-                        # Almeno una parola chiave deve corrispondere
-                        conditions.append(or_(*diagnosis_conditions))
-        
-        # Stato del trial (includi solo trial attivi)
-        status_condition = or_(
-            ClinicalTrial.status.ilike("Recruiting"),
-            ClinicalTrial.status.ilike("Not yet recruiting"),
-            ClinicalTrial.status.ilike("Active, not recruiting")
+        # Filtra per stato del trial (solo trial attivi)
+        query = query.filter(
+            sa.or_(
+                ClinicalTrial.status == 'Recruiting',
+                ClinicalTrial.status == 'Active, not recruiting',
+                ClinicalTrial.status == 'Not yet recruiting'
+            )
         )
-        conditions.append(status_condition)
         
-        # Esegui la query se ci sono condizioni
-        if conditions:
-            query = ClinicalTrial.query.filter(and_(*conditions))
-            trials = query.all()
+        # Filtra per età se disponibile
+        if age is not None:
+            age_str = str(age)
+            # Filtra per intervallo di età
+            query = query.filter(
+                sa.or_(
+                    # Nessun limite di età specificato
+                    ClinicalTrial.min_age.is_(None),
+                    ClinicalTrial.min_age == '',
+                    # Età minima specificata come numero
+                    sa.and_(
+                        ClinicalTrial.min_age.op('~')(r'^\d+'),
+                        sa.cast(sa.func.regexp_replace(ClinicalTrial.min_age, r'[^0-9]', '', 'g'), sa.Integer) <= age
+                    ),
+                    # Età minima specificata come "X Years"/"X Anno" ecc.
+                    sa.and_(
+                        ClinicalTrial.min_age.op('~')(r'\d+\s*(Years|Year|Anni|Anno|Y)'),
+                        sa.cast(sa.func.regexp_replace(ClinicalTrial.min_age, r'[^0-9]', '', 'g'), sa.Integer) <= age
+                    )
+                )
+            )
             
-            # Converti i risultati in dizionari
-            return [trial.to_dict() for trial in trials]
-        else:
-            # Se non ci sono condizioni, restituisci tutti i trial attivi
-            query = ClinicalTrial.query.filter(status_condition)
-            trials = query.all()
-            return [trial.to_dict() for trial in trials]
+            query = query.filter(
+                sa.or_(
+                    # Nessun limite massimo di età
+                    ClinicalTrial.max_age.is_(None),
+                    ClinicalTrial.max_age == '',
+                    # Età massima specificata come numero
+                    sa.and_(
+                        ClinicalTrial.max_age.op('~')(r'^\d+'),
+                        sa.cast(sa.func.regexp_replace(ClinicalTrial.max_age, r'[^0-9]', '', 'g'), sa.Integer) >= age
+                    ),
+                    # Età massima specificata come "X Years"/"X Anno" ecc.
+                    sa.and_(
+                        ClinicalTrial.max_age.op('~')(r'\d+\s*(Years|Year|Anni|Anno|Y)'),
+                        sa.cast(sa.func.regexp_replace(ClinicalTrial.max_age, r'[^0-9]', '', 'g'), sa.Integer) >= age
+                    ),
+                    # "N/A" or "No limit"
+                    ClinicalTrial.max_age.in_(['N/A', 'No limit', 'No Limit'])
+                )
+            )
+        
+        # Filtra per genere se disponibile
+        if gender and gender not in ['unknown', 'altro', 'non specificato']:
+            if gender in ['male', 'maschio', 'm']:
+                query = query.filter(
+                    sa.or_(
+                        ClinicalTrial.gender.in_(['All', 'Male', 'Both', '']), 
+                        ClinicalTrial.gender.is_(None)
+                    )
+                )
+            elif gender in ['female', 'femmina', 'f']:
+                query = query.filter(
+                    sa.or_(
+                        ClinicalTrial.gender.in_(['All', 'Female', 'Both', '']), 
+                        ClinicalTrial.gender.is_(None)
+                    )
+                )
+        
+        # Se è un paziente pediatrico, cerca trial specifici per bambini
+        if is_pediatric:
+            # Prioritizzare i trial che sono specificamente per bambini
+            # Non escludiamo altri trial in questa fase
+            pass
+            
+        # Filtra per diagnosi/tumore se disponibile
+        if diagnosis:
+            # Estrai parole chiave significative dalla diagnosi
+            keywords = self._extract_diagnosis_keywords(diagnosis)
+            if keywords:
+                # Costruisci un'espressione per cercare trial con parole chiave nella descrizione o nei criteri
+                keyword_conditions = []
+                for keyword in keywords:
+                    keyword_lower = keyword.lower()
+                    keyword_conditions.append(
+                        sa.or_(
+                            sa.func.lower(ClinicalTrial.title).contains(keyword_lower),
+                            sa.func.lower(ClinicalTrial.description).contains(keyword_lower)
+                        )
+                    )
+                
+                # Aggiungi la condizione delle parole chiave alla query
+                if keyword_conditions:
+                    # Un trial deve contenere almeno una parola chiave
+                    query = query.filter(sa.or_(*keyword_conditions))
+        
+        # Esegui la query
+        filtered_trials = query.all()
+        
+        # Converti i risultati in dizionari per la successiva elaborazione
+        trial_dicts = [trial.to_dict() for trial in filtered_trials]
+        
+        return trial_dicts
     
     def _extract_diagnosis_keywords(self, diagnosis: str) -> List[str]:
         """
@@ -226,60 +200,59 @@ class HybridQuery:
         Returns:
             List[str]: Lista di parole chiave
         """
-        # Rimuovi parole comuni non significative
-        diagnosis = diagnosis.lower()
-        stopwords = ['a', 'di', 'il', 'la', 'lo', 'gli', 'le', 'e', 'in', 'con', 'su', 'per', 
-                    'the', 'of', 'in', 'with', 'and', 'or', 'at', 'from', 'to', 
-                    'cancer', 'tumor', 'tumour', 'carcinoma', 'cancro', 'tumore']
+        # Rimuovi numeri, punteggiatura e caratteri speciali
+        cleaned_text = re.sub(r'[^\w\s]', ' ', diagnosis)
+        cleaned_text = re.sub(r'\d+', ' ', cleaned_text)
         
-        # Estrai terminologia specifica di oncologia
-        cancer_types = [
-            'lung', 'breast', 'colorectal', 'ovarian', 'prostate', 'pancreatic',
-            'gastric', 'liver', 'hepatic', 'renal', 'bladder', 'melanoma', 'sarcoma',
-            'lymphoma', 'leukemia', 'myeloma', 'glioma', 'polmone', 'mammella', 'colonretto',
-            'ovaio', 'prostata', 'pancreas', 'stomaco', 'fegato', 'rene', 'vescica',
-            'NSCLC', 'SCLC', 'HCC', 'RCC', 'DLBCL', 'AML', 'ALL', 'CLL', 'CML', 'MM'
-        ]
+        # Dividi in parole
+        words = cleaned_text.split()
         
-        subtypes = [
-            'adenocarcinoma', 'squamous', 'small cell', 'non-small cell',
-            'ductal', 'lobular', 'neuroendocrine', 'transitional', 'papillary',
-            'follicular', 'medullary', 'anaplastic', 'germ cell', 'seminoma',
-            'non-seminoma', 'sarcomatoid', 'diffuse', 'hodgkin', 'non-hodgkin'
-        ]
+        # Parole da ignorare (stopwords)
+        stopwords = set([
+            'di', 'a', 'da', 'in', 'con', 'su', 'per', 'tra', 'fra', 'il', 'lo', 'la', 
+            'i', 'gli', 'le', 'un', 'uno', 'una', 'e', 'o', 'ma', 'the', 'of', 'and',
+            'to', 'in', 'that', 'is', 'was', 'for', 'on', 'are', 'with', 'they',
+            'be', 'at', 'one', 'have', 'this', 'from', 'by', 'had', 'not', 'but',
+            'what', 'all', 'were', 'when', 'we', 'there', 'can', 'an', 'your'
+        ])
         
-        modifiers = [
-            'metastatic', 'advanced', 'refractory', 'recurrent', 'relapsed',
-            'stage iv', 'stage iii', 'stage ii', 'stage i',
-            'metastatico', 'avanzato', 'refrattario', 'recidivato', 'recidiva'
-        ]
+        # Filtra le parole troppo brevi o stopwords
+        filtered_words = [word.lower() for word in words if len(word) > 2 and word.lower() not in stopwords]
         
-        # Cerca corrispondenze tra le parole chiave e la diagnosi
-        keywords = []
+        # Lista di nomi di tumori e termini oncologici rilevanti
+        cancer_terms = set([
+            'cancer', 'tumor', 'tumour', 'carcinoma', 'sarcoma', 'leukemia', 'leucemia',
+            'lymphoma', 'linfoma', 'melanoma', 'blastoma', 'myeloma', 'mieloma',
+            'adenocarcinoma', 'metastatic', 'metastatico', 'neoplasm', 'neoplasma',
+            'malignant', 'maligno', 'oncology', 'oncologico'
+        ])
         
-        # Aggiungi tipi di cancro trovati
-        for cancer_type in cancer_types:
-            if cancer_type.lower() in diagnosis:
-                keywords.append(cancer_type)
+        # Lista di siti anatomici comuni per tumori
+        anatomical_sites = set([
+            'lung', 'polmone', 'breast', 'seno', 'mammella', 'prostate', 'prostata',
+            'colorectal', 'colon', 'retto', 'rectum', 'pancreas', 'liver', 'fegato',
+            'ovarian', 'ovaio', 'cervical', 'cervice', 'uterine', 'utero', 'uterus',
+            'brain', 'cervello', 'kidney', 'rene', 'bladder', 'vescica', 'gastric',
+            'stomach', 'stomaco', 'esophageal', 'esofago', 'esophagus', 'head', 'testa',
+            'neck', 'collo', 'thyroid', 'tiroide', 'skin', 'pelle', 'bone', 'osso',
+            'testicular', 'testicolo', 'testes'
+        ])
         
-        # Aggiungi sottotipi trovati
-        for subtype in subtypes:
-            if subtype.lower() in diagnosis:
-                keywords.append(subtype)
+        # Dai priorità ai termini oncologici e siti anatomici
+        prioritized_keywords = []
+        other_keywords = []
         
-        # Aggiungi modificatori trovati
-        for modifier in modifiers:
-            if modifier.lower() in diagnosis:
-                keywords.append(modifier)
+        for word in filtered_words:
+            if word in cancer_terms or word in anatomical_sites:
+                prioritized_keywords.append(word)
+            else:
+                other_keywords.append(word)
         
-        # Se non abbiamo trovato parole chiave specifiche, usa la diagnosi intera
-        # ma rimuovi le stopwords
-        if not keywords:
-            words = diagnosis.split()
-            keywords = [word for word in words if word.lower() not in stopwords and len(word) > 3]
+        # Combina le parole chiave, dando priorità ai termini oncologici
+        keywords = prioritized_keywords + other_keywords[:10]  # Limita le parole chiave generiche
         
-        return keywords
-    
+        return keywords[:15]  # Limita il numero totale di parole chiave
+        
     def _evaluate_with_llm(self, 
                          patient_features: Dict[str, Any], 
                          trials: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -293,31 +266,243 @@ class HybridQuery:
         Returns:
             List[Dict[str, Any]]: Trial valutati con punteggi e spiegazioni
         """
-        results = []
+        # Limita il numero di trial da valutare
+        trials_to_evaluate = trials[:MAX_TRIALS_TO_EVALUATE]
+        logger.info(f"Valutazione semantica di {len(trials_to_evaluate)} trial su {len(trials)} filtrati")
         
-        for trial in trials:
-            # Usa l'LLM per valutare la compatibilità in modo più approfondito
-            evaluation = self.llm.evaluate_trial_match(patient_features, trial)
+        # Valuta ogni trial utilizzando l'LLM
+        evaluated_trials = []
+        
+        # Se l'LLM non è disponibile, utilizza un approccio basato su pattern
+        if not LLM_AVAILABLE:
+            logger.warning("LLM non disponibile, utilizzando valutazione basata su pattern")
+            for trial in trials_to_evaluate:
+                evaluation = self._evaluate_with_pattern_matching(patient_features, trial)
+                trial_with_eval = trial.copy()
+                trial_with_eval['evaluation'] = evaluation
+                evaluated_trials.append(trial_with_eval)
+        else:
+            # Valuta ciascun trial con l'LLM
+            for trial in trials_to_evaluate:
+                evaluation = self.llm.evaluate_patient_trial_match(patient_features, trial)
+                trial_with_eval = trial.copy()
+                trial_with_eval['evaluation'] = evaluation
+                evaluated_trials.append(trial_with_eval)
+        
+        return evaluated_trials
+        
+    def _evaluate_with_pattern_matching(self, 
+                                      patient_features: Dict[str, Any], 
+                                      trial: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Valuta la compatibilità tra paziente e trial utilizzando pattern matching
+        quando l'LLM non è disponibile.
+        
+        Args:
+            patient_features: Caratteristiche del paziente
+            trial: Dati del trial clinico
             
-            # Aggiungi il risultato della valutazione al trial
-            trial_with_evaluation = {
-                **trial,
-                "semantic_match": evaluation.get("match"),
-                "match_score": evaluation.get("score"),
-                "match_explanation": evaluation.get("explanation"),
-                "matching_criteria": evaluation.get("matching_criteria", []),
-                "conflicting_criteria": evaluation.get("conflicting_criteria", [])
-            }
+        Returns:
+            Dict[str, Any]: Risultato della valutazione
+        """
+        # Implementazione di fallback basata su pattern matching
+        
+        # Estrai i dati del paziente
+        age = patient_features.get('age')
+        gender = patient_features.get('gender', '').lower()
+        diagnosis = patient_features.get('diagnosis', '').lower()
+        stage = patient_features.get('stage', '').lower()
+        ecog = patient_features.get('ecog')
+        mutations = patient_features.get('mutations', [])
+        
+        # Inizializza i contatori per criteri soddisfatti e non soddisfatti
+        criteria_met = []
+        criteria_not_met = []
+        
+        # Controlla l'età
+        min_age = trial.get('min_age', '')
+        max_age = trial.get('max_age', '')
+        
+        if age is not None:
+            # Verifica età minima
+            if min_age:
+                try:
+                    min_age_value = int(re.search(r'\d+', min_age).group(0))
+                    if age < min_age_value:
+                        criteria_not_met.append(f"Il paziente ha {age} anni, ma il trial richiede almeno {min_age_value} anni")
+                    else:
+                        criteria_met.append(f"Età minima soddisfatta: paziente {age} anni, minimo richiesto {min_age_value} anni")
+                except (ValueError, AttributeError):
+                    pass
             
-            results.append(trial_with_evaluation)
+            # Verifica età massima
+            if max_age and max_age not in ['N/A', 'No limit', 'No Limit']:
+                try:
+                    max_age_value = int(re.search(r'\d+', max_age).group(0))
+                    if age > max_age_value:
+                        criteria_not_met.append(f"Il paziente ha {age} anni, ma il trial accetta fino a {max_age_value} anni")
+                    else:
+                        criteria_met.append(f"Età massima soddisfatta: paziente {age} anni, massimo accettato {max_age_value} anni")
+                except (ValueError, AttributeError):
+                    pass
         
-        # Ordina i risultati per punteggio di compatibilità (se disponibile)
-        if results and all(result.get("match_score") is not None for result in results):
-            results.sort(key=lambda x: x.get("match_score", 0), reverse=True)
+        # Controlla il genere
+        if gender and gender not in ['unknown', 'altro', 'non specificato']:
+            trial_gender = trial.get('gender', '').lower()
+            if trial_gender in ['all', 'both', '']:
+                criteria_met.append("Genere: il trial accetta tutti i generi")
+            elif (gender in ['male', 'maschio', 'm'] and trial_gender in ['male', 'uomo']) or \
+                 (gender in ['female', 'femmina', 'f'] and trial_gender in ['female', 'donna']):
+                criteria_met.append(f"Genere corrispondente: {gender}")
+            elif trial_gender not in ['all', 'both', ''] and \
+                 ((gender in ['male', 'maschio', 'm'] and trial_gender not in ['male', 'uomo']) or \
+                  (gender in ['female', 'femmina', 'f'] and trial_gender not in ['female', 'donna'])):
+                criteria_not_met.append(f"Genere non corrispondente: paziente {gender}, trial richiede {trial_gender}")
         
-        return results
+        # Verifica le corrispondenze nella diagnosi
+        if diagnosis:
+            trial_title = trial.get('title', '').lower()
+            trial_desc = trial.get('description', '').lower()
+            
+            # Estrai parole chiave dalla diagnosi
+            diagnosis_keywords = self._extract_diagnosis_keywords(diagnosis)
+            
+            matches = 0
+            total_keywords = len(diagnosis_keywords)
+            if total_keywords > 0:
+                for keyword in diagnosis_keywords:
+                    if keyword in trial_title or keyword in trial_desc:
+                        matches += 1
+                
+                match_ratio = matches / total_keywords
+                if match_ratio >= MIN_KEYWORD_MATCH_SCORE:
+                    criteria_met.append(f"Diagnosi: {int(match_ratio*100)}% di corrispondenza delle parole chiave con il trial")
+                else:
+                    criteria_not_met.append(f"Possibile mancata corrispondenza della diagnosi ({int(match_ratio*100)}% parole chiave trovate)")
+        
+        # Cerca nel titolo e nella descrizione
+        trial_text = (trial.get('title', '') + ' ' + trial.get('description', '')).lower()
+        
+        # Verifica ECOG
+        if ecog is not None:
+            ecog_patterns = [
+                (r'ecog\s*performance\s*status\s*[<≤]\s*(\d+)', 'less_than'),
+                (r'ecog\s*[<≤]\s*(\d+)', 'less_than'),
+                (r'ecog\s*performance\s*status\s*of\s*(\d+)\s*or\s*less', 'less_than_equal'),
+                (r'ecog\s*performance\s*status\s*[≤≦≠=]\s*(\d+)', 'equal'),
+                (r'ecog\s*[=]\s*(\d+)', 'equal'),
+                (r'ecog\s*performance\s*status\s*(\d+)[–-](\d+)', 'range'),
+                (r'ecog\s*(\d+)[–-](\d+)', 'range')
+            ]
+            
+            ecog_found = False
+            for pattern, pattern_type in ecog_patterns:
+                matches = re.search(pattern, trial_text)
+                if matches:
+                    ecog_found = True
+                    if pattern_type == 'less_than':
+                        max_allowed = int(matches.group(1))
+                        if ecog < max_allowed:
+                            criteria_met.append(f"ECOG soddisfatto: paziente {ecog}, trial richiede <{max_allowed}")
+                        else:
+                            criteria_not_met.append(f"ECOG non soddisfatto: paziente {ecog}, trial richiede <{max_allowed}")
+                    elif pattern_type == 'less_than_equal':
+                        max_allowed = int(matches.group(1))
+                        if ecog <= max_allowed:
+                            criteria_met.append(f"ECOG soddisfatto: paziente {ecog}, trial richiede ≤{max_allowed}")
+                        else:
+                            criteria_not_met.append(f"ECOG non soddisfatto: paziente {ecog}, trial richiede ≤{max_allowed}")
+                    elif pattern_type == 'equal':
+                        required = int(matches.group(1))
+                        if ecog == required:
+                            criteria_met.append(f"ECOG soddisfatto: paziente {ecog}, trial richiede ={required}")
+                        else:
+                            criteria_not_met.append(f"ECOG non soddisfatto: paziente {ecog}, trial richiede ={required}")
+                    elif pattern_type == 'range':
+                        min_range = int(matches.group(1))
+                        max_range = int(matches.group(2))
+                        if min_range <= ecog <= max_range:
+                            criteria_met.append(f"ECOG soddisfatto: paziente {ecog}, trial accetta {min_range}-{max_range}")
+                        else:
+                            criteria_not_met.append(f"ECOG non soddisfatto: paziente {ecog}, trial accetta {min_range}-{max_range}")
+                    break
+            
+            if not ecog_found and ecog <= 2:
+                # Se non troviamo specifiche ECOG, assumiamo che ECOG ≤ 2 sia generalmente accettabile
+                criteria_met.append(f"ECOG probabile: paziente {ecog}, probabilmente accettabile (≤2)")
+            elif not ecog_found and ecog > 2:
+                # Per ECOG > 2, inseriamo un avviso
+                criteria_not_met.append(f"ECOG dubbio: paziente {ecog}, potrebbe non essere accettabile (>2)")
+        
+        # Cerca menzioni di mutazioni
+        if mutations:
+            mutation_found = False
+            for mutation in mutations:
+                mutation_lower = mutation.lower()
+                if mutation_lower in trial_text:
+                    mutation_found = True
+                    criteria_met.append(f"Mutazione menzionata nel trial: {mutation}")
+            
+            if not mutation_found:
+                criteria_not_met.append("Nessuna menzione specifica delle mutazioni del paziente nel trial")
+        
+        # Cerca menzioni dello stadio
+        if stage:
+            stage_patterns = [
+                r'stage\s+' + re.escape(stage) + r'\b',
+                r'stadio\s+' + re.escape(stage) + r'\b'
+            ]
+            
+            stage_found = False
+            for pattern in stage_patterns:
+                if re.search(pattern, trial_text):
+                    stage_found = True
+                    criteria_met.append(f"Stadio menzionato nel trial: {stage}")
+                    break
+            
+            if not stage_found:
+                # Non lo consideriamo un criterio non soddisfatto, ma un'informazione mancante
+                pass
+        
+        # Calcola il punteggio basato sui criteri
+        total_criteria = len(criteria_met) + len(criteria_not_met)
+        if total_criteria == 0:
+            match_score = 50  # Punteggio neutro se non ci sono criteri
+        else:
+            match_score = int((len(criteria_met) / total_criteria) * 100)
+        
+        # Determina il tipo di match
+        if match_score >= 80:
+            match_type = "match"
+        elif match_score >= 50:
+            match_type = "maybe"
+        else:
+            match_type = "no_match"
+        
+        # Crea la spiegazione
+        if len(criteria_met) > 0 and len(criteria_not_met) > 0:
+            explanation = (
+                f"Il paziente soddisfa {len(criteria_met)} criteri ma non soddisfa "
+                f"{len(criteria_not_met)} criteri del trial."
+            )
+        elif len(criteria_met) > 0:
+            explanation = f"Il paziente soddisfa tutti i {len(criteria_met)} criteri valutati."
+        elif len(criteria_not_met) > 0:
+            explanation = f"Il paziente non soddisfa nessuno dei {len(criteria_not_met)} criteri valutati."
+        else:
+            explanation = "Non è stato possibile valutare criteri specifici. Consultare un medico."
+        
+        # Crea il risultato della valutazione
+        return {
+            "match": match_type,
+            "score": match_score,
+            "explanation": explanation,
+            "criteria_met": criteria_met,
+            "criteria_not_met": criteria_not_met,
+            "fallback_mode": True  # Indica che è stata utilizzata la modalità di fallback
+        }
 
-# Funzione di comodo per ottenere una nuova istanza
+
 def get_hybrid_query() -> HybridQuery:
     """
     Restituisce una nuova istanza di HybridQuery.

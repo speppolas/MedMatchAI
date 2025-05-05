@@ -314,6 +314,22 @@ Valutazione Semantica <-- [LLM locale (se disponibile)]
 Presentazione all'Utente
 ```
 
+### Miglioramenti Recenti
+
+Nell'ultima versione, abbiamo implementato diversi miglioramenti significativi:
+
+1. **Sistema di controllo LLM globale**: Monitoraggio centralizzato dello stato di disponibilità del LLM per evitare errori e garantire la resilienza del sistema.
+
+2. **Meccanismo di fallback avanzato**: Se il LLM non è disponibile, il sistema ricorre automaticamente a metodi alternativi per l'estrazione di caratteristiche e la valutazione dei trial.
+
+3. **Configurazione centralizzata**: Nuovo file `config.py` che raccoglie tutte le impostazioni in un unico punto di configurazione, semplificando la gestione e la personalizzazione.
+
+4. **Documentazione espansa**: Nuovi file dettagliati in `docs/` che spiegano l'approccio ibrido e forniscono guide complete per l'installazione di llama.cpp.
+
+5. **Organizzazione modulare**: Script di utilità spostati in una directory `scripts/` dedicata per una migliore organizzazione del codice e riutilizzo delle funzionalità.
+
+Per ulteriori dettagli sui miglioramenti e sull'architettura, consulta la documentazione nella directory `docs/`.
+
 ## Struttura del Progetto
 
 ```
@@ -324,18 +340,28 @@ medmatchint/
 │   ├── utils.py            # Funzioni di utilità generale
 │   ├── hybrid_query.py     # Implementazione dell'approccio ibrido PostgreSQL + LLM
 │   └── llm_processor.py    # Gestione dell'interazione con LLM locale
+├── docs/                   # Documentazione dettagliata
+│   ├── hybrid_approach.md  # Documentazione dell'approccio ibrido
+│   └── llama_cpp_setup.md  # Guida all'installazione e configurazione di llama.cpp
+├── scripts/                # Utility scripts modulari
+│   ├── database_utils.py   # Funzioni per la gestione del database
+│   ├── db_init.py          # Funzionalità di inizializzazione del database
+│   ├── feature_extraction.py # Estrazione caratteristiche dai documenti
+│   ├── trials_manager.py   # Gestione dei trial clinici
+│   └── update_trials.py    # Funzionalità di aggiornamento trial
 ├── static/                 # File statici (CSS, JS, immagini)
 ├── templates/              # Template HTML
 ├── uploads/                # Directory temporanea per i PDF caricati
 ├── .env.example            # Esempio di file di configurazione
-├── db_init.py              # Script di inizializzazione del database
+├── config.py               # Configurazione centralizzata dell'applicazione
+├── db_init.py              # Script per inizializzazione del database
 ├── fetch_trial_by_id.py    # Script per recuperare trial per ID
 ├── fetch_trials.py         # Script per recuperare trial da ClinicalTrials.gov
 ├── main.py                 # Punto di ingresso dell'applicazione
 ├── models.py               # Modelli del database
 ├── requirements.txt        # Dipendenze Python
 ├── update_trials.py        # Script di aggiornamento trial
-└── llama_cpp_config.md     # Istruzioni dettagliate per configurare llama.cpp
+└── llama_cpp_config.md     # Riferimento per configurare llama.cpp
 ```
 
 ## Configurazione dell'Approccio Ibrido con LLM Locale
@@ -344,7 +370,11 @@ Per abilitare l'approccio ibrido con valutazione semantica avanzata:
 
 ### 1. Installazione di llama.cpp
 
-Per i dettagli completi, consulta il file `llama_cpp_config.md`. In sintesi:
+Per i dettagli completi, consulta i file:
+- `docs/llama_cpp_setup.md` - Guida dettagliata all'installazione e configurazione di llama.cpp
+- `docs/hybrid_approach.md` - Documentazione dettagliata sull'approccio ibrido PostgreSQL + LLM
+
+In sintesi:
 
 ```bash
 # Clona repository llama.cpp

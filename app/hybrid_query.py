@@ -13,7 +13,7 @@ from sqlalchemy import or_, and_, func, cast, String, Float, Integer
 from sqlalchemy.sql.expression import literal
 
 from models import ClinicalTrial, db
-from app.llm_processor import get_llm_processor
+from app.llm_processor import get_llm_processor, LLM_AVAILABLE, LLM_ERROR_MESSAGE
 
 # Configurazione del logging
 logging.basicConfig(level=logging.INFO)
@@ -49,10 +49,57 @@ class HybridQuery:
         logger.info(f"Filtro PostgreSQL: trovati {len(db_filtered_trials)} trial potenziali")
         
         if not db_filtered_trials:
+            logger.warning("Nessun trial potenziale trovato con il filtro PostgreSQL")
             return []
         
+        # Verifica se l'LLM è disponibile globalmente
+        if not LLM_AVAILABLE:
+            logger.info(f"LLM non disponibile: {LLM_ERROR_MESSAGE}")
+            logger.info("Aggiunta delle informazioni di fallback ai risultati PostgreSQL")
+            
+            # Aggiungi informazioni di fallback ai trial filtrati
+            semantic_fallback_results = []
+            for trial in db_filtered_trials:
+                trial_with_fallback = {
+                    **trial,
+                    "semantic_match": None,  # None indica che non c'è una valutazione semantica
+                    "match_score": 70,  # Punteggio predefinito per i risultati del filtro PostgreSQL
+                    "match_explanation": "Valutazione semantica non disponibile. I risultati si basano solo sul filtro database.",
+                    "matching_criteria": [],
+                    "conflicting_criteria": []
+                }
+                semantic_fallback_results.append(trial_with_fallback)
+            
+            # Ordina per rilevanza della diagnosi
+            if patient_features.get('diagnosis'):
+                diagnosis = patient_features.get('diagnosis')
+                if isinstance(diagnosis, dict) and 'value' in diagnosis:
+                    diagnosis = diagnosis['value']
+                
+                if diagnosis and isinstance(diagnosis, str):
+                    # Estrai parole chiave dalla diagnosi per il punteggio
+                    keywords = self._extract_diagnosis_keywords(diagnosis)
+                    if keywords:
+                        for trial in semantic_fallback_results:
+                            score = 70  # Punteggio base
+                            for keyword in keywords:
+                                if len(keyword) > 3 and keyword.lower() in trial.get('description', '').lower():
+                                    score += 5
+                            trial['match_score'] = min(score, 95)  # Capped at 95
+            
+            # Ordina per punteggio
+            semantic_fallback_results.sort(key=lambda x: x.get('match_score', 0), reverse=True)
+            return semantic_fallback_results
+            
         # Fase 2: Valutazione semantica con LLM per criteri complessi
+        logger.info("Esecuzione valutazione semantica con LLM")
         semantic_results = self._evaluate_with_llm(patient_features, db_filtered_trials)
+        
+        # Verifica se ci sono risultati dalla valutazione semantica
+        if not semantic_results:
+            logger.warning("Nessun risultato ottenuto dalla valutazione semantica LLM")
+        else:
+            logger.info(f"Valutazione semantica LLM completata: {len(semantic_results)} trial analizzati")
         
         return semantic_results
     

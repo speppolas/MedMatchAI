@@ -24,6 +24,10 @@ DEFAULT_CONTEXT_SIZE = 4096
 DEFAULT_TEMP = 0.7
 MAX_TOKENS = 2048
 
+# Gestione dello stato globale dell'LLM
+LLM_AVAILABLE = False  # Sarà impostato a True se il modello e l'eseguibile sono disponibili
+LLM_ERROR_MESSAGE = ""  # Memorizza l'errore specifico se l'LLM non è disponibile
+
 class LLMProcessor:
     """
     Classe per l'elaborazione di dati tramite LLM locale utilizzando llama.cpp.
@@ -452,11 +456,36 @@ Basati solo sulle informazioni fornite. Se mancano dati essenziali per valutare 
 def get_llm_processor() -> LLMProcessor:
     """
     Crea e restituisce un'istanza di LLMProcessor con la configurazione di default.
+    Aggiorna anche lo stato globale dell'LLM per tracciare la disponibilità.
     
     Returns:
         LLMProcessor: Un'istanza del processore LLM
     """
-    return LLMProcessor()
+    global LLM_AVAILABLE, LLM_ERROR_MESSAGE
+    
+    processor = LLMProcessor()
+    
+    # Verifica e aggiorna lo stato globale dell'LLM
+    if processor._is_llm_available():
+        LLM_AVAILABLE = True
+        LLM_ERROR_MESSAGE = ""
+        logger.info("LLM disponibile e configurato correttamente")
+    else:
+        LLM_AVAILABLE = False
+        
+        if not os.path.exists(processor.model_path):
+            LLM_ERROR_MESSAGE = f"Il file del modello LLM non esiste: {processor.model_path}"
+            logger.warning(LLM_ERROR_MESSAGE)
+        elif not os.path.exists(processor.main_exe):
+            LLM_ERROR_MESSAGE = f"L'eseguibile llama.cpp non esiste: {processor.main_exe}"
+            logger.warning(LLM_ERROR_MESSAGE)
+        else:
+            LLM_ERROR_MESSAGE = "Configurazione LLM incompleta"
+            logger.warning(LLM_ERROR_MESSAGE)
+            
+        logger.info("LLM non disponibile. L'applicazione utilizzerà il fallback basato su PostgreSQL.")
+    
+    return processor
 
 # Esempio di utilizzo
 if __name__ == "__main__":

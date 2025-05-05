@@ -5,12 +5,16 @@ MedMatchINT è un'applicazione web privacy-preserving per abbinare i dati dei pa
 ## Caratteristiche Principali
 
 - Elaborazione locale di documenti PDF per estrazione di caratteristiche cliniche
+- Sistema ibrido di matching che combina:
+  - **Filtro PostgreSQL:** rapido ed efficiente per criteri oggettivi (età, genere, stato)
+  - **Analisi semantica con LLM locale:** modelli Mistral/LLaMA via llama.cpp per valutazione avanzata
 - Database PostgreSQL per lo storage dei trial clinici
 - Aggiornamento automatico dei trial da ClinicalTrials.gov
 - Interfaccia web responsive e intuitiva
 - Ricerca di trial per diversi tipi di ID (NCT, Protocollo, EudraCT, Registry)
 - Gestione sicura dei documenti dei pazienti con auto-eliminazione
 - Struttura modulare per facilitare manutenzione ed estensioni
+- Approccio privacy-preserving con elaborazione completamente locale
 
 ## Requisiti di Sistema
 
@@ -19,6 +23,17 @@ MedMatchINT è un'applicazione web privacy-preserving per abbinare i dati dei pa
 - Sistema operativo Linux, MacOS o Windows
 - 2GB di RAM minimo (consigliati 4GB per prestazioni ottimali)
 - 1GB di spazio su disco per l'applicazione e le dipendenze
+
+### Requisiti Opzionali per l'Approccio Ibrido
+
+Per l'utilizzo completo dell'approccio ibrido PostgreSQL + LLM:
+
+- llama.cpp (compilato per il tuo sistema)
+- Modello LLM Mistral 7B o LLaMA 2 in formato GGUF
+- 8GB di RAM minimo per modelli quantizzati a 4-bit
+- GPU con 6GB+ VRAM per accelerazione hardware (consigliata ma opzionale)
+
+> **Nota**: L'applicazione funziona anche senza LLM, utilizzando un approccio fallback basato su PostgreSQL e analisi con espressioni regolari.
 
 ## Installazione
 
@@ -105,9 +120,16 @@ notepad .env
 Modifica il file `.env` inserendo le tue configurazioni:
 
 ```
+# Configurazione database
 DATABASE_URL=postgresql://medmatchuser:password_sicura@localhost/medmatchint
+
+# Configurazione Flask
 FLASK_SECRET_KEY=una_chiave_segreta_lunga_e_casuale
 FLASK_ENV=production
+
+# Configurazione LLM (opzionale, per approccio ibrido)
+LLAMA_CPP_PATH=/percorso/completo/a/llama.cpp
+LLM_MODEL_PATH=/percorso/completo/a/llama.cpp/models/mistral-7b-instruct-v0.2.Q4_K_M.gguf
 ```
 
 ## Inizializzazione del Database
@@ -258,6 +280,53 @@ medmatchint/
 ├── requirements.txt     # Dipendenze Python
 └── update_trials.py     # Script di aggiornamento trial
 ```
+
+## Configurazione dell'Approccio Ibrido con LLM Locale
+
+Per abilitare l'approccio ibrido con valutazione semantica avanzata:
+
+### 1. Installazione di llama.cpp
+
+Per i dettagli completi, consulta il file `llama_cpp_config.md`. In sintesi:
+
+```bash
+# Clona repository llama.cpp
+git clone https://github.com/ggerganov/llama.cpp.git ~/llama.cpp
+cd ~/llama.cpp
+
+# Compila (versione base CPU)
+mkdir build && cd build
+cmake ..
+cmake --build . --config Release
+
+# Alternativa: compila con supporto CUDA (GPU NVIDIA)
+# mkdir build-cuda && cd build-cuda
+# cmake .. -DLLAMA_CUDA=ON
+# cmake --build . --config Release
+```
+
+### 2. Download del Modello
+
+Scarica un modello quantizzato adatto (esempio Mistral 7B):
+
+```bash
+mkdir -p ~/llama.cpp/models
+wget -O ~/llama.cpp/models/mistral-7b-instruct-v0.2.Q4_K_M.gguf \
+  https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q4_K_M.gguf
+```
+
+### 3. Configurazione dell'Applicazione
+
+Aggiorna il file `.env` con i percorsi:
+
+```
+LLAMA_CPP_PATH=/percorso/completo/a/llama.cpp
+LLM_MODEL_PATH=/percorso/completo/a/llama.cpp/models/mistral-7b-instruct-v0.2.Q4_K_M.gguf
+```
+
+L'applicazione rileverà automaticamente il modello LLM e utilizzarà l'approccio ibrido per il matching dei trial clinici, combinando il filtraggio rapido di PostgreSQL con l'analisi semantica approfondita del LLM.
+
+> **Nota**: Se il modello LLM non è disponibile, l'applicazione utilizzerà automaticamente la modalità fallback basata su PostgreSQL e analisi con espressioni regolari.
 
 ## Risoluzione dei Problemi
 

@@ -490,15 +490,105 @@ def get_all_trials_json():
 
 def match_trials_db(patient_features):
     """
-    Match patient features with available clinical trials in database.
+    Match patient features with available clinical trials using the hybrid approach.
+    
+    Questo metodo utilizza un approccio ibrido che combina:
+    1. Filtro veloce con PostgreSQL per criteri oggettivi (età, genere, stato trial)
+    2. Valutazione semantica con LLM per criteri complessi
     
     Args:
-        patient_features: Extracted patient features
+        patient_features: Caratteristiche estratte del paziente
         
     Returns:
-        list: Matching clinical trials with explanation
+        list: Trial clinici corrispondenti con spiegazioni e punteggi
     """
     try:
+        logging.info("Avvio ricerca trial con approccio ibrido PostgreSQL + LLM")
+        
+        # Istanzia il processore di query ibrido
+        try:
+            hybrid_searcher = get_hybrid_query()
+            use_hybrid = True
+            logging.info("Utilizzando approccio ibrido con LLM")
+        except Exception as hybrid_error:
+            logging.warning(f"Errore nell'inizializzazione dell'approccio ibrido: {str(hybrid_error)}")
+            logging.info("Fallback all'approccio tradizionale senza LLM")
+            use_hybrid = False
+        
+        # APPROCCIO IBRIDO
+        if use_hybrid:
+            try:
+                # Filtra i trial utilizzando l'approccio ibrido
+                hybrid_results = hybrid_searcher.filter_trials_by_criteria(patient_features)
+                
+                if hybrid_results:
+                    matched_trials = []
+                    
+                    for trial_data in hybrid_results:
+                        # Estrai valutazione semantica
+                        semantic_match = trial_data.get('semantic_match')
+                        match_explanation = trial_data.get('match_explanation', '')
+                        semantic_score = trial_data.get('match_score')
+                        
+                        # Inizializza match e non-match
+                        matches = []
+                        non_matches = []
+                        
+                        # Elabora i risultati del matching
+                        if 'matching_criteria' in trial_data:
+                            for criterion in trial_data.get('matching_criteria', []):
+                                matches.append({
+                                    'criterion': criterion,
+                                    'matches': True,
+                                    'explanation': "Criterio soddisfatto (analisi semantica)"
+                                })
+                        
+                        if 'conflicting_criteria' in trial_data:
+                            for criterion in trial_data.get('conflicting_criteria', []):
+                                non_matches.append({
+                                    'criterion': criterion,
+                                    'matches': False, 
+                                    'explanation': "Criterio non soddisfatto (analisi semantica)"
+                                })
+                        
+                        # Calcola punteggio e percentuale
+                        match_score = len(matches)
+                        total_criteria = match_score + len(non_matches)
+                        match_percentage = (match_score / total_criteria * 100) if total_criteria > 0 else 0
+                        
+                        # Se non ci sono criteri valutati ma c'è un punteggio semantico, usalo
+                        if total_criteria == 0 and semantic_score is not None:
+                            match_percentage = semantic_score
+                        
+                        # Aggiungi il trial se supera la soglia (o se ha una valutazione semantica positiva)
+                        if match_percentage >= 50 or (semantic_match is not None and semantic_match in [True, 'true', 'True']):
+                            matched_trial = {
+                                'trial_id': trial_data.get('id'),
+                                'title': trial_data.get('title'),
+                                'phase': trial_data.get('phase'),
+                                'match_percentage': round(match_percentage, 1),
+                                'matches': matches,
+                                'non_matches': non_matches,
+                                'description': trial_data.get('description', ''),
+                                'semantic_evaluation': {
+                                    'match': semantic_match,
+                                    'explanation': match_explanation,
+                                    'score': semantic_score
+                                }
+                            }
+                            matched_trials.append(matched_trial)
+                    
+                    # Ordina per percentuale di match (decrescente)
+                    matched_trials.sort(key=lambda x: x['match_percentage'], reverse=True)
+                    
+                    logging.info(f"Trovati {len(matched_trials)} trial compatibili con approccio ibrido")
+                    return matched_trials
+            except Exception as hybrid_process_error:
+                logging.error(f"Errore nell'elaborazione ibrida: {str(hybrid_process_error)}")
+                logging.info("Fallback all'approccio tradizionale")
+        
+        # APPROCCIO TRADIZIONALE (FALLBACK)
+        logging.info("Utilizzando approccio tradizionale per match_trials_db")
         # Get trials from database
         trials = get_all_trials_db()
         
@@ -547,19 +637,27 @@ def match_trials_db(patient_features):
             
             # Add to matched trials if score is above threshold
             if match_percentage >= 50:  # Minimum 50% match
-                matched_trials.append({
+                matched_trial = {
                     'trial_id': trial.get('id'),
                     'title': trial.get('title'),
                     'phase': trial.get('phase'),
                     'match_percentage': round(match_percentage, 1),
                     'matches': matches,
                     'non_matches': non_matches,
-                    'description': trial.get('description', '')
-                })
+                    'description': trial.get('description', ''),
+                    # Aggiungiamo un campo per informare che non è stata usata l'analisi semantica
+                    'semantic_evaluation': {
+                        'match': None,
+                        'explanation': "Valutazione semantica non disponibile. Configura un modello LLM locale per risultati più accurati.",
+                        'score': None
+                    }
+                }
+                matched_trials.append(matched_trial)
         
         # Sort by match percentage (descending)
         matched_trials.sort(key=lambda x: x['match_percentage'], reverse=True)
         
+        logging.info(f"Trovati {len(matched_trials)} trial compatibili con approccio tradizionale")
         return matched_trials
     
     except Exception as e:

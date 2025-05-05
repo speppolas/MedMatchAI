@@ -1,0 +1,418 @@
+[
+  {
+    "id": "NCT04294810",
+    "title": "Study of Pembrolizumab in Biomarker-positive Metastatic Non-small Cell Lung Cancer",
+    "phase": "Phase II",
+    "description": "A trial for patients with metastatic non-small cell lung cancer who test positive for specific biomarkers to evaluate the efficacy of pembrolizumab.",
+    "inclusion_criteria": [
+      {
+        "type": "age",
+        "text": "Adults aged 18 years and older"
+      },
+      {
+        "type": "diagnosis",
+        "text": "Histologically or cytologically confirmed metastatic non-small cell lung cancer (NSCLC)"
+      },
+      {
+        "type": "mutation",
+        "text": "Positive for at least one of the following biomarkers: PD-L1 expression ≥1%, MSI-H, or TMB-high"
+      },
+      {
+        "type": "performance",
+        "text": "ECOG performance status of 0 or 1"
+      },
+      {
+        "type": "general",
+        "text": "Measurable disease according to RECIST 1.1 criteria"
+      }
+    ],
+    "exclusion_criteria": [
+      {
+        "type": "mutation",
+        "text": "EGFR mutation or ALK translocation positive"
+      },
+      {
+        "type": "treatment",
+        "text": "Prior treatment with any anti-PD-1, anti-PD-L1, or anti-CTLA-4 antibody"
+      },
+      {
+        "type": "condition",
+        "text": "Active autoimmune disease requiring systemic treatment within the past 2 years"
+      },
+      {
+        "type": "condition",
+        "text": "Active or untreated CNS metastases"
+      }
+    ]
+  },
+  {
+    "id": "NCT04385368",
+    "title": "Osimertinib in EGFR-Mutated Non-small Cell Lung Cancer with Brain Metastases",
+    "phase": "Phase III",
+    "description": "A study to evaluate the efficacy and safety of osimertinib in patients with EGFR-mutated NSCLC with brain metastases.",
+    "inclusion_criteria": [
+      {
+        "type": "age",
+        "text": "Adults aged 18 years and older"
+      },
+      {
+        "type": "diagnosis",
+        "text": "Histologically or cytologically confirmed locally advanced or metastatic non-small cell lung cancer not amenable to curative surgery or radiotherapy"
+      },
+      {
+        "type": "mutation",
+        "text": "Documented EGFR exon 19 deletion or exon 21 L858R mutation"
+      },
+      {
+        "type": "metastasis",
+        "text": "Confirmed brain metastases by MRI"
+      },
+      {
+        "type": "performance",
+        "text": "ECOG performance status of 0-2"
+      }
+    ],
+    "exclusion_criteria": [
+      {
+        "type": "mutation",
+        "text": "T790M mutation positive"
+      },
+      {
+        "type": "treatment",
+        "text": "Prior treatment with EGFR-TKI therapy"
+      },
+      {
+        "type": "treatment",
+        "text": "Treatment with cytotoxic chemotherapy, investigational agents or other anticancer drugs within 2 weeks before the first dose of study treatment"
+      }
+    ]
+  },
+  {
+    "id": "NCT03976375",
+    "title": "Alectinib for ALK-Positive Advanced Lung Cancer",
+    "phase": "Phase II",
+    "description": "An open-label, single-arm study of alectinib in patients with ALK-positive advanced NSCLC who have previously received ALK-TKI therapy.",
+    "inclusion_criteria": [
+      {
+        "type": "age",
+        "text": "Adults at least 18 years of age"
+      },
+      {
+        "type": "diagnosis",
+        "text": "Histologically or cytologically confirmed diagnosis of advanced or metastatic NSCLC that is ALK-positive as determined by an FDA-approved test"
+      },
+      {
+        "type": "performance",
+        "text": "ECOG performance status of 0-2"
+      },
+      {
+        "type": "treatment",
+        "text": "Prior treatment with at least one ALK TKI"
+      }
+    ],
+    "exclusion_criteria": [
+      {
+        "type": "treatment",
+        "text": "Prior treatment with alectinib"
+      },
+      {
+        "type": "condition",
+        "text": "Symptomatic or unstable CNS metastases"
+      },
+      {
+        "type": "condition",
+        "text": "Significant cardiovascular disease, including unstable angina, acute myocardial infarction within the previous 3 months, or congestive heart failure"
+      }
+    ]
+  },
+  {
+    "id": "NCT04512846",
+    "title": "Combination Therapy in Treatment-Naive Metastatic Colorectal Cancer",
+    "phase": "Phase III",
+    "description": "A randomized study of combination chemotherapy plus bevacizumab compared to FOLFOXIRI plus bevacizumab in patients with treatment-naive metastatic colorectal cancer.",
+    "inclusion_criteria": [
+      {
+        "type": "age",
+        "text": "18 years of age or older"
+      },
+      {
+        "type": "diagnosis",
+        "text": "Histologically confirmed metastatic colorectal adenocarcinoma with at least one measurable lesion"
+      },
+      {
+        "type": "performance",
+        "text": "ECOG performance status of 0 or 1"
+      },
+      {
+        "type": "general",
+        "text": "Adequate hematologic, hepatic, and renal function"
+      }
+    ],
+    "exclusion_criteria": [
+      {
+        "type": "treatment",
+        "text": "Prior chemotherapy for metastatic disease"
+      },
+      {
+        "type": "condition",
+        "text": "Active brain metastases"
+      },
+      {
+        "type": "condition",
+        "text": "Uncontrolled hypertension"
+      },
+      {
+        "type": "condition",
+        "text": "Major surgical procedure within 28 days prior to study treatment"
+      }
+    ]
+  },
+  {
+    "id": "NCT04209153",
+    "title": "Neoadjuvant Immunotherapy in Triple-Negative Breast Cancer",
+    "phase": "Phase II",
+    "description": "A study to evaluate the efficacy of neoadjuvant pembrolizumab combined with chemotherapy in early-stage triple-negative breast cancer.",
+    "inclusion_criteria": [
+      {
+        "type": "age",
+        "text": "Women age ≥18 years"
+      },
+      {
+        "type": "gender",
+        "text": "Female"
+      },
+      {
+        "type": "diagnosis",
+        "text": "Histologically confirmed diagnosis of invasive triple-negative breast cancer (estrogen receptor negative, progesterone receptor negative, and HER2 negative)"
+      },
+      {
+        "type": "stage",
+        "text": "Clinical stage II or III disease suitable for neoadjuvant therapy"
+      },
+      {
+        "type": "performance",
+        "text": "ECOG performance status of 0 or 1"
+      }
+    ],
+    "exclusion_criteria": [
+      {
+        "type": "condition",
+        "text": "Metastatic disease (stage IV)"
+      },
+      {
+        "type": "treatment",
+        "text": "Prior chemotherapy, radiation therapy, or hormone therapy for the current breast cancer"
+      },
+      {
+        "type": "condition",
+        "text": "Active autoimmune disease requiring systemic treatment"
+      }
+    ]
+  },
+  {
+    "id": "NCT04675996",
+    "title": "KRAS G12C Inhibitor in Advanced Solid Tumors",
+    "phase": "Phase I/II",
+    "description": "A study of a KRAS G12C inhibitor in patients with advanced solid tumors harboring a KRAS G12C mutation.",
+    "inclusion_criteria": [
+      {
+        "type": "age",
+        "text": "18 years or older"
+      },
+      {
+        "type": "diagnosis",
+        "text": "Locally advanced or metastatic solid tumor that has progressed on or after standard therapy"
+      },
+      {
+        "type": "mutation",
+        "text": "KRAS G12C mutation confirmed by a validated test"
+      },
+      {
+        "type": "performance",
+        "text": "ECOG performance status of 0 or 1"
+      }
+    ],
+    "exclusion_criteria": [
+      {
+        "type": "treatment",
+        "text": "Prior treatment with a KRAS G12C inhibitor"
+      },
+      {
+        "type": "condition",
+        "text": "Symptomatic, untreated, or unstable CNS metastases"
+      },
+      {
+        "type": "condition",
+        "text": "History of interstitial lung disease or pneumonitis requiring steroids"
+      }
+    ]
+  },
+  {
+    "id": "NCT04533127",
+    "title": "Immunotherapy for Elderly Patients with Advanced NSCLC",
+    "phase": "Phase II",
+    "description": "A study evaluating the safety and efficacy of pembrolizumab monotherapy in elderly patients with advanced non-small cell lung cancer.",
+    "inclusion_criteria": [
+      {
+        "type": "age",
+        "text": "75 years or older"
+      },
+      {
+        "type": "diagnosis",
+        "text": "Histologically or cytologically confirmed stage IV non-small cell lung cancer"
+      },
+      {
+        "type": "mutation",
+        "text": "PD-L1 expression ≥1%"
+      },
+      {
+        "type": "performance",
+        "text": "ECOG performance status of 0-2"
+      }
+    ],
+    "exclusion_criteria": [
+      {
+        "type": "mutation",
+        "text": "Sensitizing EGFR mutations or ALK translocations"
+      },
+      {
+        "type": "treatment",
+        "text": "Prior systemic treatment for metastatic NSCLC"
+      },
+      {
+        "type": "condition",
+        "text": "Active autoimmune disease requiring systemic immunosuppression"
+      },
+      {
+        "type": "condition",
+        "text": "Unstable or untreated brain metastases"
+      }
+    ]
+  },
+  {
+    "id": "NCT04473755",
+    "title": "Targeted Therapy for BRAF V600E Mutated Advanced Colorectal Cancer",
+    "phase": "Phase III",
+    "description": "A randomized study comparing standard chemotherapy versus encorafenib plus cetuximab in patients with BRAF V600E mutated metastatic colorectal cancer.",
+    "inclusion_criteria": [
+      {
+        "type": "age",
+        "text": "18 years or older"
+      },
+      {
+        "type": "diagnosis",
+        "text": "Histologically or cytologically confirmed metastatic colorectal adenocarcinoma"
+      },
+      {
+        "type": "mutation",
+        "text": "BRAF V600E mutation-positive tumor"
+      },
+      {
+        "type": "performance",
+        "text": "ECOG performance status of 0 or 1"
+      },
+      {
+        "type": "general",
+        "text": "Measurable disease per RECIST v1.1"
+      }
+    ],
+    "exclusion_criteria": [
+      {
+        "type": "treatment",
+        "text": "Prior treatment with RAF, MEK, or EGFR inhibitors"
+      },
+      {
+        "type": "condition",
+        "text": "Known RAS mutation"
+      },
+      {
+        "type": "condition",
+        "text": "Active CNS metastases"
+      }
+    ]
+  },
+  {
+    "id": "NCT04624204",
+    "title": "Antibody-Drug Conjugate in HER2-Positive Metastatic Breast Cancer",
+    "phase": "Phase II",
+    "description": "A study evaluating an antibody-drug conjugate in patients with HER2-positive metastatic breast cancer who have progressed on prior anti-HER2 therapies.",
+    "inclusion_criteria": [
+      {
+        "type": "age",
+        "text": "Adults age ≥18 years"
+      },
+      {
+        "type": "diagnosis",
+        "text": "Histologically confirmed, HER2-positive (IHC 3+ or ISH-positive) metastatic breast cancer"
+      },
+      {
+        "type": "treatment",
+        "text": "Prior treatment with trastuzumab and pertuzumab in any setting and T-DM1 in the metastatic setting"
+      },
+      {
+        "type": "performance",
+        "text": "ECOG performance status of 0 or 1"
+      }
+    ],
+    "exclusion_criteria": [
+      {
+        "type": "condition",
+        "text": "History of unstable angina or myocardial infarction within 6 months"
+      },
+      {
+        "type": "condition",
+        "text": "Left ventricular ejection fraction <50%"
+      },
+      {
+        "type": "condition",
+        "text": "Symptomatic or progressive brain metastases"
+      }
+    ]
+  },
+  {
+    "id": "NCT04849351",
+    "title": "Experimental Drug for BRCA-Mutated Ovarian Cancer",
+    "phase": "Phase II",
+    "description": "A study of a novel PARP inhibitor in patients with BRCA-mutated platinum-sensitive recurrent ovarian cancer.",
+    "inclusion_criteria": [
+      {
+        "type": "age",
+        "text": "18 years or older"
+      },
+      {
+        "type": "gender",
+        "text": "Female"
+      },
+      {
+        "type": "diagnosis",
+        "text": "Histologically confirmed recurrent epithelial ovarian, fallopian tube, or primary peritoneal cancer"
+      },
+      {
+        "type": "mutation",
+        "text": "Deleterious or suspected deleterious BRCA1 or BRCA2 mutation (germline and/or somatic)"
+      },
+      {
+        "type": "treatment",
+        "text": "Received at least 2 prior lines of platinum-based chemotherapy and be platinum sensitive"
+      },
+      {
+        "type": "performance",
+        "text": "ECOG performance status 0-1"
+      }
+    ],
+    "exclusion_criteria": [
+      {
+        "type": "treatment",
+        "text": "Prior treatment with any PARP inhibitor"
+      },
+      {
+        "type": "condition",
+        "text": "History of myelodysplastic syndrome or acute myeloid leukemia"
+      },
+      {
+        "type": "general",
+        "text": "Inadequate bone marrow, renal, or hepatic function"
+      }
+    ]
+  }
+]

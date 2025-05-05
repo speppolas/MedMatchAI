@@ -1,12 +1,14 @@
 import os
 import logging
 from app import create_app
+from config import LOG_LEVEL, LOG_FORMAT, HOST, PORT
 
 # Configurazione del logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=getattr(logging, LOG_LEVEL), format=LOG_FORMAT)
 
 # Creazione dell'applicazione
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    # Avvio dell'applicazione in modalità sviluppo
+    app.run(host=HOST, port=PORT)

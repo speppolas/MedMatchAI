@@ -232,8 +232,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Display matching trials
         displayMatches(data.matches);
         
-        // Display original text
-        displayOriginalText(data.text || data.features.original_text);
+        // Display original text and PDF viewer button if available
+        displayOriginalText(data.text || data.features.original_text, data.pdf_filename);
         
         // Scroll to results
         if (resultsSection) {
@@ -241,11 +241,38 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Display original text/PDF content
-    function displayOriginalText(text) {
+    // Display original text/PDF content and add PDF viewer button if available
+    function displayOriginalText(text, pdfFilename) {
+        const pdfContainer = document.getElementById('pdf-container');
         const pdfTextContainer = document.getElementById('pdf-text');
+        
         if (pdfTextContainer && text) {
             pdfTextContainer.textContent = text;
+        }
+        
+        // Se il nome del file PDF è disponibile, mostriamo il pulsante
+        if (pdfFilename && pdfContainer) {
+            // Rimuovi eventuali pulsanti precedenti
+            const oldButton = document.getElementById('view-pdf-button');
+            if (oldButton) {
+                oldButton.remove();
+            }
+            
+            // Crea un nuovo pulsante per visualizzare il PDF
+            const viewButton = document.createElement('div');
+            viewButton.className = 'text-center p-3';
+            viewButton.innerHTML = `
+                <a id="view-pdf-button" href="/view-pdf/${pdfFilename}" target="_blank" 
+                   class="btn btn-primary">
+                    <i data-feather="file-text"></i> Visualizza PDF Originale
+                </a>
+            `;
+            
+            // Inserisci il pulsante prima del contenitore di testo
+            pdfContainer.insertBefore(viewButton, pdfTextContainer);
+            
+            // Inizializza le icone Feather
+            feather.replace();
         }
     }
     

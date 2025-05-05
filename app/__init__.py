@@ -18,6 +18,11 @@ def create_app():
                 static_folder="../static", 
                 template_folder="../templates")
     
+    # Configura la cartella per gli upload temporanei
+    app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'uploads')
+    # Limite di dimensione file (10MB)
+    app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
+    
     # Configurazione Flask e SQLAlchemy
     app.config['SECRET_KEY'] = os.environ.get('SESSION_SECRET', 'dev_key_please_change')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')

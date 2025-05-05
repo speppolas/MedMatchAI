@@ -4,6 +4,9 @@ import pdfplumber
 import logging
 import requests
 import re
+import time
+import shutil
+from datetime import datetime, timedelta
 from flask import current_app
 
 def extract_text_from_pdf(pdf_file):
@@ -11,13 +14,14 @@ def extract_text_from_pdf(pdf_file):
     Extract text content from a PDF file using pdfplumber.
     
     Args:
-        pdf_file: The PDF file object from request.files
+        pdf_file: Either a file object from request.files or a filepath string
         
     Returns:
         str: Extracted text from the PDF
     """
     text = ""
     try:
+        # Check if pdf_file is a string (filepath) or a file object
         with pdfplumber.open(pdf_file) as pdf:
             for page in pdf.pages:
                 text += page.extract_text() or ""
@@ -171,6 +175,45 @@ def extract_with_ollama(text):
     except Exception as e:
         logging.warning(f"Estrazione con Ollama fallita: {str(e)}. Ritorno all'estrazione di base.")
         return None
+
+def clean_expired_files(max_age_minutes=30):
+    """
+    Rimuove i file PDF scaduti dalla cartella uploads.
+    
+    Questa funzione scansiona la cartella degli upload e rimuove i file PDF
+    che sono stati creati più di max_age_minutes minuti fa. Questo garantisce che
+    i documenti sensibili non rimangano sul server più a lungo del necessario.
+    
+    Args:
+        max_age_minutes: Il tempo massimo in minuti per cui un file può rimanere sul server.
+                        Default: 30 minuti.
+    """
+    try:
+        upload_folder = current_app.config['UPLOAD_FOLDER']
+        
+        # Se la cartella non esiste, non c'è nulla da pulire
+        if not os.path.exists(upload_folder):
+            return
+            
+        # Calcola il timestamp di scadenza
+        expiration_time = datetime.now() - timedelta(minutes=max_age_minutes)
+        expiration_timestamp = expiration_time.timestamp()
+        
+        # Verifica tutti i file nella cartella uploads
+        for filename in os.listdir(upload_folder):
+            if filename.endswith('.pdf'):
+                file_path = os.path.join(upload_folder, filename)
+                file_creation_time = os.path.getctime(file_path)
+                
+                # Se il file è più vecchio del tempo massimo consentito, eliminalo
+                if file_creation_time < expiration_timestamp:
+                    try:
+                        os.remove(file_path)
+                        logging.info(f"Rimosso file scaduto: {filename}")
+                    except Exception as e:
+                        logging.error(f"Errore durante la rimozione del file {filename}: {str(e)}")
+    except Exception as e:
+        logging.error(f"Errore durante la pulizia dei file scaduti: {str(e)}")
 
 def basic_feature_extraction(text):
     """

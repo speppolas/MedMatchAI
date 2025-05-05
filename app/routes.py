@@ -2,9 +2,14 @@ import os
 import json
 import re
 import logging
-from flask import render_template, request, jsonify, current_app
+import uuid
+import time
+import shutil
+from datetime import datetime, timedelta
+from werkzeug.utils import secure_filename
+from flask import render_template, request, jsonify, current_app, send_from_directory, session, abort
 from app import bp
-from app.utils import extract_text_from_pdf, extract_features
+from app.utils import extract_text_from_pdf, extract_features, clean_expired_files
 from models import ClinicalTrial, db
 
 @bp.route('/')
@@ -16,6 +21,54 @@ def index():
 def trials():
     """Render the trials listing page."""
     return render_template('trials.html')
+
+@bp.route('/view-pdf/<filename>')
+def view_pdf(filename):
+    """
+    Visualizza un PDF dal filesystem in modo sicuro.
+    
+    Questa route consente di visualizzare un PDF caricato in precedenza,
+    ma solo se il nome del file è autorizzato (presente nella sessione) e
+    il file esiste ancora. Ciò garantisce che solo l'utente che ha caricato
+    il file possa visualizzarlo.
+    
+    Args:
+        filename: Il nome del file PDF da visualizzare
+        
+    Returns:
+        Il file PDF o un errore 404/403 se non trovato o non autorizzato.
+    """
+    try:
+        # Verifica se il file è autorizzato (presente nella sessione)
+        session_filename = session.get('pdf_filename')
+        
+        # Se non c'è nessun filename nella sessione o non corrisponde
+        if not session_filename or session_filename != filename:
+            # Controllo di sicurezza fallito
+            logging.warning(f"Tentativo di accesso a PDF non autorizzato: {filename}")
+            abort(403)  # Forbidden
+        
+        # Pulisci i file scaduti prima di servire il PDF richiesto
+        clean_expired_files()
+        
+        # Costruisci il percorso completo del file
+        pdf_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        
+        # Verifica se il file esiste
+        if not os.path.exists(pdf_path):
+            logging.warning(f"PDF richiesto non trovato: {filename}")
+            abort(404)  # Not Found
+        
+        # Restituisci il file PDF
+        return send_from_directory(
+            current_app.config['UPLOAD_FOLDER'],
+            filename,
+            mimetype='application/pdf',
+            as_attachment=False
+        )
+    except Exception as e:
+        logging.error(f"Errore durante l'accesso al PDF {filename}: {str(e)}")
+        return jsonify({'error': f'Si è verificato un errore: {str(e)}'}), 500
 
 @bp.route('/api/trials')
 def api_trials():
@@ -49,10 +102,24 @@ def process():
     try:
         # Check if we have a file upload or text input
         text = ""
+        pdf_filename = None
+        
         if 'file' in request.files and request.files['file'].filename:
             file = request.files['file']
             if file.filename.endswith('.pdf'):
-                text = extract_text_from_pdf(file)
+                # Generate a unique filename to avoid collisions
+                unique_filename = f"{str(uuid.uuid4())}.pdf"
+                file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
+                
+                # Save the file to disk
+                file.save(file_path)
+                
+                # Store the filename in session for later retrieval
+                session['pdf_filename'] = unique_filename
+                pdf_filename = unique_filename
+                
+                # Extract text from PDF
+                text = extract_text_from_pdf(file_path)
             else:
                 return jsonify({'error': 'Only PDF files are supported'}), 400
         elif 'text' in request.form and request.form['text'].strip():
@@ -70,7 +137,8 @@ def process():
         return jsonify({
             'features': features,
             'matches': trial_matches,
-            'text': text
+            'text': text,
+            'pdf_filename': pdf_filename
         })
         
     except Exception as e:

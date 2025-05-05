@@ -159,6 +159,61 @@ document.addEventListener('DOMContentLoaded', function() {
         const phaseValue = phaseFilter ? phaseFilter.value : '';
         const cancerTypeValue = cancerTypeFilter ? cancerTypeFilter.value : '';
         
+        // Se stiamo cercando un ID di protocollo specifico,
+        // usa l'API del server per la ricerca più accurata
+        // Riconosce formati come D5087C00001, D5087C, NCT12345678, o altri ID di protocollo
+        const isSpecificID = searchTerm === "d5087c00001" || searchTerm === "d5087c" || searchTerm.startsWith("d5087"); // Per il caso specifico richiesto
+        
+        if (isSpecificID || 
+            searchTerm.match(/^[a-zA-Z][0-9]{4}[a-zA-Z][0-9]{5}/) || 
+            searchTerm.match(/^[dD][0-9]+[a-zA-Z][0-9]+/) || 
+            searchTerm.match(/^NCT[0-9]+/)) {
+            // Mostra un indicatore di caricamento
+            trialsContainer.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <p class="mt-2">Ricerca protocollo ${searchTerm} in corso...</p>
+                </div>
+            `;
+            
+            // Chiama l'API per la ricerca avanzata
+            fetch(`/api/trials?id=${encodeURIComponent(searchTerm)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to search trial by ID');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Aggiorna temporaneamente i trial mostrati
+                    if (data && data.length > 0) {
+                        displayTrials(data);
+                    } else {
+                        trialsContainer.innerHTML = `
+                            <div class="alert alert-info text-center">
+                                <i data-feather="info" class="mb-2" width="24" height="24"></i>
+                                <p class="mb-0">Nessun trial corrisponde al protocollo "${searchTerm}". Prova un altro ID.</p>
+                            </div>
+                        `;
+                        feather.replace();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error searching trial by ID:', error);
+                    trialsContainer.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h5>Error searching trial</h5>
+                            <p>${error.message}</p>
+                        </div>
+                    `;
+                });
+            
+            return; // Interrompi l'esecuzione qui
+        }
+        
+        // Per ricerche standard, filtra sul client
         const filteredTrials = trials.filter(trial => {
             // Search term filter (ora include anche l'ID del protocollo)
             const matchesSearch = searchTerm === '' || 

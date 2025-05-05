@@ -38,12 +38,12 @@ INT_ORGANIZATION_TERMS = [
 ]
 MAX_RESULTS_PER_REQUEST = 1000  # Limite massimo consentito dall'API
 
-def fetch_trials_from_api(offset: int = 0) -> Dict[str, Any]:
+def fetch_trials_from_api(page_token: Optional[str] = None) -> Dict[str, Any]:
     """
     Recupera i trial clinici da ClinicalTrials.gov utilizzando l'API ufficiale v2.
     
     Args:
-        offset: Posizione di partenza per la paginazione
+        page_token: Token della pagina per la paginazione (utilizzato dall'API v2)
         
     Returns:
         Dict: Risposta JSON dall'API
@@ -55,7 +55,7 @@ def fetch_trials_from_api(offset: int = 0) -> Dict[str, Any]:
     params = {
         "format": "json",
         "pageSize": 100,  # Numero di risultati per pagina (max 100 per l'API v2)
-        "pageToken": str(offset) if offset > 0 else None,
+        "pageToken": page_token,
         "query.term": '"Istituto Nazionale dei Tumori" AND (Milan OR Milano)',
         "query.field": ["LocationFacility", "LocationCity"],
         "countTotal": "true",
@@ -66,7 +66,7 @@ def fetch_trials_from_api(offset: int = 0) -> Dict[str, Any]:
     # Rimuovi i parametri None
     params = {k: v for k, v in params.items() if v is not None}
     
-    logger.info(f"Richiesta all'API v2 di ClinicalTrials.gov con offset {offset}")
+    logger.info(f"Richiesta all'API v2 di ClinicalTrials.gov con page_token: {page_token}")
     logger.info(f"Parametri: {params}")
     
     try:

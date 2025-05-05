@@ -11,6 +11,8 @@ from flask import render_template, request, jsonify, current_app, send_from_dire
 from app import bp
 from app.utils import extract_text_from_pdf, extract_features, clean_expired_files, format_features_concise
 from models import ClinicalTrial, db
+from app.llm_processor import get_llm_processor
+from app.hybrid_query import get_hybrid_query
 
 @bp.route('/')
 def index():

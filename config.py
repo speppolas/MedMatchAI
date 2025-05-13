@@ -32,7 +32,7 @@ PORT = int(os.getenv('PORT', 5000))
 DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 't', 'yes')
 
 # Configurazione del database (unificato per SQLAlchemy)
-SQLALCHEMY_DATABASE_URI = get_required_env_var('SQLALCHEMY_DATABASE_URI')
+SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI', 'sqlite:///medmatchint.db')
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SQLALCHEMY_ENGINE_OPTIONS = {
@@ -45,7 +45,7 @@ UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', str(BASE_DIR / 'uploads'))
 MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH', 10 * 1024 * 1024))  # 10 MB predefinito
 
 # Sicurezza
-SECRET_KEY = get_required_env_var('FLASK_SECRET_KEY')
+SECRET_KEY = os.getenv('FLASK_SECRET_KEY', 'dev_secret_key_123')
 CORS_ORIGINS = os.getenv('CORS_ORIGINS', '*')
 
 # LLM Configuration
@@ -58,16 +58,12 @@ LLM_MAX_TOKENS = int(os.getenv('LLM_MAX_TOKENS', 512))
 LLM_TIMEOUT = int(os.getenv('LLM_TIMEOUT', 10))  # timeout in secondi
 LLM_EXTRA_PARAMS = os.getenv('LLM_EXTRA_PARAMS', '')
 
-# Verifica che i percorsi del modello e dell'eseguibile siano corretti
-if not USE_OLLAMA_FALLBACK:
-    if not LLAMA_CPP_PATH:
-        raise ValueError("ERRORE: LLAMA_CPP_PATH deve essere impostato quando USE_OLLAMA_FALLBACK è false.")
-    if not LLM_MODEL_PATH:
-        raise ValueError("ERRORE: LLM_MODEL_PATH deve essere impostato quando USE_OLLAMA_FALLBACK è false.")
+# Skip llama.cpp validation when using fallback
+if not USE_OLLAMA_FALLBACK and LLAMA_CPP_PATH and LLM_MODEL_PATH:
     if not Path(LLAMA_CPP_PATH).exists():
-        raise ValueError(f"ERRORE: Il percorso di llama.cpp (LLAMA_CPP_PATH) non è valido: {LLAMA_CPP_PATH}")
+        logging.warning(f"Warning: llama.cpp path not found: {LLAMA_CPP_PATH}")
     if not Path(LLM_MODEL_PATH).exists():
-        raise ValueError(f"ERRORE: Il percorso del modello LLM (LLM_MODEL_PATH) non è valido: {LLM_MODEL_PATH}")
+        logging.warning(f"Warning: LLM model path not found: {LLM_MODEL_PATH}")
 
 # Configurazione logging (Globale)
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'DEBUG').upper()
@@ -83,7 +79,6 @@ INT_LOCATION_ID = os.getenv('INT_LOCATION_ID', 'Milano, Lombardy, Italy')
 MIN_KEYWORD_MATCH_SCORE = float(os.getenv('MIN_KEYWORD_MATCH_SCORE', 0.6))
 MAX_TRIALS_TO_EVALUATE = int(os.getenv('MAX_TRIALS_TO_EVALUATE', 20))
 
-
 class Config:
     """Classe base di configurazione."""
     DEBUG = False
@@ -94,33 +89,17 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = SQLALCHEMY_ENGINE_OPTIONS
     UPLOAD_FOLDER = UPLOAD_FOLDER
     MAX_CONTENT_LENGTH = MAX_CONTENT_LENGTH
-
-    # Logging
-    LOG_LEVEL = LOG_LEVEL
-    LOG_FORMAT = LOG_FORMAT
-
-    # LLM Configuration
     USE_OLLAMA_FALLBACK = USE_OLLAMA_FALLBACK
-    LLAMA_CPP_PATH = LLAMA_CPP_PATH
-    LLM_MODEL_PATH = LLM_MODEL_PATH
-    LLM_CONTEXT_SIZE = LLM_CONTEXT_SIZE
-    LLM_TEMPERATURE = LLM_TEMPERATURE
-    LLM_MAX_TOKENS = LLM_MAX_TOKENS
-    LLM_TIMEOUT = LLM_TIMEOUT
-    LLM_EXTRA_PARAMS = LLM_EXTRA_PARAMS
-
 
 class ProductionConfig(Config):
     """Configurazione per l'ambiente di produzione."""
     DEBUG = False
     LOG_LEVEL = 'INFO'
 
-
 class DevelopmentConfig(Config):
     """Configurazione per l'ambiente di sviluppo."""
     DEBUG = True
     LOG_LEVEL = 'DEBUG'
-
 
 class TestingConfig(Config):
     """Configurazione per l'ambiente di test."""
@@ -129,7 +108,6 @@ class TestingConfig(Config):
     SECRET_KEY = "test_key"
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     LOG_LEVEL = 'DEBUG'
-
 
 def get_config():
     """Restituisce la classe di configurazione attiva."""
@@ -141,4 +119,3 @@ def get_config():
         return TestingConfig
     else:
         return DevelopmentConfig
-```

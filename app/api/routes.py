@@ -114,21 +114,52 @@ def process():
 
 def match_trials_llm(patient_features):
     """
-    Match patient features with clinical trials using LLM (llama.cpp).
+    Match patient features with clinical trials using LLM (llama.cpp) with XAI.
+    Provides detailed explanations for each match/non-match decision.
 
     Args:
         patient_features: Extracted patient features (from LLM).
         
     Returns:
-        list: List of matching trials with details.
+        list: List of matching trials with detailed explanations.
     """
     try:
-        logger.info("🔍 Matching trials using LLM (llama.cpp)...")
+        logger.info("🔍 Matching trials using LLM with explainable reasoning...")
         llm = get_llm_processor()
         
-        # Load clinical trials
+        # Load clinical trials from Istituto Nazionale Tumori
         trials = get_all_trials_json()
         matched_trials = []
+        
+        # Enhanced prompt template for XAI reasoning
+        prompt_template = """
+        Analyze if this patient is eligible for the clinical trial.
+        
+        Patient Profile:
+        {patient_features}
+        
+        Trial Criteria:
+        - Name: {trial_name}
+        - ID: {trial_id}
+        - Inclusion Criteria: {inclusion_criteria}
+        - Exclusion Criteria: {exclusion_criteria}
+        
+        Provide a structured analysis in JSON format:
+        {
+            "eligible": true/false,
+            "confidence_score": 0-1,
+            "reasoning": {
+                "inclusion_analysis": [
+                    {"criterion": "criterion text", "met": true/false, "explanation": "detailed explanation"}
+                ],
+                "exclusion_analysis": [
+                    {"criterion": "criterion text", "met": true/false, "explanation": "detailed explanation"}
+                ],
+                "key_factors": ["list of decisive factors"],
+                "summary": "concise summary of decision"
+            }
+        }
+        """
         
         for trial in trials:
             # Create structured prompt for matching
@@ -149,16 +180,28 @@ def match_trials_llm(patient_features):
             JSON response:
             """
             
-            # Get matching result
-            response = llm.generate_response(prompt)
-            result = json.loads(response)
+            # Generate detailed analysis for each trial
+            prompt = prompt_template.format(
+                patient_features=json.dumps(patient_features, indent=2),
+                trial_name=trial.get('title', ''),
+                trial_id=trial.get('id', ''),
+                inclusion_criteria=json.dumps(trial.get('inclusion_criteria', []), indent=2),
+                exclusion_criteria=json.dumps(trial.get('exclusion_criteria', []), indent=2)
+            )
             
-            if result.get('matches', False) and result.get('confidence', 0) > 0.7:
+            response = llm.generate_response(prompt)
+            analysis = json.loads(response)
+            
+            if analysis.get('eligible', False) and analysis.get('confidence_score', 0) > 0.7:
                 matched_trials.append({
                     'trial': trial,
-                    'match_reason': result.get('reason', ''),
-                    'confidence': result.get('confidence', 0)
+                    'analysis': analysis['reasoning'],
+                    'confidence_score': analysis['confidence_score'],
+                    'summary': analysis['reasoning']['summary']
                 })
+            
+            # Log detailed analysis for transparency
+            logger.info(f"Trial {trial.get('id')} analysis: {json.dumps(analysis['reasoning'], indent=2)}")
         
         # Sort by confidence
         matched_trials.sort(key=lambda x: x['confidence'], reverse=True)

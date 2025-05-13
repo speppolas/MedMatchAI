@@ -209,40 +209,36 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('text', textInput.value.trim());
         }
         
-        // Send request using EventSource for progress updates
-        const params = new URLSearchParams();
+        // Send request using fetch for file upload
+        const formData = new FormData();
         if (selectedFile) {
-            params.append('file', selectedFile);
+            formData.append('file', selectedFile);
         } else {
-            params.append('text', textInput.value.trim());
+            formData.append('text', textInput.value.trim());
         }
 
-        const evtSource = new EventSource('/process?' + params.toString());
-        
-        evtSource.onmessage = function(event) {
-            const data = JSON.parse(event.data);
-            
-            if (data.percentage !== undefined) {
-                // Update progress
-                progressBar.style.width = data.percentage + '%';
-                progressMessage.textContent = data.message;
-                
-                if (data.complete) {
-                    // Complete - hide progress and show results
-                    progressBanner.style.display = 'none';
-                    evtSource.close();
-                    displayResults(data);
-                    if (resultsSection) resultsSection.classList.remove('d-none');
-                }
-            }
-        };
-        
-        evtSource.onerror = function(err) {
-            evtSource.close();
-            progressBanner.style.display = 'none';
-            showAlert('An error occurred while processing the document.', 'danger');
-        };
+        fetch('/process', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
         .then(data => {
+            // Hide loading spinner
+            if (loadingSpinner) loadingSpinner.classList.add('d-none');
+            
+            // Display results
+            displayResults(data);
+            
+            // Show results section
+            if (resultsSection) resultsSection.classList.remove('d-none');
+        })
+        .catch(error => {
+            // Hide loading spinner
+            if (loadingSpinner) loadingSpinner.classList.add('d-none');
+            
+            // Show error message
+            showAlert('An error occurred while processing the document.', 'danger');
+        });
             // Hide loading spinner
             if (loadingSpinner) loadingSpinner.classList.add('d-none');
             

@@ -4,7 +4,8 @@ import re
 import logging
 import uuid
 from werkzeug.utils import secure_filename
-from flask import render_template, request, jsonify, current_app, send_from_directory, session, abort
+from flask import render_template, request, jsonify, current_app, send_from_directory, session, abort, Response
+from werkzeug.utils import secure_filename
 from app.api import bp
 from app.utils import extract_text_from_pdf, extract_features, clean_expired_files, format_features_concise
 from app.llm_processor import get_llm_processor
@@ -83,7 +84,7 @@ def _basic_criteria_match(trial, basic_criteria):
 @bp.route('/process', methods=['POST'])
 def process():
     """
-    Process uploaded PDF or text input and find matching trials using LLM (llama.cpp).
+    Process uploaded PDF or text input and find matching trials.
     """
     try:
         text = ""
@@ -108,37 +109,24 @@ def process():
             text = request.form['text']
         else:
             return jsonify({'error': 'No input provided. Please upload a PDF or enter text.'}), 400
-        
-        def send_progress(message, percentage):
-            progress = {'message': message, 'percentage': percentage}
-            print(f"data: {json.dumps(progress)}\n\n", flush=True)
 
-        # Server-sent events response
-        def generate():
-            # Start feature extraction
-            send_progress("Extracting patient features...", 10)
-            features = extract_features(text)
+        # Extract features
+        features = extract_features(text)
+        concise_features = format_features_concise(features)
             
-            send_progress("Processing extracted features...", 40)
-            concise_features = format_features_concise(features)
+        # Match trials
+        matched_trials = []  # You can implement match_trials() function later
             
-            send_progress("Matching with clinical trials...", 60)
-            matched_trials = match_trials_llm(features)
-            
-            send_progress("Finalizing results...", 90)
-            
-            # Final response
-            result = {
-                'features': concise_features,
-                'matches': matched_trials,
-                'text': text,
-                'pdf_filename': pdf_filename,
-                'complete': True
-            }
-            send_progress("Complete!", 100)
-            return f"data: {json.dumps(result)}\n\n"
-            
-        return Response(generate(), mimetype='text/event-stream')
+        return jsonify({
+            'features': concise_features,
+            'matches': matched_trials,
+            'text': text,
+            'pdf_filename': pdf_filename
+        })
+        
+    except Exception as e:
+        logger.error(f"Error processing request: {str(e)}")
+        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
         
         return jsonify({
             'features': concise_features,

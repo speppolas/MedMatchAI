@@ -17,6 +17,11 @@ def index():
     logger.info("✅ Index route accessed")
     return render_template('index.html')
 
+@bp.route('/health')
+def health():
+    """Health check endpoint."""
+    return {"status": "ok"}
+
 @bp.route('/trials')
 def trials():
     """Render the trials listing page."""

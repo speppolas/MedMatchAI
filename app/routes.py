@@ -102,9 +102,47 @@ def match_trials_llm(patient_features):
         logger.info("🔍 Matching trials using LLM (llama.cpp)...")
         llm = get_llm_processor()
         
-        # Load clinical trials (from JSON for simplicity)
+        # Load clinical trials
         trials = get_all_trials_json()
         matched_trials = []
+        
+        for trial in trials:
+            # Create structured prompt for matching
+            prompt = f"""
+            Determine if the patient matches this clinical trial. Return ONLY a JSON object with format:
+            {{
+                "matches": true/false,
+                "reason": "brief explanation of match or mismatch",
+                "confidence": number between 0-1
+            }}
+
+            Patient features:
+            {json.dumps(patient_features, indent=2)}
+
+            Trial criteria:
+            {json.dumps(trial, indent=2)}
+
+            JSON response:
+            """
+            
+            # Get matching result
+            response = llm.generate_response(prompt)
+            result = json.loads(response)
+            
+            if result.get('matches', False) and result.get('confidence', 0) > 0.7:
+                matched_trials.append({
+                    'trial': trial,
+                    'match_reason': result.get('reason', ''),
+                    'confidence': result.get('confidence', 0)
+                })
+        
+        # Sort by confidence
+        matched_trials.sort(key=lambda x: x['confidence'], reverse=True)
+        return matched_trials[:10]  # Return top 10 matches
+        
+    except Exception as e:
+        logger.error(f"Error in trial matching: {str(e)}")
+        return [] = []
 
         for trial in trials:
             # Use LLM to evaluate if the patient matches the trial

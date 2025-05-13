@@ -32,43 +32,52 @@ def extract_text_from_pdf(pdf_file):
 
 def extract_features(text):
     """
-    Estrae caratteristiche cliniche dal testo utilizzando vari approcci.
-    
-    L'estrazione avviene in questo ordine di priorità:
-    1. LLM locale tramite llama.cpp (se configurato)
-    2. Ollama (se disponibile sulla macchina)
-    3. Estrazione di base con espressioni regolari (fallback)
+    Extract clinical features from text using llama.cpp local LLM.
     
     Args:
-        text: Il testo da analizzare
+        text: Text to analyze
         
     Returns:
-        dict: Caratteristiche cliniche estratte in formato JSON
+        dict: Extracted clinical features in JSON format
     """
     try:
-        # Prova prima con llama.cpp se configurato
-        try:
-            from app.llm_processor import get_llm_processor, LLM_AVAILABLE
-            if LLM_AVAILABLE:
-                llm = get_llm_processor()
-                features = llm.extract_patient_features(text)
-                logging.info("Caratteristiche estratte con successo utilizzando llama.cpp")
-                return features
-            else:
-                logging.info("llama.cpp non disponibile, provo con Ollama...")
-        except Exception as llm_error:
-            logging.warning(f"Errore nell'utilizzo di llama.cpp: {str(llm_error)}")
-            
-        # Prova con Ollama
-        features = extract_with_ollama(text)
+        from app.llm_processor import get_llm_processor
+        llm = get_llm_processor()
         
-        # Se Ollama non è disponibile, usa l'estrazione di base
-        if not features:
-            logging.info("Ollama non disponibile, utilizzo estrazione di base")
-            features = basic_feature_extraction(text)
-            
+        # Structured prompt for feature extraction
+        prompt = """
+        Extract clinical features from the following patient text. Return ONLY a JSON object with these fields:
+        {
+            "age": number or null,
+            "gender": "male"/"female" or null,
+            "diagnosis": string or null,
+            "stage": string or null,
+            "ecog": number or null,
+            "mutations": [list of strings],
+            "metastases": [list of strings],
+            "previous_treatments": [list of strings],
+            "lab_values": {key-value pairs}
+        }
+
+        Patient text:
+        ###
+        {text}
+        ###
+
+        JSON response:
+        """
+        
+        # Generate response and parse JSON
+        response = llm.generate_response(prompt.format(text=text))
+        import json
+        features = json.loads(response)
+        
+        logging.info("Features extracted successfully using llama.cpp")
         return features
+        
     except Exception as e:
+        logging.error(f"Error in feature extraction: {str(e)}")
+        return {} e:
         logging.error(f"Errore nell'estrazione delle caratteristiche: {str(e)}")
         # Fallback all'estrazione di base in caso di errore
         logging.info("Fallback all'estrazione di base a causa di un errore")

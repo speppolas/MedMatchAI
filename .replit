@@ -36,7 +36,7 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "FLASK_APP=main.py FLASK_ENV=development flask run --host=0.0.0.0 --port=5000"
+args = "FLASK_APP=main.py FLASK_ENV=development FLASK_DEBUG=1 flask run --host=0.0.0.0 --port=5000"
 
 [[workflows.workflow]]
 name = "Run App"

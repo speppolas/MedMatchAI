@@ -54,7 +54,7 @@ LLM_MODEL_PATH = get_required_env_var('LLM_MODEL_PATH')
 LLM_CONTEXT_SIZE = int(os.getenv('LLM_CONTEXT_SIZE', 2048))
 LLM_TEMPERATURE = float(os.getenv('LLM_TEMPERATURE', 0.1))
 LLM_MAX_TOKENS = int(os.getenv('LLM_MAX_TOKENS', 512))
-LLM_TIMEOUT = int(os.getenv('LLM_TIMEOUT', 180))  # timeout in secondi
+LLM_TIMEOUT = int(os.getenv('LLM_TIMEOUT', 10))  # timeout in secondi
 LLM_EXTRA_PARAMS = os.getenv('LLM_EXTRA_PARAMS', '')
 
 # Verifica che i percorsi del modello e dell'eseguibile siano corretti

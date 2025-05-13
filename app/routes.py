@@ -173,9 +173,7 @@ def extract_features(text):
         "mutations": ["mutation1", "mutation2"],
         "previous_treatments": ["treatment1", "treatment2"],
         "metastases": ["site1", "site2"],
-        "comorbidities": ["condition1", "condition2"],
-        "lab_results": {{"test_name": "result"}},
-        "biomarkers": {{"marker_name": "value"}}
+        "comorbidities": ["condition1", "condition2"]
     }}
     """
     response = llm.generate_response(prompt)

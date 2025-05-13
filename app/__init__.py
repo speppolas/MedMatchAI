@@ -46,7 +46,7 @@ logger = logging.getLogger(__name__)
 bp = Blueprint("main", __name__)
 
 # Import routes after the blueprint to avoid circular imports
-from app import routes
+from app.api import routes
 
 def create_app(config_class=None):
     logger.info("🔧 Creating MedMatchINT Application")

@@ -47,8 +47,6 @@ logger = logging.getLogger(__name__)
 from app.api import bp as api_bp
 
 def create_app(config_class=None):
-
-def create_app(config_class=None):
     logger.info("🔧 Creating MedMatchINT Application")
     
     app = Flask(

@@ -1,4 +1,4 @@
-modules = ["python-3.11", "cpp-clang14", "c-clang14", "nodejs-20"]
+modules = ["python-3.11", "cpp-clang14", "c-clang14"]
 
 [nix]
 channel = "stable-24_05"

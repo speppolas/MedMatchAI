@@ -59,10 +59,11 @@ LLM_TIMEOUT = int(os.getenv('LLM_TIMEOUT', 10))  # timeout in secondi
 LLM_EXTRA_PARAMS = os.getenv('LLM_EXTRA_PARAMS', '')
 
 # Skip llama.cpp validation when using fallback
-if not USE_OLLAMA_FALLBACK and LLAMA_CPP_PATH and LLM_MODEL_PATH:
-    if not Path(LLAMA_CPP_PATH).exists():
+# Skip validation when using fallback
+if not USE_OLLAMA_FALLBACK:
+    if LLAMA_CPP_PATH and not Path(LLAMA_CPP_PATH).exists():
         logging.warning(f"Warning: llama.cpp path not found: {LLAMA_CPP_PATH}")
-    if not Path(LLM_MODEL_PATH).exists():
+    if LLM_MODEL_PATH and not Path(LLM_MODEL_PATH).exists():
         logging.warning(f"Warning: LLM model path not found: {LLM_MODEL_PATH}")
 
 # Configurazione logging (Globale)
@@ -90,6 +91,7 @@ class Config:
     UPLOAD_FOLDER = UPLOAD_FOLDER
     MAX_CONTENT_LENGTH = MAX_CONTENT_LENGTH
     USE_OLLAMA_FALLBACK = USE_OLLAMA_FALLBACK
+    LOG_FORMAT = LOG_FORMAT
 
 class ProductionConfig(Config):
     """Configurazione per l'ambiente di produzione."""

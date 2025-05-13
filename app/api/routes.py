@@ -166,7 +166,7 @@ def match_trials_llm(patient_features):
         
     except Exception as e:
         logger.error(f"Error in trial matching: {str(e)}")
-        return [] = []
+        return []
 
         for trial in trials:
             # Use LLM to evaluate if the patient matches the trial

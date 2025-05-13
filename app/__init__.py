@@ -43,10 +43,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Main Blueprint
-bp = Blueprint("main", __name__)
+# Import routes before registering blueprint
+from app.api import bp as api_bp
 
-# Import routes after the blueprint to avoid circular imports
-from app.api import routes
+def create_app(config_class=None):
 
 def create_app(config_class=None):
     logger.info("🔧 Creating MedMatchINT Application")
@@ -75,7 +75,7 @@ def create_app(config_class=None):
     db.init_app(app)
     
     # Register Blueprint
-    app.register_blueprint(bp)
+    app.register_blueprint(api_bp)
     
     # Ensure database schema is initialized
     with app.app_context():

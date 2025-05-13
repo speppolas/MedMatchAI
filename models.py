@@ -19,12 +19,12 @@ class ClinicalTrial(db.Model):
     completion_date = db.Column(db.String(50))
     sponsor = db.Column(db.String(200))
     last_updated = db.Column(db.String(50))
-    locations = db.Column(JSONB, default=[])
+    locations = db.Column(JSON, default=list)
     min_age = db.Column(db.String(50))
     max_age = db.Column(db.String(50))
     gender = db.Column(db.String(50))
-    org_study_id = db.Column(db.String(100))  # ID dello studio dell'organizzazione (es. D5087C00001)
-    secondary_ids = db.Column(JSONB, default=[])  # Altri ID dello studio
+    org_study_id = db.Column(db.String(100))  # Organization study ID (e.g. D5087C00001)
+    secondary_ids = db.Column(JSON, default=list)  # Other study IDs
     
     # Relazione con i criteri di inclusione/esclusione (alternativa al JSONB)
     # inclusion_criteria = db.relationship('Criterion', backref='inclusion_trial',

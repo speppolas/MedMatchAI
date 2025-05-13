@@ -42,6 +42,37 @@ def view_pdf(filename):
         return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename, as_attachment=False)
     except Exception as e:
         logger.error(f"Error accessing PDF {filename}: {str(e)}")
+
+def _basic_criteria_match(trial, basic_criteria):
+    """Quick pre-filter for basic matching criteria."""
+    try:
+        # Check age criteria if available
+        if basic_criteria['age']:
+            min_age = trial.get('min_age')
+            max_age = trial.get('max_age')
+            if min_age and int(basic_criteria['age']) < int(min_age):
+                return False
+            if max_age and int(basic_criteria['age']) > int(max_age):
+                return False
+                
+        # Check gender criteria if specified
+        if basic_criteria['gender'] and trial.get('gender'):
+            if trial['gender'].lower() != 'any' and \
+               trial['gender'].lower() != basic_criteria['gender'].lower():
+                return False
+                
+        # Basic diagnosis match (more detailed matching done by LLM)
+        if basic_criteria['diagnosis'] and trial.get('conditions'):
+            diagnosis_lower = basic_criteria['diagnosis'].lower()
+            if not any(c.lower() in diagnosis_lower or diagnosis_lower in c.lower() 
+                      for c in trial['conditions']):
+                return False
+                
+        return True
+    except Exception as e:
+        logger.error(f"Error in basic criteria matching: {str(e)}")
+        return True  # On error, let the LLM do the detailed matching
+
         return jsonify({'error': f'Error accessing PDF: {str(e)}'}), 500
 
 @bp.route('/process', methods=['POST'])
@@ -114,17 +145,19 @@ def process():
 
 def match_trials_llm(patient_features):
     """
-    Match patient features with clinical trials using LLM (llama.cpp) with XAI.
-    Provides detailed explanations for each match/non-match decision.
+    Enhanced trial matching with XAI using a structured approach:
+    1. Pre-filter trials based on basic criteria
+    2. Detailed LLM analysis with reasoning for each criterion
+    3. Confidence scoring with explanation
 
     Args:
-        patient_features: Extracted patient features (from LLM).
+        patient_features: Extracted patient features from patient document
         
     Returns:
-        list: List of matching trials with detailed explanations.
+        list: List of matching trials with detailed XAI explanations
     """
     try:
-        logger.info("🔍 Matching trials using LLM with explainable reasoning...")
+        logger.info("🔍 Starting enhanced trial matching with XAI...")
         llm = get_llm_processor()
         
         # Load clinical trials from Istituto Nazionale Tumori
@@ -133,20 +166,45 @@ def match_trials_llm(patient_features):
             logger.error("No trials found in database")
             return []
             
+        # Pre-filter trials based on basic criteria
+        basic_criteria = {
+            'age': patient_features.get('age', {}).get('value'),
+            'gender': patient_features.get('gender', {}).get('value'),
+            'diagnosis': patient_features.get('diagnosis', {}).get('value')
+        }
+        
+        potential_trials = [
+            trial for trial in trials 
+            if _basic_criteria_match(trial, basic_criteria)
+        ]
+        
+        logger.info(f"Pre-filtered to {len(potential_trials)} potentially matching trials")
         matched_trials = []
         
         # Enhanced prompt template for XAI reasoning
         prompt_template = """
-        Analyze if this patient is eligible for the clinical trial.
+        You are a clinical trial matching expert. Analyze if this patient is eligible for the clinical trial.
+        Provide detailed reasoning for each criterion.
         
         Patient Profile:
         {patient_features}
         
-        Trial Criteria:
+        Trial Information:
         - Name: {trial_name}
         - ID: {trial_id}
-        - Inclusion Criteria: {inclusion_criteria}
-        - Exclusion Criteria: {exclusion_criteria}
+        - Phase: {trial_phase}
+        - Status: {trial_status}
+        
+        Criteria Analysis Required:
+        1. Inclusion Criteria: {inclusion_criteria}
+        2. Exclusion Criteria: {exclusion_criteria}
+        3. Disease Specific Requirements: {conditions}
+        
+        For each criterion, provide:
+        1. Whether it is met (true/false)
+        2. Confidence level (0-100%)
+        3. Specific evidence from patient profile
+        4. Clinical reasoning for the decision
         
         Provide a structured analysis in JSON format:
         {

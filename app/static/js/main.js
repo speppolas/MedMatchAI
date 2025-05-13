@@ -174,9 +174,26 @@ document.addEventListener('DOMContentLoaded', function() {
             showAlert('Please upload a PDF file or enter text.', 'danger');
             return;
         }
+
+        // Create progress banner if it doesn't exist
+        let progressBanner = document.getElementById('progress-banner');
+        if (!progressBanner) {
+            progressBanner = document.createElement('div');
+            progressBanner.id = 'progress-banner';
+            progressBanner.className = 'progress-banner';
+            progressBanner.innerHTML = `
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                </div>
+                <div class="progress-message"></div>
+            `;
+            document.body.appendChild(progressBanner);
+        }
         
-        // Show loading spinner
-        if (loadingSpinner) loadingSpinner.classList.remove('d-none');
+        // Show progress banner
+        progressBanner.style.display = 'block';
+        const progressBar = progressBanner.querySelector('.progress-bar');
+        const progressMessage = progressBanner.querySelector('.progress-message');
         
         // Hide results and clear previous content
         if (resultsSection) resultsSection.classList.add('d-none');
@@ -192,19 +209,39 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('text', textInput.value.trim());
         }
         
-        // Send request to backend
-        fetch('/process', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(data => {
-                    throw new Error(data.error || 'An error occurred while processing the document.');
-                });
+        // Send request using EventSource for progress updates
+        const params = new URLSearchParams();
+        if (selectedFile) {
+            params.append('file', selectedFile);
+        } else {
+            params.append('text', textInput.value.trim());
+        }
+
+        const evtSource = new EventSource('/process?' + params.toString());
+        
+        evtSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            if (data.percentage !== undefined) {
+                // Update progress
+                progressBar.style.width = data.percentage + '%';
+                progressMessage.textContent = data.message;
+                
+                if (data.complete) {
+                    // Complete - hide progress and show results
+                    progressBanner.style.display = 'none';
+                    evtSource.close();
+                    displayResults(data);
+                    if (resultsSection) resultsSection.classList.remove('d-none');
+                }
             }
-            return response.json();
-        })
+        };
+        
+        evtSource.onerror = function(err) {
+            evtSource.close();
+            progressBanner.style.display = 'none';
+            showAlert('An error occurred while processing the document.', 'danger');
+        };
         .then(data => {
             // Hide loading spinner
             if (loadingSpinner) loadingSpinner.classList.add('d-none');

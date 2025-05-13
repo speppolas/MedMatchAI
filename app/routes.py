@@ -69,12 +69,36 @@ def process():
         else:
             return jsonify({'error': 'No input provided. Please upload a PDF or enter text.'}), 400
         
-        # Use llama.cpp (LLM) to extract features
-        features = extract_features(text)
-        concise_features = format_features_concise(features)
-        
-        # Use LLM to match with clinical trials
-        matched_trials = match_trials_llm(features)
+        def send_progress(message, percentage):
+            progress = {'message': message, 'percentage': percentage}
+            print(f"data: {json.dumps(progress)}\n\n", flush=True)
+
+        # Server-sent events response
+        def generate():
+            # Start feature extraction
+            send_progress("Extracting patient features...", 10)
+            features = extract_features(text)
+            
+            send_progress("Processing extracted features...", 40)
+            concise_features = format_features_concise(features)
+            
+            send_progress("Matching with clinical trials...", 60)
+            matched_trials = match_trials_llm(features)
+            
+            send_progress("Finalizing results...", 90)
+            
+            # Final response
+            result = {
+                'features': concise_features,
+                'matches': matched_trials,
+                'text': text,
+                'pdf_filename': pdf_filename,
+                'complete': True
+            }
+            send_progress("Complete!", 100)
+            return f"data: {json.dumps(result)}\n\n"
+            
+        return Response(generate(), mimetype='text/event-stream')
         
         return jsonify({
             'features': concise_features,

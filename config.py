@@ -48,9 +48,10 @@ MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH', 10 * 1024 * 1024))  # 1
 SECRET_KEY = get_required_env_var('FLASK_SECRET_KEY')
 CORS_ORIGINS = os.getenv('CORS_ORIGINS', '*')
 
-# Configurazione LLM con llama.cpp
-LLAMA_CPP_PATH = get_required_env_var('LLAMA_CPP_PATH')
-LLM_MODEL_PATH = get_required_env_var('LLM_MODEL_PATH')
+# LLM Configuration
+USE_OLLAMA_FALLBACK = os.getenv('USE_OLLAMA_FALLBACK', 'true').lower() == 'true'
+LLAMA_CPP_PATH = os.getenv('LLAMA_CPP_PATH', '')
+LLM_MODEL_PATH = os.getenv('LLM_MODEL_PATH', '')
 LLM_CONTEXT_SIZE = int(os.getenv('LLM_CONTEXT_SIZE', 2048))
 LLM_TEMPERATURE = float(os.getenv('LLM_TEMPERATURE', 0.1))
 LLM_MAX_TOKENS = int(os.getenv('LLM_MAX_TOKENS', 512))
@@ -58,10 +59,15 @@ LLM_TIMEOUT = int(os.getenv('LLM_TIMEOUT', 10))  # timeout in secondi
 LLM_EXTRA_PARAMS = os.getenv('LLM_EXTRA_PARAMS', '')
 
 # Verifica che i percorsi del modello e dell'eseguibile siano corretti
-if not Path(LLAMA_CPP_PATH).exists():
-    raise ValueError(f"ERRORE: Il percorso di llama.cpp (LLAMA_CPP_PATH) non è valido: {LLAMA_CPP_PATH}")
-if not Path(LLM_MODEL_PATH).exists():
-    raise ValueError(f"ERRORE: Il percorso del modello LLM (LLM_MODEL_PATH) non è valido: {LLM_MODEL_PATH}")
+if not USE_OLLAMA_FALLBACK:
+    if not LLAMA_CPP_PATH:
+        raise ValueError("ERRORE: LLAMA_CPP_PATH deve essere impostato quando USE_OLLAMA_FALLBACK è false.")
+    if not LLM_MODEL_PATH:
+        raise ValueError("ERRORE: LLM_MODEL_PATH deve essere impostato quando USE_OLLAMA_FALLBACK è false.")
+    if not Path(LLAMA_CPP_PATH).exists():
+        raise ValueError(f"ERRORE: Il percorso di llama.cpp (LLAMA_CPP_PATH) non è valido: {LLAMA_CPP_PATH}")
+    if not Path(LLM_MODEL_PATH).exists():
+        raise ValueError(f"ERRORE: Il percorso del modello LLM (LLM_MODEL_PATH) non è valido: {LLM_MODEL_PATH}")
 
 # Configurazione logging (Globale)
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'DEBUG').upper()
@@ -94,6 +100,7 @@ class Config:
     LOG_FORMAT = LOG_FORMAT
 
     # LLM Configuration
+    USE_OLLAMA_FALLBACK = USE_OLLAMA_FALLBACK
     LLAMA_CPP_PATH = LLAMA_CPP_PATH
     LLM_MODEL_PATH = LLM_MODEL_PATH
     LLM_CONTEXT_SIZE = LLM_CONTEXT_SIZE
@@ -127,10 +134,11 @@ class TestingConfig(Config):
 def get_config():
     """Restituisce la classe di configurazione attiva."""
     env = os.getenv("FLASK_ENV", "development").lower()
-    
+
     if env == "production":
         return ProductionConfig
     elif env == "testing":
         return TestingConfig
     else:
         return DevelopmentConfig
+```

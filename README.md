@@ -1,3 +1,34 @@
+
+# MedMatchINT
+
+## Quick Preview Mode with Ollama
+
+For development and preview purposes, you can run the application using Ollama as a fallback:
+
+1. Install and start Ollama locally with the Mistral model:
+```bash
+curl https://ollama.ai/install.sh | sh
+ollama run mistral
+```
+
+2. The application will automatically use Ollama if llama.cpp is not configured.
+
+3. To start the application:
+```bash
+python main.py
+```
+
+The web interface will be available at http://localhost:5000
+
+## Production Setup with llama.cpp
+
+For production use, follow these steps to use llama.cpp:
+
+1. Set USE_OLLAMA_FALLBACK=false in .env
+2. Configure LLAMA_CPP_PATH and LLM_MODEL_PATH in .env
+3. Follow the llama.cpp setup instructions in llama_cpp_setup.md
+
+
 # MedMatchINT - Advanced Clinical Trial Matching System
 
 MedMatchINT is a high-performance, privacy-preserving web application designed for matching cancer patient data with active clinical trials. This system leverages a GPU-accelerated Large Language Model (LLM) using llama.cpp, ensuring fast and accurate semantic matching of patient characteristics with trial criteria.

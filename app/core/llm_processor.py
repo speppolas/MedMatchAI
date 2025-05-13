@@ -110,8 +110,15 @@ class LLMProcessor:
             return "[LLM Error]"
 
 
-def get_llm_processor() -> LLMProcessor:
+def get_llm_processor():
     """
     Returns an instance of the LLM Processor.
+    Falls back to Ollama if configured.
     """
+    from config import USE_OLLAMA_FALLBACK
+    if USE_OLLAMA_FALLBACK:
+        from .ollama_processor import OllamaProcessor
+        if OllamaProcessor.is_available():
+            return OllamaProcessor()
+    return LLMProcessor()
     return LLMProcessor()

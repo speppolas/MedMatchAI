@@ -110,16 +110,19 @@ def process():
         else:
             return jsonify({'error': 'No input provided. Please upload a PDF or enter text.'}), 400
 
-        # Try LLM extraction first
+        # Try feature extraction
         try:
-            # Extract features using basic extraction as fallback
-            features = basic_feature_extraction(text)
+            from app.core.feature_extraction import extract_features, format_features_concise
+            
+            # Extract features
+            features = extract_features(text)
             
             # Format features for display
             concise_features = format_features_concise(features)
             
-            # Match trials (to be implemented)
-            matched_trials = []
+            # Get matching trials (using basic matching for now)
+            from app.utils import match_trials
+            matched_trials = match_trials(features)
             
             return jsonify({
                 'features': concise_features,

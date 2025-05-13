@@ -110,19 +110,46 @@ def process():
         else:
             return jsonify({'error': 'No input provided. Please upload a PDF or enter text.'}), 400
 
-        # Try feature extraction
+        # Extract features using llama.cpp
         try:
-            from app.core.feature_extraction import extract_features, format_features_concise
+            from app.llm_processor import get_llm_processor
+            llm = get_llm_processor()
             
             # Extract features
-            features = extract_features(text)
+            feature_prompt = f"""
+            Extract clinical features from this patient text in JSON format:
+            {text}
             
-            # Format features for display
-            concise_features = format_features_concise(features)
+            Return ONLY a JSON object with:
+            - age: number
+            - gender: "male" or "female"
+            - diagnosis: main cancer diagnosis
+            - stage: cancer stage
+            - mutations: list of genetic mutations
+            - metastases: list of metastatic sites
+            - previous_treatments: list of previous treatments
+            """
             
-            # Get matching trials (using basic matching for now)
-            from app.utils import match_trials
-            matched_trials = match_trials(features)
+            features_json = llm.generate_response(feature_prompt)
+            import json
+            features = json.loads(features_json)
+            
+            # Find matching trials
+            trial_prompt = f"""
+            Given these patient features:
+            {json.dumps(features, indent=2)}
+            
+            Find matching clinical trials from this list:
+            {json.dumps(get_all_trials_json(), indent=2)}
+            
+            Return ONLY a JSON array of matching trials with confidence scores:
+            [
+              {{"trial_id": "...", "confidence": 0.9, "reason": "..."}}
+            ]
+            """
+            
+            matches_json = llm.generate_response(trial_prompt)
+            matched_trials = json.loads(matches_json)
             
             return jsonify({
                 'features': concise_features,

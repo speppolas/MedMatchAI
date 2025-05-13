@@ -36,6 +36,10 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
+args = "./llama.cpp/build/bin/llama-server -m models/llama-2-7b-chat.Q4_K_M.gguf -ngl 35 --host 0.0.0.0 --port 8080"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
 args = "PYTHONPATH=/home/runner/workspace FLASK_APP=main.py FLASK_ENV=development FLASK_DEBUG=1 flask run --host=0.0.0.0 --port=5000"
 
 [[workflows.workflow]]
@@ -72,7 +76,7 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "llama-server -m models/llama-2-7b-chat.Q4_K_M.gguf -ngl 35 --host 0.0.0.0 --port 8080"
+args = "./llama.cpp/build/bin/llama-server -m models/llama-2-7b-chat.Q4_K_M.gguf -ngl 35 --host 0.0.0.0 --port 8080"
 
 [[ports]]
 localPort = 5000

@@ -18,7 +18,8 @@ class LLMProcessor:
                 "temperature": 0.7,
                 "top_p": 0.95,
                 "stream": False,
-                "max_tokens": 512
+                "max_tokens": 2048,
+                "stop": ["}"]  # Stop after JSON completion
             }
             
             response = requests.post(self.api_url, json=payload)
@@ -32,3 +33,6 @@ class LLMProcessor:
         except Exception as e:
             self.logger.error(f"Error calling LLM server: {str(e)}")
             return "Error connecting to LLM server"
+
+def get_llm_processor():
+    return LLMProcessor()

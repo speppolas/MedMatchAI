@@ -110,19 +110,27 @@ def process():
         else:
             return jsonify({'error': 'No input provided. Please upload a PDF or enter text.'}), 400
 
-        # Extract features
-        features = extract_features(text)
-        concise_features = format_features_concise(features)
+        # Try LLM extraction first
+        try:
+            # Extract features using basic extraction as fallback
+            features = basic_feature_extraction(text)
             
-        # Match trials
-        matched_trials = []  # You can implement match_trials() function later
+            # Format features for display
+            concise_features = format_features_concise(features)
             
-        return jsonify({
-            'features': concise_features,
-            'matches': matched_trials,
-            'text': text,
-            'pdf_filename': pdf_filename
-        })
+            # Match trials (to be implemented)
+            matched_trials = []
+            
+            return jsonify({
+                'features': concise_features,
+                'matches': matched_trials,
+                'text': text,
+                'pdf_filename': pdf_filename
+            })
+            
+        except Exception as e:
+            logger.error(f"Error in feature extraction: {str(e)}")
+            return jsonify({'error': 'Failed to extract features from document'}), 500
         
     except Exception as e:
         logger.error(f"Error processing request: {str(e)}")

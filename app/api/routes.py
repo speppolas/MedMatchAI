@@ -129,6 +129,10 @@ def match_trials_llm(patient_features):
         
         # Load clinical trials from Istituto Nazionale Tumori
         trials = get_all_trials_json()
+        if not trials:
+            logger.error("No trials found in database")
+            return []
+            
         matched_trials = []
         
         # Enhanced prompt template for XAI reasoning

@@ -77,9 +77,10 @@ def extract_features(text):
         
     except Exception as e:
         logging.error(f"Error in feature extraction: {str(e)}")
-        return {} e:
-        logging.error(f"Errore nell'estrazione delle caratteristiche: {str(e)}")
-        # Fallback all'estrazione di base in caso di errore
+        return {}
+    except Exception as e:
+        logging.error(f"Error in feature extraction: {str(e)}")
+        # Fallback to basic extraction in case of error
         logging.info("Fallback all'estrazione di base a causa di un errore")
         return basic_feature_extraction(text)
         

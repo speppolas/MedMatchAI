@@ -2,7 +2,7 @@ modules = ["python-3.11", "cpp-clang14", "c-clang14", "nodejs-20"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["openssl", "postgresql", "jq"]
+packages = ["jq", "openssl", "postgresql"]
 
 [deployment]
 deploymentTarget = "autoscale"

@@ -4,7 +4,9 @@ import pdfminer
 from flask import Flask, Blueprint
 from pathlib import Path
 from dotenv import load_dotenv
+from flask_socketio import SocketIO, emit  # ✅ Added for real-time communication
 
+logging.basicConfig(level=logging.INFO)
 # Load .env file (always loaded before anything else)
 load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
 
@@ -20,7 +22,6 @@ print("CUDA Configuration:")
 print(f"GGML_CUDA: {os.environ.get('GGML_CUDA')}")
 print(f"GGML_CUDA_FORCE_MMQ: {os.environ.get('GGML_CUDA_FORCE_MMQ')}")
 print(f"GGML_CUDA_FORCE_CUBLAS: {os.environ.get('GGML_CUDA_FORCE_CUBLAS')}")
-
 
 # Set PDFMiner logging level to WARNING
 pdfminer_logger = logging.getLogger("pdfminer")
@@ -44,6 +45,9 @@ logger = logging.getLogger(__name__)
 
 # Main Blueprint
 bp = Blueprint("main", __name__)
+
+# Initialize Socket.IO (without async mode)
+socketio = SocketIO(cors_allowed_origins="*")  # ✅ Initialize Socket.IO
 
 # Import routes after the blueprint to avoid circular imports
 from app import routes
@@ -77,6 +81,9 @@ def create_app(config_class=None):
     # Register Blueprint
     app.register_blueprint(bp)
     
+    # Initialize Socket.IO with the app
+    socketio.init_app(app)  # ✅ Socket.IO initialized with Flask app
+
     # Ensure database schema is initialized
     with app.app_context():
         db.create_all()
@@ -84,3 +91,10 @@ def create_app(config_class=None):
     
     logger.info("✅ MedMatchINT Application Initialized Successfully")
     return app
+
+def emit_progress(message):
+    """
+    Emit progress messages to the front-end via Socket.IO
+    """
+    logger.info(f"🔧 Progress Update: {message}")
+    socketio.emit('progress_update', {'message': message}, broadcast=True)  # ✅ Emit using Socket.IO

@@ -1,21 +1,6 @@
-'''import os
-import logging
-from app import create_app
-from config import LOG_LEVEL, LOG_FORMAT, HOST, PORT
-
-# Configurazione del logging
-logging.basicConfig(level=getattr(logging, LOG_LEVEL), format=LOG_FORMAT)
-
-# Creazione dell'applicazione
-app = create_app()
-
-if __name__ == '__main__':
-    # Avvio dell'applicazione in modalità sviluppo
-    app.run(host=HOST, port=PORT) '''
-    
 import os
 import logging
-from app import create_app
+from app import create_app, socketio  # ✅ Import socketio from app (Socket.IO instance)
 from config import LOG_LEVEL, LOG_FORMAT, HOST, PORT
 
 # Enhanced Logging Configuration with File Handler (Rotating)
@@ -39,5 +24,7 @@ logger = logging.getLogger(__name__)
 app = create_app()
 
 if __name__ == '__main__':
-    logger.info("🚀 Starting MedMatchINT Application...")
-    app.run(host=HOST, port=PORT)
+    logger.info("🚀 Starting MedMatchINT Application with Socket.IO...")
+    
+    # ✅ Run the application with Socket.IO (this replaces app.run)
+    socketio.run(app, host=HOST, port=PORT, debug=True)

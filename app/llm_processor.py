@@ -12,15 +12,9 @@ from config import (
 
 logger = logging.getLogger(__name__)
 
-# Global variables for LLM availability
-LLM_AVAILABLE = False
-_llm_availability_checked = False
-_llm_availability_lock = threading.Lock()
-
 class LLMProcessor:
     
     def __init__(self):
-        """Initialize the LLM Processor."""
         self.llama_cpp_path = LLAMA_CPP_PATH
         self.model_path = LLM_MODEL_PATH
         self.context_size = LLM_CONTEXT_SIZE
@@ -29,89 +23,67 @@ class LLMProcessor:
         self.timeout = LLM_TIMEOUT
         self.extra_params = LLM_EXTRA_PARAMS
         
-        # ✅ Forcing CUDA Settings for GPU-Only
         self._set_cuda_environment()
-        
-        # ✅ Debugging CUDA Variables
-        logger.info("🔧 Forcing CUDA Settings for GPU-Only:")
-        logger.info(f"🧪 GGML_CUDA: {os.environ.get('GGML_CUDA')}")
-        logger.info(f"🧪 GGML_CUDA_FORCE_MMQ: {os.environ.get('GGML_CUDA_FORCE_MMQ')}")
-        logger.info(f"🧪 GGML_CUDA_FORCE_CUBLAS: {os.environ.get('GGML_CUDA_FORCE_CUBLAS')}")
-        logger.info(f"🧪 GGML_CUDA_MAX_BATCH_SIZE: {os.environ.get('GGML_CUDA_MAX_BATCH_SIZE')}")
+        self._debug_cuda_configuration()
+
+        if not os.path.exists(self.model_path):
+            logger.error(f"❌ LLM Model not found at path: {self.model_path}")
+            raise FileNotFoundError(f"LLM Model not found at path: {self.model_path}")
 
     def _set_cuda_environment(self):
-        """Set CUDA variables correctly for GPU-Only."""
         os.environ['GGML_CUDA'] = 'yes'
         os.environ['GGML_CUDA_FORCE_MMQ'] = 'yes'
         os.environ['GGML_CUDA_FORCE_CUBLAS'] = 'yes'
-        os.environ['GGML_CUDA_MAX_BATCH_SIZE'] = '1024'  # Adjust based on GPU memory
         os.environ['CUDA_HOME'] = '/usr/local/cuda-12.8'
-        os.environ['PATH'] = f"{os.environ['CUDA_HOME']}/bin:{os.environ.get('PATH', '')}"
-        os.environ['LD_LIBRARY_PATH'] = f"{os.environ['CUDA_HOME']}/lib64:{os.environ.get('LD_LIBRARY_PATH', '')}"
-    
-    def generate_response(self, prompt: str, 
-                     temperature: Optional[float] = None,
-                     max_tokens: Optional[int] = None) -> str:
-    
+        os.environ['LD_LIBRARY_PATH'] = f"{os.environ['CUDA_HOME']}/lib64"
+
+    def _debug_cuda_configuration(self):
+        logger.info("🔧 Verifying CUDA Configuration (llm_processor.py):")
+        for var in ["GGML_CUDA", "GGML_CUDA_FORCE_MMQ", "GGML_CUDA_FORCE_CUBLAS", "CUDA_HOME", "LD_LIBRARY_PATH"]:
+            logger.info(f"🧪 {var}: {os.environ.get(var)}")
+
+    def generate_response(self, prompt: str, temperature: Optional[float] = None, max_tokens: Optional[int] = None) -> str:
         temp = temperature if temperature is not None else self.temperature
         tokens = max_tokens if max_tokens is not None else self.max_tokens
 
-        # Ensure the prompt is properly formatted (escaped)
-        import json
-        sanitized_prompt = json.dumps(prompt)
-
-        # Optimized Command for GPU-Only llama.cpp
         cmd = [
-            self.llama_cpp_path,
-            "--model", self.model_path,
-            "--prompt", sanitized_prompt,
-            "--predict", str(tokens),
-            "--ctx-size", str(self.context_size),
-            "--temp", str(temp),
-            "--no-warmup",
-            "--interactive",
-            "--gpu-layers", "-1",     # Use all layers on GPU
-            "--threads", "32",           # CPU minimized
-            "--batch-size", "1024"       # Large batch size for GPU speed
+            self.llama_cpp_path, "--model", self.model_path,
+            "--prompt", prompt, "--predict", str(tokens),
+            "--ctx-size", str(self.context_size), "--temp", str(temp),
+            "--no-warmup"
         ]
 
         if self.extra_params:
             cmd.extend(self.extra_params.split())
-        
-        # ✅ Forcing CUDA variables directly in the subprocess
-        env = {
-            "GGML_CUDA": "yes",
-            "GGML_CUDA_FORCE_MMQ": "yes",
-            "GGML_CUDA_FORCE_CUBLAS": "yes",
-            "GGML_CUDA_MAX_BATCH_SIZE": "1024",
-            "CUDA_HOME": "/usr/local/cuda-12.8",
-            "PATH": f"/usr/local/cuda-12.8/bin:{os.getenv('PATH')}",
-            "LD_LIBRARY_PATH": f"/usr/local/cuda-12.8/lib64:{os.getenv('LD_LIBRARY_PATH')}"
-        }
-        
-        logger.info(f"🚀 Executing LLM Command with GPU-Only: {' '.join(cmd)}")
-        
+
+        logger.info(f"🚀 Running llama.cpp with command: {' '.join(cmd)}")
+
         try:
-            result = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=self.timeout)
-            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=self.timeout)
+
+            if result.stderr:
+                logger.error(f"❌ LLM Error: {result.stderr.strip()}")
+
             if result.returncode != 0:
-                logger.error(f"❌ LLM Execution Error (code {result.returncode})")
-                logger.error(f"Stderr: {result.stderr}")
-                return f"[LLM Error: {result.stderr.strip()}]"
-            
-            return result.stdout.strip()
-        
+                logger.error(f"❌ LLM process exited with code {result.returncode}")
+                return None
+
+            output = result.stdout.strip()
+            logger.info(f"✅ LLM Output (Raw): {output}")
+
+            # ✅ Ensure JSON is clean
+            output = re.sub(r'(?<=: )(\d+)(?=[,}\]])', r'"\1"', output)
+
+            return output
+
         except subprocess.TimeoutExpired:
             logger.error(f"❌ Timeout during LLM execution ({self.timeout}s)")
-            return "[Timeout LLM]"
-        
+            return None
+
         except Exception as e:
-            logger.error(f"❌ Error during LLM usage: {str(e)}")
-            return "[LLM Error]"
+            logger.error(f"❌ Error running llama.cpp: {str(e)}")
+            return None
 
 
 def get_llm_processor() -> LLMProcessor:
-    """
-    Returns an instance of the LLM Processor.
-    """
     return LLMProcessor()

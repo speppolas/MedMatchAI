@@ -1,21 +1,19 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import JSON
 
 db = SQLAlchemy()
 
 class ClinicalTrial(db.Model):
-    """Modello per i trial clinici dell'Istituto Nazionale dei Tumori."""
+    """Model for clinical trials."""
     
     __tablename__ = 'clinical_trials'
-    __table_args__ = {'schema': 'medmatchschema'}
 
-    
     id = db.Column(db.String(30), primary_key=True)
     title = db.Column(db.String(500), nullable=False)
     phase = db.Column(db.String(20), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    inclusion_criteria = db.Column(JSONB, nullable=False, default=[])
-    exclusion_criteria = db.Column(JSONB, nullable=False, default=[])
+    inclusion_criteria = db.Column(JSON, nullable=False, default=list)
+    exclusion_criteria = db.Column(JSON, nullable=False, default=list)
     status = db.Column(db.String(50))
     start_date = db.Column(db.String(50))
     completion_date = db.Column(db.String(50))

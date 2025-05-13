@@ -1,82 +1,86 @@
 import os
 import logging
+import pdfminer
 from flask import Flask, Blueprint
-from models import db, ClinicalTrial
-from config import (
-    LOG_LEVEL, LOG_FORMAT, UPLOAD_FOLDER, MAX_CONTENT_LENGTH,
-    SECRET_KEY, DATABASE_URL, SQLALCHEMY_TRACK_MODIFICATIONS,
-    SQLALCHEMY_ENGINE_OPTIONS, get_config
-)
+from pathlib import Path
+from dotenv import load_dotenv
 
-# Configure logging
-logging.basicConfig(level=getattr(logging, LOG_LEVEL), format=LOG_FORMAT)
+# Load .env file (always loaded before anything else)
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
+
+# ✅ Impostazione variabili CUDA per sicurezza
+os.environ['GGML_CUDA'] = 'yes'
+os.environ['GGML_CUDA_FORCE_MMQ'] = 'yes'
+os.environ['GGML_CUDA_FORCE_CUBLAS'] = 'yes'
+os.environ['CUDA_HOME'] = '/usr/local/cuda-12.8'
+os.environ['PATH'] = f"{os.environ['CUDA_HOME']}/bin:{os.environ.get('PATH', '')}"
+os.environ['LD_LIBRARY_PATH'] = f"{os.environ['CUDA_HOME']}/lib64:{os.environ.get('LD_LIBRARY_PATH', '')}"
+
+print("CUDA Configuration:")
+print(f"GGML_CUDA: {os.environ.get('GGML_CUDA')}")
+print(f"GGML_CUDA_FORCE_MMQ: {os.environ.get('GGML_CUDA_FORCE_MMQ')}")
+print(f"GGML_CUDA_FORCE_CUBLAS: {os.environ.get('GGML_CUDA_FORCE_CUBLAS')}")
+
+
+# Set PDFMiner logging level to WARNING
+pdfminer_logger = logging.getLogger("pdfminer")
+pdfminer_logger.setLevel(logging.WARNING)
+
+# Import configurations and database
+from models import db, ClinicalTrial
+from config import get_config
+
+# Initialize logging with the loaded configuration
+config_class = get_config()
+logging.basicConfig(
+    level=getattr(logging, config_class.LOG_LEVEL, "INFO"),
+    format=config_class.LOG_FORMAT,
+    handlers=[
+        logging.StreamHandler(),  
+        logging.FileHandler("logs/medmatchint.log")
+    ]
+)
 logger = logging.getLogger(__name__)
 
-# Create the Blueprint
-bp = Blueprint('main', __name__)
+# Main Blueprint
+bp = Blueprint("main", __name__)
 
-# Import routes after blueprint is created to avoid circular imports
+# Import routes after the blueprint to avoid circular imports
 from app import routes
 
 def create_app(config_class=None):
-    """
-    Crea e configura l'app Flask
+    logger.info("🔧 Creating MedMatchINT Application")
     
-    Args:
-        config_class: Classe di configurazione opzionale
-                     (se None, usa la configurazione dall'ambiente)
-                     
-    Returns:
-        Flask: App Flask configurata
-    """
-    logger.info("Creazione dell'app MedMatchINT")
+    app = Flask(
+        __name__, 
+        static_folder="static", 
+        template_folder="templates"
+    )
     
-    app = Flask(__name__, 
-                static_folder="../static", 
-                template_folder="../templates")
-    
-    # Carica la configurazione
+    # Load configuration
     if config_class is None:
         config_class = get_config()
+    
     app.config.from_object(config_class)
     
-    # Assicurati che alcuni valori critici siano impostati
-    if not app.config.get('SQLALCHEMY_DATABASE_URI'):
-        app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-        
-    if not app.config.get('SECRET_KEY'):
-        app.config['SECRET_KEY'] = SECRET_KEY
-        
-    # Configura la cartella per gli upload temporanei
-    if not app.config.get('UPLOAD_FOLDER'):
-        upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), UPLOAD_FOLDER)
-        app.config['UPLOAD_FOLDER'] = upload_dir
-        
-        # Crea la directory se non esiste
-        if not os.path.exists(upload_dir):
-            os.makedirs(upload_dir)
-            logger.info(f"Creata directory per gli upload: {upload_dir}")
+    # Set default UPLOAD_FOLDER if not specified
+    upload_dir = app.config.get("UPLOAD_FOLDER", Path(__file__).resolve().parent.parent / "uploads")
+    app.config["UPLOAD_FOLDER"] = str(upload_dir)
     
-    # Impostazioni aggiuntive
-    if not app.config.get('MAX_CONTENT_LENGTH'):
-        app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
+    if not os.path.exists(upload_dir):
+        os.makedirs(upload_dir)
+        logger.info(f"✅ Created upload directory: {upload_dir}")
     
-    if not app.config.get('SQLALCHEMY_TRACK_MODIFICATIONS'):
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = SQLALCHEMY_TRACK_MODIFICATIONS
-        
-    if not app.config.get('SQLALCHEMY_ENGINE_OPTIONS'):
-        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = SQLALCHEMY_ENGINE_OPTIONS
-    
-    # Inizializzazione delle estensioni
+    # Initialize extensions
     db.init_app(app)
     
-    # Registro del blueprint
+    # Register Blueprint
     app.register_blueprint(bp)
     
-    # Creazione delle tabelle se non esistenti
+    # Ensure database schema is initialized
     with app.app_context():
         db.create_all()
-        logger.info("Schema del database verificato/creato")
+        logger.info("✅ Database schema verified/created successfully.")
     
-    logger.info("Applicazione MedMatchINT inizializzata con successo")
+    logger.info("✅ MedMatchINT Application Initialized Successfully")
     return app

@@ -8,22 +8,32 @@ dalle variabili d'ambiente con fallback a valori predefiniti sicuri.
 import os
 import logging
 from pathlib import Path
+from dotenv import load_dotenv
 
-# Directory di base del progetto
+# Caricamento delle variabili d'ambiente dal file .env
 BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / '.env')
+
+# Funzione per verificare variabili richieste
+def get_required_env_var(var_name, default=None):
+    value = os.getenv(var_name, default)
+    if not value:
+        raise ValueError(f"ERRORE: La variabile {var_name} non è impostata.")
+    return value
 
 # Configurazione dell'applicazione
-APP_NAME = os.environ.get('APP_NAME', 'MedMatchINT')
-APP_DESCRIPTION = os.environ.get('APP_DESCRIPTION', 'Matching di trial clinici oncologici per l\'Istituto Nazionale dei Tumori')
-VERSION = os.environ.get('VERSION', '1.1.0')
+APP_NAME = os.getenv('APP_NAME', 'MedMatchINT')
+APP_DESCRIPTION = os.getenv('APP_DESCRIPTION', 'Matching di trial clinici oncologici per l\'Istituto Nazionale dei Tumori')
+VERSION = os.getenv('VERSION', '1.1.0')
 
 # Configurazione del server
-HOST = os.environ.get('HOST', '0.0.0.0')
-PORT = int(os.environ.get('PORT', 5000))
-DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 't', 'yes')
+HOST = os.getenv('HOST', '0.0.0.0')
+PORT = int(os.getenv('PORT', 5000))
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 't', 'yes')
 
-# Configurazione del database
-DATABASE_URL = os.environ.get('DATABASE_URL')
+# Configurazione del database (unificato per SQLAlchemy)
+SQLALCHEMY_DATABASE_URI = get_required_env_var('SQLALCHEMY_DATABASE_URI')
+
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SQLALCHEMY_ENGINE_OPTIONS = {
     "pool_recycle": 300,
@@ -31,55 +41,78 @@ SQLALCHEMY_ENGINE_OPTIONS = {
 }
 
 # Gestione dei file
-UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', 'uploads')
-MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', 10 * 1024 * 1024))  # 10 MB predefinito
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', str(BASE_DIR / 'uploads'))
+MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH', 10 * 1024 * 1024))  # 10 MB predefinito
 
 # Sicurezza
-SECRET_KEY = os.environ.get('SESSION_SECRET', 'dev_key_please_change')
-CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*')
+SECRET_KEY = get_required_env_var('FLASK_SECRET_KEY')
+CORS_ORIGINS = os.getenv('CORS_ORIGINS', '*')
 
-# Configurazione LLM
-LLAMA_CPP_PATH = os.environ.get('LLAMA_CPP_PATH', '')
-LLM_MODEL_PATH = os.environ.get('LLM_MODEL_PATH', '')
-LLM_CONTEXT_SIZE = int(os.environ.get('LLM_CONTEXT_SIZE', 4096))
-LLM_TEMPERATURE = float(os.environ.get('LLM_TEMPERATURE', 0.7))
-LLM_MAX_TOKENS = int(os.environ.get('LLM_MAX_TOKENS', 2048))
-LLM_TIMEOUT = int(os.environ.get('LLM_TIMEOUT', 60))  # timeout in secondi
-LLM_EXTRA_PARAMS = os.environ.get('LLM_EXTRA_PARAMS', '')
+# Configurazione LLM con llama.cpp
+LLAMA_CPP_PATH = get_required_env_var('LLAMA_CPP_PATH')
+LLM_MODEL_PATH = get_required_env_var('LLM_MODEL_PATH')
+LLM_CONTEXT_SIZE = int(os.getenv('LLM_CONTEXT_SIZE', 2048))
+LLM_TEMPERATURE = float(os.getenv('LLM_TEMPERATURE', 0.1))
+LLM_MAX_TOKENS = int(os.getenv('LLM_MAX_TOKENS', 512))
+LLM_TIMEOUT = int(os.getenv('LLM_TIMEOUT', 180))  # timeout in secondi
+LLM_EXTRA_PARAMS = os.getenv('LLM_EXTRA_PARAMS', '')
 
-# Configurazione logging
-LOG_LEVEL = os.environ.get('LOG_LEVEL', 'DEBUG')
-LOG_FORMAT = os.environ.get('LOG_FORMAT', '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# Verifica che i percorsi del modello e dell'eseguibile siano corretti
+if not Path(LLAMA_CPP_PATH).exists():
+    raise ValueError(f"ERRORE: Il percorso di llama.cpp (LLAMA_CPP_PATH) non è valido: {LLAMA_CPP_PATH}")
+if not Path(LLM_MODEL_PATH).exists():
+    raise ValueError(f"ERRORE: Il percorso del modello LLM (LLM_MODEL_PATH) non è valido: {LLM_MODEL_PATH}")
+
+# Configurazione logging (Globale)
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'DEBUG').upper()
+LOG_FORMAT = os.getenv('LOG_FORMAT', '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
 
 # Impostazioni per API esterne
-CLINICALTRIALS_API_BASE = os.environ.get('CLINICALTRIALS_API_BASE', 'https://clinicaltrials.gov/api/v2')
-API_REQUEST_TIMEOUT = int(os.environ.get('API_REQUEST_TIMEOUT', 30))  # secondi
+CLINICALTRIALS_API_BASE = os.getenv('CLINICALTRIALS_API_BASE', 'https://clinicaltrials.gov/api/v2')
+API_REQUEST_TIMEOUT = int(os.getenv('API_REQUEST_TIMEOUT', 30))  # secondi
 
 # Impostazioni business logic
-INT_LOCATION_ID = os.environ.get('INT_LOCATION_ID', 'Milano, Lombardy, Italy')
-MIN_KEYWORD_MATCH_SCORE = float(os.environ.get('MIN_KEYWORD_MATCH_SCORE', 0.6))
-MAX_TRIALS_TO_EVALUATE = int(os.environ.get('MAX_TRIALS_TO_EVALUATE', 20))
+INT_LOCATION_ID = os.getenv('INT_LOCATION_ID', 'Milano, Lombardy, Italy')
+MIN_KEYWORD_MATCH_SCORE = float(os.getenv('MIN_KEYWORD_MATCH_SCORE', 0.6))
+MAX_TRIALS_TO_EVALUATE = int(os.getenv('MAX_TRIALS_TO_EVALUATE', 20))
+
 
 class Config:
     """Classe base di configurazione."""
     DEBUG = False
     TESTING = False
     SECRET_KEY = SECRET_KEY
-    SQLALCHEMY_DATABASE_URI = DATABASE_URL
+    SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI
     SQLALCHEMY_TRACK_MODIFICATIONS = SQLALCHEMY_TRACK_MODIFICATIONS
     SQLALCHEMY_ENGINE_OPTIONS = SQLALCHEMY_ENGINE_OPTIONS
     UPLOAD_FOLDER = UPLOAD_FOLDER
     MAX_CONTENT_LENGTH = MAX_CONTENT_LENGTH
 
+    # Logging
+    LOG_LEVEL = LOG_LEVEL
+    LOG_FORMAT = LOG_FORMAT
+
+    # LLM Configuration
+    LLAMA_CPP_PATH = LLAMA_CPP_PATH
+    LLM_MODEL_PATH = LLM_MODEL_PATH
+    LLM_CONTEXT_SIZE = LLM_CONTEXT_SIZE
+    LLM_TEMPERATURE = LLM_TEMPERATURE
+    LLM_MAX_TOKENS = LLM_MAX_TOKENS
+    LLM_TIMEOUT = LLM_TIMEOUT
+    LLM_EXTRA_PARAMS = LLM_EXTRA_PARAMS
+
 
 class ProductionConfig(Config):
     """Configurazione per l'ambiente di produzione."""
-    pass
+    DEBUG = False
+    LOG_LEVEL = 'INFO'
 
 
 class DevelopmentConfig(Config):
     """Configurazione per l'ambiente di sviluppo."""
     DEBUG = True
+    LOG_LEVEL = 'DEBUG'
 
 
 class TestingConfig(Config):
@@ -88,11 +121,12 @@ class TestingConfig(Config):
     DEBUG = True
     SECRET_KEY = "test_key"
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    LOG_LEVEL = 'DEBUG'
 
 
 def get_config():
     """Restituisce la classe di configurazione attiva."""
-    env = os.environ.get("FLASK_ENV", "development")
+    env = os.getenv("FLASK_ENV", "development").lower()
     
     if env == "production":
         return ProductionConfig

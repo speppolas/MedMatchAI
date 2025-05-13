@@ -7,6 +7,8 @@ class ClinicalTrial(db.Model):
     """Modello per i trial clinici dell'Istituto Nazionale dei Tumori."""
     
     __tablename__ = 'clinical_trials'
+    __table_args__ = {'schema': 'medmatchschema'}
+
     
     id = db.Column(db.String(30), primary_key=True)
     title = db.Column(db.String(500), nullable=False)

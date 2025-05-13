@@ -84,6 +84,10 @@ def process():
         text = ""
         pdf_filename = None
         
+        # Ensure upload folder exists
+        if not os.path.exists(current_app.config['UPLOAD_FOLDER']):
+            os.makedirs(current_app.config['UPLOAD_FOLDER'], exist_ok=True)
+        
         if 'file' in request.files and request.files['file'].filename:
             file = request.files['file']
             if file.filename.endswith('.pdf'):

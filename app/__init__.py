@@ -84,3 +84,23 @@ def create_app(config_class=None):
     
     logger.info("✅ MedMatchINT Application Initialized Successfully")
     return app
+import os
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
+def create_app():
+    """Create and configure Flask application."""
+    app = Flask(__name__)
+    
+    # Configure upload folder
+    app.config['UPLOAD_FOLDER'] = 'uploads'
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    
+    # Rest of your app configuration
+    app.config.from_object('config')
+    
+    # Initialize extensions
+    from app.api import bp
+    app.register_blueprint(bp)
+    
+    return app

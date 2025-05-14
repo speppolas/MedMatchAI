@@ -1,12 +1,20 @@
+
 # MedMatchINT - Clinical Trial Matching System
 
 ## 🚀 Quick Start on Replit
 
 1. Fork this repl to your account
-2. Install dependencies automatically by clicking Run
-3. The application will start at port 5000
+2. Start Ollama server and download the Mistral model:
+```bash
+ollama serve &
+ollama pull mistral
+```
+3. Run the Flask application:
+```bash
+FLASK_APP=main.py FLASK_ENV=development flask run --host=0.0.0.0 --port=5000
+```
 
-## 📋 Manual Deployment Steps
+## 📋 Manual Setup Steps
 
 ### 1. Install Dependencies
 ```bash
@@ -25,36 +33,21 @@ No files or patient data are saved to disk for privacy protection.
 
 ### 4. Run the Application
 
-#### Development Mode
+Start Ollama server and pull the model:
+```bash
+ollama serve &
+ollama pull mistral
+```
+
+Then run the Flask application:
 ```bash
 FLASK_APP=main.py FLASK_ENV=development flask run --host=0.0.0.0 --port=5000
-```
-
-#### Production Mode
-```bash
-gunicorn --bind 0.0.0.0:5000 main:app
-```
-
-## 🔧 Environment Variables
-
-Required environment variables in `.env`:
-- `FLASK_SECRET_KEY`: Generate a secure random key
-- `UPLOAD_FOLDER`: Directory for uploaded files (default: uploads)
-- `PDF_AUTO_DELETE_TIMEOUT`: Timeout for PDF deletion in minutes (default: 30)
-
-## 🛠️ CUDA Configuration
-
-The application is configured for CUDA acceleration with these settings:
-```bash
-GGML_CUDA=yes
-GGML_CUDA_FORCE_MMQ=yes
-GGML_CUDA_FORCE_CUBLAS=yes
 ```
 
 ## 📊 Key Features
 
 - PDF Processing and Analysis
-- GPU-Accelerated LLM Integration
+- LLM-powered Analysis with Ollama (Mistral model)
 - Clinical Trial Matching
 - Secure File Handling
 

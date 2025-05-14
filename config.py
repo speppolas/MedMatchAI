@@ -23,8 +23,7 @@ LLM_MODEL_PATH = os.getenv('LLM_MODEL_PATH')
 SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI', 'sqlite:///instance/medmatchint.db')
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-# Upload
-UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', str(BASE_DIR / 'uploads'))
+# In-memory processing only
 MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH', 10 * 1024 * 1024))
 
 class Config:

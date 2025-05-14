@@ -19,11 +19,9 @@ Create a `.env` file with your configuration:
 cp .env.example .env
 ```
 
-### 3. Initialize Database and Upload Directory
-```bash
-mkdir -p uploads logs
-touch logs/medmatchint.log
-```
+### 3. Privacy Note
+This application processes all data in-memory only.
+No files or patient data are saved to disk for privacy protection.
 
 ### 4. Run the Application
 

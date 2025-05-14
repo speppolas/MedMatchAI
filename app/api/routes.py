@@ -97,12 +97,8 @@ def process():
         if 'file' in request.files and request.files['file'].filename:
             file = request.files['file']
             if file.filename.endswith('.pdf'):
-                unique_filename = f"{str(uuid.uuid4())}.pdf"
-                file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
-                file.save(file_path)
-                session['pdf_filename'] = unique_filename
-                pdf_filename = unique_filename
-                text = extract_text_from_pdf(file_path)
+                text = extract_text_from_pdf(file.stream)
+                pdf_filename = None  # We don't save files anymore
             else:
                 return jsonify({'error': 'Only PDF files are supported'}), 400
         elif 'text' in request.form and request.form['text'].strip():

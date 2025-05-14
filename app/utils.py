@@ -9,23 +9,22 @@ import shutil
 from datetime import datetime, timedelta
 from flask import current_app
 
-def extract_text_from_pdf(pdf_file):
+def extract_text_from_pdf(pdf_stream):
     """
-    Extract text content from a PDF file using pdfplumber.
+    Extract text content from a PDF stream using pdfplumber.
     
     Args:
-        pdf_file: Either a file object from request.files or a filepath string
+        pdf_stream: PDF file stream from request.files
         
     Returns:
         str: Extracted text from the PDF
     """
     text = ""
     try:
-        # Check if pdf_file is a string (filepath) or a file object
-        with pdfplumber.open(pdf_file) as pdf:
+        with pdfplumber.open(pdf_stream) as pdf:
             for page in pdf.pages:
-                text += page.extract_text() or ""
-        return text
+                text += (page.extract_text() or "") + "\n"
+        return text.strip()
     except Exception as e:
         logging.error(f"Error extracting text from PDF: {str(e)}")
         raise Exception(f"Could not extract text from PDF: {str(e)}")

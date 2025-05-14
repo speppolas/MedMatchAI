@@ -29,3 +29,6 @@ python-dotenv
 requests
 sqlalchemy
 trafilatura
+flask
+python-dotenv
+requests

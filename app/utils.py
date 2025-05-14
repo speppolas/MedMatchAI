@@ -697,7 +697,7 @@ def get_all_trials():
         return []
     except Exception as e:
         logging.error(f"Error loading trials: {str(e)}")
-        return []"Error loading trials: {str(e)}")
+        logging.error(f"Error loading trials: {str(e)}")
         return []
 
 def check_criterion_match(criterion, patient_features):

@@ -30,6 +30,32 @@ class LLMProcessor:
         os.environ['GGML_CUDA_FORCE_CUBLAS'] = 'yes'
         os.environ['GGML_CUDA_MAX_BATCH_SIZE'] = '1024'
 
+    def process_feature_extraction(self, text: str) -> dict:
+        """Process feature extraction using the dedicated prompt."""
+        from .prompts.feature_extraction import FEATURE_EXTRACTION_PROMPT
+        prompt = FEATURE_EXTRACTION_PROMPT.format(text=text)
+        response = self.generate_response(prompt, temperature=0.7)
+        return self._parse_json_response(response)
+
+    def process_trial_matching(self, patient_features: dict, trial: dict) -> dict:
+        """Process trial matching with XAI using the dedicated prompt."""
+        from .prompts.trial_matching import TRIAL_MATCHING_PROMPT
+        prompt = TRIAL_MATCHING_PROMPT.format(
+            patient_features=json.dumps(patient_features, indent=2),
+            trial=json.dumps(trial, indent=2)
+        )
+        response = self.generate_response(prompt, temperature=0.7)
+        return self._parse_json_response(response)
+
+    def generate_trial_summary(self, match_analysis: dict) -> dict:
+        """Generate a patient-friendly trial match summary."""
+        from .prompts.trial_matching import TRIAL_SUMMARY_PROMPT
+        prompt = TRIAL_SUMMARY_PROMPT.format(
+            match_analysis=json.dumps(match_analysis, indent=2)
+        )
+        response = self.generate_response(prompt, temperature=0.7)
+        return self._parse_json_response(response)
+
     def generate_response(self, prompt: str, 
                       temperature: float = 0.7,
                       max_tokens: int = 2048) -> str:

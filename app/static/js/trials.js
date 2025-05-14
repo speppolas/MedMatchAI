@@ -206,13 +206,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     return response.json();
                 })
                 .then(data => {
-                    // Filtra i trial per mostrare solo quello cercato
-                    const exactMatch = Array.isArray(data) ? 
-                        data.filter(trial => trial.id.toUpperCase() === searchTerm.toUpperCase()) :
-                        [];
-
-                    if (exactMatch.length > 0) {
-                        displayTrials(exactMatch);
+                    // Display all trials returned from the API
+                    if (Array.isArray(data) && data.length > 0) {
+                        displayTrials(data);
                     } else {
                         trialsContainer.innerHTML = `
                             <div class="alert alert-info text-center">

@@ -43,3 +43,23 @@
 2025-05-14 08:34:30,951 - werkzeug - INFO - 172.31.128.96 - - [14/May/2025 08:34:30] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
 2025-05-14 08:34:31,131 - werkzeug - INFO - 172.31.128.96 - - [14/May/2025 08:34:31] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -
 2025-05-14 08:34:31,208 - werkzeug - INFO - 172.31.128.96 - - [14/May/2025 08:34:31] "[33mGET /api/trials HTTP/1.1[0m" 404 -
+2025-05-14 08:35:43,612 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.31.128.96:5000
+2025-05-14 08:35:43,613 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-05-14 08:35:44,373 - app.api.routes - INFO - ✅ Index route accessed
+2025-05-14 08:35:44,381 - werkzeug - INFO - 172.31.128.96 - - [14/May/2025 08:35:44] "GET / HTTP/1.1" 200 -
+2025-05-14 08:35:44,549 - werkzeug - INFO - 172.31.128.96 - - [14/May/2025 08:35:44] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-05-14 08:35:44,914 - werkzeug - INFO - 172.31.128.96 - - [14/May/2025 08:35:44] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-05-14 08:35:45,356 - werkzeug - INFO - 172.31.128.96 - - [14/May/2025 08:35:45] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -
+2025-05-14 08:37:20,867 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 08:37:20,868 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 08:37:20,869 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 08:37:20,869 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 08:37:21,434 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 08:37:21,435 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 08:37:21,435 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 08:37:21,435 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 08:37:21,435 - app.api.routes - ERROR - Error in feature extraction: llama.cpp server binary not found. Please build llama.cpp first.
+2025-05-14 08:37:21,435 - werkzeug - INFO - 172.31.128.96 - - [14/May/2025 08:37:21] "[35m[1mPOST /process HTTP/1.1[0m" 500 -

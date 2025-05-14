@@ -339,6 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     criteriaContainer.style.display = 'block';
                     this.innerHTML = '<i data-feather="chevron-up"></i> Nascondi criteri';
                     this.dataset.expanded = 'true';
+                    criteriaContainer.style.display = 'block';
 
                     // Clear and reload criteria every time they are shown
                     const inclusionContainer = trialCard.querySelector('.inclusion-criteria-container');
@@ -349,28 +350,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (exclusionContainer) exclusionContainer.innerHTML = '';
 
                     // Add inclusion criteria
-                    if (inclusionContainer && trial.inclusion_criteria) {
+                    if (inclusionContainer && trial.inclusion_criteria && Array.isArray(trial.inclusion_criteria)) {
                         trial.inclusion_criteria.forEach(criterion => {
-                            if (criterion.text && criterion.text.trim()) {
-                                const criterionEl = document.createElement('div');
-                                criterionEl.className = 'match-criterion criterion-matched mb-2 p-2';
-                                criterionEl.innerHTML = `<p class="criterion-text mb-0">${criterion.text}</p>`;
-                                inclusionContainer.appendChild(criterionEl);
-                            }
+                            const criterionEl = document.createElement('div');
+                            criterionEl.className = 'match-criterion criterion-matched mb-2 p-2';
+                            criterionEl.innerHTML = `<p class="criterion-text mb-0">${typeof criterion === 'string' ? criterion : criterion.text}</p>`;
+                            inclusionContainer.appendChild(criterionEl);
                         });
                     }
 
                     // Add exclusion criteria
-                    if (exclusionContainer && trial.exclusion_criteria) {
+                    if (exclusionContainer && trial.exclusion_criteria && Array.isArray(trial.exclusion_criteria)) {
                         trial.exclusion_criteria.forEach(criterion => {
-                            if (criterion.text && criterion.text.trim()) {
-                                const criterionEl = document.createElement('div');
-                                criterionEl.className = 'match-criterion criterion-not-matched mb-2 p-2';
-                                criterionEl.innerHTML = `<p class="criterion-text mb-0">${criterion.text}</p>`;
-                                exclusionContainer.appendChild(criterionEl);
-                            }
+                            const criterionEl = document.createElement('div');
+                            criterionEl.className = 'match-criterion criterion-not-matched mb-2 p-2';
+                            criterionEl.innerHTML = `<p class="criterion-text mb-0">${typeof criterion === 'string' ? criterion : criterion.text}</p>`;
+                            exclusionContainer.appendChild(criterionEl);
                         });
                     }
+
+                    // Initialize feather icons for any new elements
+                    feather.replace();
                 }
 
                 // Reinizializza le icone feather

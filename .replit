@@ -10,7 +10,7 @@ deploymentTarget = "autoscale"
 run = ["sh", "-c", "python main.py"]
 
 [workflows]
-runButton = "Flask Simple"
+runButton = "Run App"
 
 [[workflows.workflow]]
 name = "Project"
@@ -47,6 +47,18 @@ args = "PYTHONPATH=/home/runner/workspace FLASK_APP=main.py FLASK_ENV=developmen
 name = "Run App"
 author = 42578415
 mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "ollama serve &"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "sleep 5"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "ollama pull mistral"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"

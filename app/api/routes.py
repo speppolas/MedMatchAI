@@ -23,6 +23,49 @@ def health():
     """Health check endpoint."""
     return {"status": "ok"}
 
+@bp.route('/validate-int-trials')
+def validate_int_trials():
+    """Validate that all required INT trials are present and complete."""
+    required_nct_ids = [
+        'NCT04613596', 'NCT05224141', 'NCT05261399', 'NCT05261399',
+        'NCT05298423', 'NCT06312137', 'NCT06305754', 'NCT05920356',
+        'NCT06074588', 'NCT05609968', 'NCT05703997', 'NCT06422143',
+        'NCT05676931', 'NCT06452277', 'NCT06170788', 'NCT06077760',
+        'NCT06119581', 'NCT06117774'
+    ]
+    
+    trials = get_all_trials_json()
+    found_trials = {}
+    missing_trials = []
+    
+    for nct_id in required_nct_ids:
+        found = False
+        for trial in trials:
+            if trial.get('id') == nct_id:
+                found = True
+                # Validate trial completeness
+                has_criteria = (
+                    trial.get('inclusion_criteria') and 
+                    trial.get('exclusion_criteria')
+                )
+                found_trials[nct_id] = {
+                    'found': True,
+                    'has_criteria': has_criteria,
+                    'title': trial.get('title', 'No title')
+                }
+                break
+        if not found:
+            missing_trials.append(nct_id)
+            found_trials[nct_id] = {'found': False}
+    
+    return jsonify({
+        'status': 'ok' if not missing_trials else 'incomplete',
+        'total_required': len(required_nct_ids),
+        'found': len(required_nct_ids) - len(missing_trials),
+        'missing': missing_trials,
+        'trials': found_trials
+    })
+
 @bp.route('/trials')
 def trials():
     """Render the trials listing page."""

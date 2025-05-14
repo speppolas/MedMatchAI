@@ -574,9 +574,10 @@ def fetch_and_save_trial_by_id(trial_id: str, save_to_db: bool = True, save_to_j
         logger.error(f"Errore nel processo di recupero e salvataggio del trial {trial_id}: {str(e)}")
         return None
 
-def update_trials(search_terms: List[str] = None, max_trials: int = 100) -> bool:
+def update_trials(search_terms: List[str] = None, max_trials: int = 100, required_nct_ids: List[str] = None) -> bool:
     """
     Aggiorna i trial clinici nel database e nel file JSON, recuperandoli da ClinicalTrials.gov.
+    Ensures specific NCT IDs from INT are included.
     
     Args:
         search_terms: Lista di termini di ricerca (es. ["lung cancer", "NSCLC"])
@@ -658,15 +659,50 @@ def update_trials(search_terms: List[str] = None, max_trials: int = 100) -> bool
             except Exception as e:
                 logger.error(f"Errore generico nell'elaborazione dei trial per {term}: {str(e)}")
         
-        # Rimuovi duplicati basati sull'ID NCT
+        # Ensure required INT trials are included
+        required_nct_ids = [
+            'NCT04613596', 'NCT05224141', 'NCT05261399', 'NCT05261399',
+            'NCT05298423', 'NCT06312137', 'NCT06305754', 'NCT05920356',
+            'NCT06074588', 'NCT05609968', 'NCT05703997', 'NCT06422143',
+            'NCT05676931', 'NCT06452277', 'NCT06170788', 'NCT06077760',
+            'NCT06119581', 'NCT06117774'
+        ]
+        
+        # First fetch all required trials
+        required_trials = []
+        for nct_id in required_nct_ids:
+            try:
+                trial_data = fetch_trial_by_nct_id(nct_id)
+                if trial_data:
+                    required_trials.append(trial_data)
+                    logger.info(f"Successfully fetched required INT trial: {nct_id}")
+                else:
+                    logger.warning(f"Could not fetch required INT trial: {nct_id}")
+            except Exception as e:
+                logger.error(f"Error fetching required INT trial {nct_id}: {str(e)}")
+        
+        # Combine with other trials and remove duplicates
         unique_trials = []
         seen_ids = set()
         
+        # First add required trials
+        for trial in required_trials:
+            trial_id = trial.get('id')
+            if trial_id and trial_id not in seen_ids:
+                seen_ids.add(trial_id)
+                unique_trials.append(trial)
+        
+        # Then add other trials
         for trial in all_trials:
             trial_id = trial.get('id')
             if trial_id and trial_id not in seen_ids:
                 seen_ids.add(trial_id)
                 unique_trials.append(trial)
+                
+        # Validate that all required trials are included
+        missing_trials = set(required_nct_ids) - seen_ids
+        if missing_trials:
+            logger.warning(f"Some required INT trials are missing: {missing_trials}")
         
         logger.info(f"Recuperati {len(unique_trials)} trial unici in totale")
         

@@ -50,7 +50,7 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "ollama serve &"
+args = "~/bin/ollama serve &"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
@@ -58,7 +58,7 @@ args = "sleep 5"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "ollama pull mistral"
+args = "~/bin/ollama pull mistral"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"

@@ -98,3 +98,31 @@
 2025-05-14 08:43:52,170 - werkzeug - INFO -  * Restarting with stat
 2025-05-14 08:43:52,754 - werkzeug - WARNING -  * Debugger is active!
 2025-05-14 08:43:52,755 - werkzeug - INFO -  * Debugger PIN: 126-720-406
+2025-05-14 09:15:33,103 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.31.128.5:5000
+2025-05-14 09:15:33,103 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-05-14 09:15:33,921 - app.api.routes - INFO - ✅ Index route accessed
+2025-05-14 09:15:33,928 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:15:33] "GET / HTTP/1.1" 200 -
+2025-05-14 09:15:34,074 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:15:34] "GET /static/css/styles.css HTTP/1.1" 200 -
+2025-05-14 09:15:34,470 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:15:34] "GET /static/js/main.js HTTP/1.1" 200 -
+2025-05-14 09:15:34,726 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:15:34] "GET /static/img/logo.svg HTTP/1.1" 200 -
+2025-05-14 09:15:40,728 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 09:15:40,729 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 09:15:40,729 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 09:15:41,142 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 09:15:41,142 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 09:15:41,142 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 09:15:41,142 - app.api.routes - ERROR - Error in feature extraction: llama.cpp server binary not found. Please build llama.cpp first.
+2025-05-14 09:15:41,143 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:15:41] "[35m[1mPOST /process HTTP/1.1[0m" 500 -
+2025-05-14 09:15:44,986 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.31.128.5:5000
+2025-05-14 09:15:44,987 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-05-14 09:15:45,696 - app.api.routes - INFO - ✅ Index route accessed
+2025-05-14 09:15:45,704 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:15:45] "GET / HTTP/1.1" 200 -
+2025-05-14 09:15:45,849 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:15:45] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-05-14 09:15:46,177 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:15:46] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-05-14 09:15:46,294 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:15:46] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -

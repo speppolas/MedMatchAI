@@ -236,3 +236,22 @@
 2025-05-14 10:18:01,088 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:18:01] "[36mGET /static/js/trials.js HTTP/1.1[0m" 304 -
 2025-05-14 10:18:01,209 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:18:01] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -
 2025-05-14 10:18:01,683 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:18:01] "GET /api/trials HTTP/1.1" 200 -
+2025-05-14 10:19:03,353 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:19:03] "GET /api/trials?id=nct046135 HTTP/1.1" 200 -
+2025-05-14 10:19:03,691 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:19:03] "GET /api/trials?id=nct0461359 HTTP/1.1" 200 -
+2025-05-14 10:19:03,722 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:19:03] "GET /api/trials?id=nct04613596 HTTP/1.1" 200 -
+2025-05-14 10:19:55,584 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.31.128.18:5000
+2025-05-14 10:19:55,584 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-05-14 10:19:56,257 - app.api.routes - INFO - ✅ Index route accessed
+2025-05-14 10:19:56,266 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:19:56] "GET / HTTP/1.1" 200 -
+2025-05-14 10:19:56,421 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:19:56] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-05-14 10:19:56,753 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:19:56] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-05-14 10:19:56,877 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:19:56] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -
+2025-05-14 10:20:00,080 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:20:00] "GET /trials HTTP/1.1" 200 -
+2025-05-14 10:20:00,215 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:20:00] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-05-14 10:20:00,567 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:20:00] "[36mGET /static/js/trials.js HTTP/1.1[0m" 304 -
+2025-05-14 10:20:00,689 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:20:00] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -
+2025-05-14 10:20:00,991 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:20:00] "GET /api/trials HTTP/1.1" 200 -
+2025-05-14 10:20:09,796 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:20:09] "GET /api/trials?id=nct06117774 HTTP/1.1" 200 -

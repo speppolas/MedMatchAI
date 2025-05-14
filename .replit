@@ -9,7 +9,7 @@ deploymentTarget = "autoscale"
 run = ["gunicorn", "--bind", "0.0.0.0:5000", "main:app"]
 
 [workflows]
-runButton = "Preview"
+runButton = "Run"
 
 [[workflows.workflow]]
 name = "Project"
@@ -77,6 +77,19 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "./llama.cpp/build/bin/llama-server -m models/llama-2-7b-chat.Q4_K_M.gguf -ngl 35 --host 0.0.0.0 --port 8080"
+
+[[workflows.workflow]]
+name = "Run"
+author = 42675335
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "./llama.cpp/build/bin/server -m models/llama-2-7b-chat.Q4_K_M.gguf -ngl 35 --host 0.0.0.0 --port 8080"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "FLASK_APP=main.py FLASK_ENV=development flask run --host=0.0.0.0 --port=5000"
 
 [[ports]]
 localPort = 5000

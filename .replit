@@ -9,7 +9,7 @@ deploymentTarget = "autoscale"
 run = ["gunicorn", "--bind", "0.0.0.0:5000", "main:app"]
 
 [workflows]
-runButton = "Flask Dev Server"
+runButton = "Flask Simple"
 
 [[workflows.workflow]]
 name = "Project"
@@ -95,6 +95,15 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "FLASK_APP=main.py FLASK_ENV=development FLASK_DEBUG=1 flask run --host=0.0.0.0 --port=5000"
+
+[[workflows.workflow]]
+name = "Flask Simple"
+author = 42677888
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "FLASK_APP=main.py FLASK_ENV=development flask run --host=0.0.0.0 --port=5000"
 
 [[ports]]
 localPort = 5000

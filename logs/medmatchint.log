@@ -82,3 +82,15 @@
 2025-05-14 08:39:29,427 - werkzeug - INFO - 172.31.128.96 - - [14/May/2025 08:39:29] "[36mGET /static/js/trials.js HTTP/1.1[0m" 304 -
 2025-05-14 08:39:29,557 - werkzeug - INFO - 172.31.128.96 - - [14/May/2025 08:39:29] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -
 2025-05-14 08:39:29,742 - werkzeug - INFO - 172.31.128.96 - - [14/May/2025 08:39:29] "[33mGET /api/trials HTTP/1.1[0m" 404 -
+2025-05-14 08:42:02,915 - werkzeug - INFO -  * Detected change in '/home/runner/workspace/app/api/routes.py', reloading
+2025-05-14 08:42:03,061 - werkzeug - INFO -  * Restarting with stat
+2025-05-14 08:42:03,911 - werkzeug - WARNING -  * Debugger is active!
+2025-05-14 08:42:03,912 - werkzeug - INFO -  * Debugger PIN: 679-971-051
+2025-05-14 08:42:10,508 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.31.128.96:5000
+2025-05-14 08:42:10,509 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-05-14 08:42:10,510 - werkzeug - INFO -  * Restarting with stat
+2025-05-14 08:42:11,358 - werkzeug - WARNING -  * Debugger is active!
+2025-05-14 08:42:11,360 - werkzeug - INFO -  * Debugger PIN: 171-107-345

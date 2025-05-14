@@ -25,6 +25,7 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # In-memory processing only
 MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH', 10 * 1024 * 1024))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 
 class Config:
     DEBUG = DEBUG

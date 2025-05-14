@@ -1,143 +1,72 @@
+# MedMatchINT - Clinical Trial Matching System
 
-# MedMatchINT
+## 🚀 Quick Start on Replit
 
-## Quick Preview Mode with Ollama
+1. Fork this repl to your account
+2. Install dependencies automatically by clicking Run
+3. The application will start at port 5000
 
-For development and preview purposes, you can run the application using Ollama as a fallback:
+## 📋 Manual Deployment Steps
 
-1. Install and start Ollama locally with the Mistral model:
+### 1. Install Dependencies
 ```bash
-curl https://ollama.ai/install.sh | sh
-ollama run mistral
+pip install -r requirements.txt
 ```
 
-2. The application will automatically use Ollama if llama.cpp is not configured.
-
-3. To start the application:
-```bash
-python main.py
-```
-
-The web interface will be available at http://localhost:5000
-
-## Production Setup with llama.cpp
-
-For production use, follow these steps to use llama.cpp:
-
-1. Set USE_OLLAMA_FALLBACK=false in .env
-2. Configure LLAMA_CPP_PATH and LLM_MODEL_PATH in .env
-3. Follow the llama.cpp setup instructions in llama_cpp_setup.md
-
-
-# MedMatchINT - Advanced Clinical Trial Matching System
-
-MedMatchINT is a high-performance, privacy-preserving web application designed for matching cancer patient data with active clinical trials. This system leverages a GPU-accelerated Large Language Model (LLM) using llama.cpp, ensuring fast and accurate semantic matching of patient characteristics with trial criteria.
-
-## 🚀 Key Features
-
-* **Local GPU-Accelerated LLM (llama.cpp)** for fast, accurate semantic matching.
-* **Modular Architecture:** Easily extensible with a clear directory structure.
-* **High-Performance Matching:** Utilizes the LLM (llama.cpp) for feature extraction and matching without PostgreSQL.
-* **Secure PDF Processing:** Patient documents are processed locally and deleted after use.
-* **Scalable and Customizable:** Easily adaptable to various clinical use cases.
-
-## 📌 Quick Start
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/tuorepositorio/medmatchint.git
-cd medmatchint
-```
-
-### 2. Create a Virtual Environment
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### 3. Install Dependencies
-
-```bash
-pip install -r requirements-docker.txt
-```
-
-### 4. Configure Environment Variables
-
-* Copy the example environment file and customize it:
-
+### 2. Configure Environment
+Create a `.env` file with your configuration:
 ```bash
 cp .env.example .env
-nano .env
 ```
 
-### 5. Start the Application
+### 3. Initialize Database and Upload Directory
+```bash
+mkdir -p uploads logs
+touch logs/medmatchint.log
+```
+
+### 4. Run the Application
 
 #### Development Mode
-
 ```bash
-flask run --host=0.0.0.0 --port=5000
+FLASK_APP=main.py FLASK_ENV=development flask run --host=0.0.0.0 --port=5000
 ```
 
-#### Production Mode with Gunicorn
-
+#### Production Mode
 ```bash
-gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --timeout 120 --log-level info
+gunicorn --bind 0.0.0.0:5000 main:app
 ```
 
-## ⚡ GPU-Only LLM Configuration
+## 🔧 Environment Variables
 
-MedMatchINT uses a GPU-accelerated LLM (llama.cpp). Ensure you have CUDA installed.
+Required environment variables in `.env`:
+- `FLASK_SECRET_KEY`: Generate a secure random key
+- `UPLOAD_FOLDER`: Directory for uploaded files (default: uploads)
+- `PDF_AUTO_DELETE_TIMEOUT`: Timeout for PDF deletion in minutes (default: 30)
 
-* Set CUDA environment variables directly in `.env`:
+## 🛠️ CUDA Configuration
 
+The application is configured for CUDA acceleration with these settings:
 ```bash
-LLAMA_CPP_PATH=/usr/local/llama.cpp
-LLM_MODEL_PATH=/usr/local/llama.cpp/models/mistral-7b-instruct-v0.2.Q4_K_M.gguf
+GGML_CUDA=yes
+GGML_CUDA_FORCE_MMQ=yes
+GGML_CUDA_FORCE_CUBLAS=yes
 ```
 
-## 🚦 System Requirements
+## 📊 Key Features
 
-* **Python 3.10+**
-* **CUDA 12.8+ for GPU Acceleration**
-* **8GB RAM minimum (16GB recommended)**
-* **NVIDIA GPU with 6GB+ VRAM for optimal performance**
+- PDF Processing and Analysis
+- GPU-Accelerated LLM Integration
+- Clinical Trial Matching
+- Secure File Handling
 
-## 📊 Architecture
+## 📝 Logs
 
-MedMatchINT is a fully LLM-driven application:
+Application logs are stored in:
+- `logs/medmatchint.log`
 
-* **GPU-Accelerated LLM (llama.cpp)** for feature extraction and trial matching.
-* **No PostgreSQL Required:** Directly utilizes the LLM for all matching logic.
+## 🔒 Security Notes
 
-## 🚀 Deployment
-
-### Docker Compose (Recommended for Production)
-
-```bash
-docker-compose up --build
-```
-
-## 🛡️ Security Best Practices
-
-* Use HTTPS in production.
-* Store sensitive credentials securely (e.g., AWS Secrets Manager).
-* Restrict access to uploaded patient documents.
-* Ensure correct CUDA configuration for GPU-only LLM.
-
-## ❓ Troubleshooting
-
-### Common Issues
-
-* **LLM Errors:** Verify CUDA paths and settings in `.env`.
-* **CUDA Errors:** Check CUDA installation and compatibility.
-
-## 📄 License
-
-\[Insert License Information]
-
-## 🌐 Contact
-
-\[Insert Contact Information]
-
+- Use HTTPS in production (enabled by default on Replit)
+- Keep your `.env` file secure
+- Regular security updates

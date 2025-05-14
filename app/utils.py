@@ -757,4 +757,4 @@ def check_criterion_match(criterion, patient_features):
                 result['matches'] = True
                 result['explanation'] = "Both genders are allowed"
             else:
-                result['explanation'] = f"Patient gender {gender}
+                result['explanation'] = f"Patient gender {gender} does not match trial requirements"

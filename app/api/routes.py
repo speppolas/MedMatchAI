@@ -69,7 +69,16 @@ def validate_int_trials():
 @bp.route('/trials')
 def trials():
     """Render the trials listing page."""
-    return render_template('trials.html')
+    try:
+        # Ensure trials.json exists and is readable
+        trials_data = get_all_trials()
+        if not trials_data:
+            logger.error("No trials data found")
+            return render_template('trials.html', error="No trials data found")
+        return render_template('trials.html')
+    except Exception as e:
+        logger.error(f"Error loading trials page: {str(e)}")
+        return render_template('trials.html', error=str(e))
 
 @bp.route('/view-pdf/<filename>')
 def view_pdf(filename):

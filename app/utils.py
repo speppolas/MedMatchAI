@@ -686,9 +686,18 @@ def get_all_trials():
     try:
         with open('trials_int.json', 'r') as f:
             trials = json.load(f)
-        return trials
+            if not trials:
+                return []
+            return trials
+    except FileNotFoundError:
+        logging.error("trials_int.json not found")
+        return []
+    except json.JSONDecodeError:
+        logging.error("Invalid JSON in trials_int.json")
+        return []
     except Exception as e:
         logging.error(f"Error loading trials: {str(e)}")
+        return []"Error loading trials: {str(e)}")
         return []
 
 def check_criterion_match(criterion, patient_features):

@@ -126,3 +126,13 @@
 2025-05-14 09:15:45,849 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:15:45] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
 2025-05-14 09:15:46,177 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:15:46] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
 2025-05-14 09:15:46,294 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:15:46] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -
+2025-05-14 09:16:29,958 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.31.128.5:5000
+2025-05-14 09:16:29,958 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-05-14 09:16:30,612 - app.api.routes - INFO - ✅ Index route accessed
+2025-05-14 09:16:30,621 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:16:30] "GET / HTTP/1.1" 200 -
+2025-05-14 09:16:30,767 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:16:30] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-05-14 09:16:31,190 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:16:31] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-05-14 09:16:31,310 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:16:31] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -

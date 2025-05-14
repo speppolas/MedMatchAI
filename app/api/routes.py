@@ -75,11 +75,19 @@ def trials():
 def get_trials():
     """API endpoint to get all trials."""
     try:
+        search_id = request.args.get('id', '').strip().upper()
         from app.utils import get_all_trials
         trials_data = get_all_trials()
+        
         if not trials_data:
             logger.error("No trials data found")
             return jsonify({'error': 'No trials data found'}), 404
+            
+        if search_id:
+            # Filter for exact NCT ID match
+            filtered_trials = [trial for trial in trials_data if trial.get('id', '').upper() == search_id]
+            return jsonify(filtered_trials)
+            
         return jsonify(trials_data)
     except Exception as e:
         logger.error(f"Error loading trials: {str(e)}")

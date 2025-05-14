@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
 
             // Chiama l'API per la ricerca avanzata
-            fetch(`/api/trials?id=${encodeURIComponent(searchTerm)}`)
+            fetch(`/api/trials?id=${encodeURIComponent(searchTerm.toUpperCase())}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Failed to search trial by ID');
@@ -206,9 +206,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     return response.json();
                 })
                 .then(data => {
-                    // Aggiorna temporaneamente i trial mostrati
-                    if (data && data.length > 0) {
-                        displayTrials(data);
+                    // Filtra i trial per mostrare solo quello cercato
+                    const exactMatch = Array.isArray(data) ? 
+                        data.filter(trial => trial.id.toUpperCase() === searchTerm.toUpperCase()) :
+                        [];
+
+                    if (exactMatch.length > 0) {
+                        displayTrials(exactMatch);
                     } else {
                         trialsContainer.innerHTML = `
                             <div class="alert alert-info text-center">

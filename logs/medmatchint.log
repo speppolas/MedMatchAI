@@ -136,3 +136,43 @@
 2025-05-14 09:16:30,767 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:16:30] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
 2025-05-14 09:16:31,190 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:16:31] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
 2025-05-14 09:16:31,310 - werkzeug - INFO - 172.31.128.5 - - [14/May/2025 09:16:31] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -
+2025-05-14 10:10:52,411 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.31.128.18:5000
+2025-05-14 10:10:52,412 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-05-14 10:10:53,194 - app.api.routes - INFO - ✅ Index route accessed
+2025-05-14 10:10:53,201 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:10:53] "GET / HTTP/1.1" 200 -
+2025-05-14 10:10:53,348 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:10:53] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-05-14 10:10:53,721 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:10:53] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-05-14 10:10:53,848 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:10:53] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -
+2025-05-14 10:11:01,980 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 10:11:01,981 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 10:11:01,982 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 10:11:01,982 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 10:11:02,462 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 10:11:02,463 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 10:11:02,463 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 10:11:02,463 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-05-14 10:11:02,463 - app.api.routes - ERROR - Error in feature extraction: llama.cpp server binary not found. Please build llama.cpp first.
+2025-05-14 10:11:02,464 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:11:02] "[35m[1mPOST /process HTTP/1.1[0m" 500 -
+2025-05-14 10:11:06,221 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:11:06] "GET /trials HTTP/1.1" 200 -
+2025-05-14 10:11:06,361 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:11:06] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-05-14 10:11:06,790 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:11:06] "GET /static/js/trials.js HTTP/1.1" 200 -
+2025-05-14 10:11:07,029 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:11:07] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -
+2025-05-14 10:11:07,155 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:11:07] "GET /api/trials HTTP/1.1" 200 -
+2025-05-14 10:11:34,973 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.31.128.18:5000
+2025-05-14 10:11:34,973 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-05-14 10:11:35,694 - app.api.routes - INFO - ✅ Index route accessed
+2025-05-14 10:11:35,702 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:11:35] "GET / HTTP/1.1" 200 -
+2025-05-14 10:11:35,856 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:11:35] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-05-14 10:11:36,170 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:11:36] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+2025-05-14 10:11:36,292 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:11:36] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -
+2025-05-14 10:11:39,443 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:11:39] "GET /trials HTTP/1.1" 200 -
+2025-05-14 10:11:39,930 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:11:39] "[36mGET /static/js/trials.js HTTP/1.1[0m" 304 -
+2025-05-14 10:11:39,981 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:11:39] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-05-14 10:11:40,102 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:11:40] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -
+2025-05-14 10:11:40,216 - werkzeug - INFO - 172.31.128.18 - - [14/May/2025 10:11:40] "GET /api/trials HTTP/1.1" 200 -

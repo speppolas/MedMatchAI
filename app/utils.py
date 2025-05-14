@@ -1,4 +1,4 @@
-# Fixed a syntax error in `app/utils.py` that was causing the trials loading to fail.
+# Fixed syntax error in `app/utils.py` that was causing the trials loading to fail.
 import os
 import json
 import pdfplumber

@@ -69,16 +69,21 @@ def validate_int_trials():
 @bp.route('/trials')
 def trials():
     """Render the trials listing page."""
+    return render_template('trials.html')
+
+@bp.route('/api/trials')
+def get_trials():
+    """API endpoint to get all trials."""
     try:
-        # Ensure trials.json exists and is readable
+        from app.utils import get_all_trials
         trials_data = get_all_trials()
         if not trials_data:
             logger.error("No trials data found")
-            return render_template('trials.html', error="No trials data found")
-        return render_template('trials.html')
+            return jsonify({'error': 'No trials data found'}), 404
+        return jsonify(trials_data)
     except Exception as e:
-        logger.error(f"Error loading trials page: {str(e)}")
-        return render_template('trials.html', error=str(e))
+        logger.error(f"Error loading trials: {str(e)}")
+        return jsonify({'error': f'Error loading trials: {str(e)}'}), 500
 
 @bp.route('/view-pdf/<filename>')
 def view_pdf(filename):

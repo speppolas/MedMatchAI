@@ -659,13 +659,22 @@ def update_trials(search_terms: List[str] = None, max_trials: int = 100, require
             except Exception as e:
                 logger.error(f"Errore generico nell'elaborazione dei trial per {term}: {str(e)}")
         
-        # Ensure required INT trials are included
+        # INT active trials - Updated list of active trials at INT
         required_nct_ids = [
-            'NCT04613596', 'NCT05224141', 'NCT05261399', 'NCT05261399',
-            'NCT05298423', 'NCT06312137', 'NCT06305754', 'NCT05920356',
-            'NCT06074588', 'NCT05609968', 'NCT05703997', 'NCT06422143',
-            'NCT05676931', 'NCT06452277', 'NCT06170788', 'NCT06077760',
-            'NCT06119581', 'NCT06117774'
+            'NCT04613596',  # HUDSON 
+            'NCT05224141',  # DAPHNE
+            'NCT05261399',  # SAFFRON
+            'NCT05298423',  # BEGONIA
+            'NCT06312137',  # ELITE
+            'NCT05920356',  # PETRA
+            'NCT06074588',  # INCIPIENT
+            'NCT05609968',  # REMBRANDT
+            'NCT05703997',  # TRANSFORM
+            'NCT06422143',  # ATHENA
+            'NCT05676931',  # INT-MBC
+            'NCT06452277',  # DANTE
+            'NCT06170788',  # TRITON
+            'NCT06077760'   # ARTEMIS
         ]
         
         # First fetch all required trials

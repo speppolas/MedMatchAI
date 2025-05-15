@@ -104,12 +104,12 @@ def process():
             logger.error("❌ Invalid or empty response from LLM")
             return jsonify({'error': 'LLM returned an invalid or empty response.'}), 500
 
-        highlighted_text = highlight_sources(text, features)
-
+        # highlighted_text = highlight_sources(text, features)
+        print(features)
         return jsonify({
             'features': features,
             'text': text,
-            'text_highlighted': highlighted_text,
+            'text_highlighted': 'highlighted_text',
             'pdf_filename': pdf_filename
         })
 

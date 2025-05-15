@@ -2,7 +2,15 @@ import os
 import logging
 import requests
 import json
+import sys
 
+logging.basicConfig(
+    level=logging.INFO,
+    handlers=[
+        logging.FileHandler("record.log"),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 logger = logging.getLogger(__name__)
 
 # Carica i parametri dal file di configurazione
@@ -40,11 +48,11 @@ class LLMProcessor:
                 "max_tokens": max_tokens,
                 "stream": False
             }
-            logger.info(f"Sending request to Ollama API with payload: {payload}")
+            # print(f"Sending request to Ollama API with payload: {payload}")
             response = requests.post(self.api_url, json=payload)
-            logger.info(f"Ollama API response status: {response.status_code}")
+            print(f"Ollama API response status: {response.status_code}")
             if response.status_code == 200:
-                logger.info(f"Ollama API response body (truncated): {response.text[:500]}")
+                # print(f"Ollama API response body (truncated): {response.text[:500]}")
                 return response.text
             else:
                 logger.error(f"Non-200 response from Ollama API: {response.status_code} - {response.text}")

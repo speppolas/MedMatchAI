@@ -28,6 +28,39 @@ def extract_text_from_pdf(pdf_file: Union[str, bytes]) -> str:
 
 def extract_features_with_llm(text: str) -> Dict[str, Any]:
     llm = get_llm_processor()
+    # prompt = f"""
+    # You are a medical AI assistant. Extract clinical features from the clinical text below. For each field, return:
+    # - The extracted value
+    # - And the corresponding *_source_text used to infer it
+
+    # Return ONLY a valid JSON object with this structure:
+
+    # {{
+    # "age": integer or null,
+    # "age_source_text": string or null,
+    # "gender": "male" | "female" | "not mentioned",
+    # "gender_source_text": string or null,
+    # "diagnosis": string or null,
+    # "diagnosis_source_text": string or null,
+    # "stage": string or null,
+    # "stage_source_text": string or null,
+    # "ecog": string or null,
+    # "ecog_source_text": string or null,
+    # "mutations": list of strings,
+    # "mutations_source_text": list of strings,
+    # "metastases": list of strings,
+    # "metastases_source_text": list of strings,
+    # "previous_treatments": list of strings,
+    # "previous_treatments_source_text": list of strings,
+    # "lab_values": dict,
+    # "lab_values_source_text": dict
+    # }}
+
+    # TEXT:
+    # {text}
+
+    # JSON ONLY OUTPUT:
+    # """
     prompt = f"""You are a clinical NLP model. Extract ONLY the following JSON object from the text below, with no explanation or extra text. Use keys:
 
 {{
@@ -61,33 +94,32 @@ Text:
         logger.info(f"💾 Saved LLM debug output to {filename}")
     except Exception as e:
         logger.warning(f"⚠️ Failed to write raw debug log: {e}")
-
+    
     # Then proceed parsing the response JSON as before
     try:
         resp_json = json.loads(response)
+        llm_text = json.loads(resp_json['response'])
     except json.JSONDecodeError as e:
-        logger.error(f"❌ Failed to parse outer JSON from LLM response: {e}, raw: {response}")
+        print(f"❌ Failed to parse outer JSON from LLM response: {e}, raw: {response}")
         return {}
+    
+    return llm_text
+    # if not llm_text:
+    #     logger.error("❌ LLM response 'response' field is empty")
+    #     return {}
 
-    llm_text = resp_json.get("response", "")#.strip()
-    llm_text = json.loads(llm_text)
-    print(llm_text)
-    if not llm_text:
-        logger.error("❌ LLM response 'response' field is empty")
-        return {}
-
-    try:
-        data = json.loads(llm_text)
-        validated = ClinicalFeatures(**data)
-        logger.info(f"✅ Extracted fields summary: {json.dumps(validated.dict(), indent=2)}")
-        return validated.dict()
-    except json.JSONDecodeError as e:
-        logger.error(f"❌ Failed to parse JSON from LLM 'response' text: {e}, text: {llm_text}")
-    except ValidationError as ve:
-        logger.error(f"❌ Schema Validation Error: {ve}")
-    except Exception as e:
-        logger.error(f"❌ Unexpected error: {e}")
-    return {}
+    # try:
+    #     data = json.loads(llm_text)
+    #     validated = ClinicalFeatures(**data)
+    #     print(f"✅ Extracted fields summary: {json.dumps(validated.dict(), indent=2)}")
+    #     return validated.dict()
+    # except json.JSONDecodeError as e:
+    #     print(f"❌ Failed to parse JSON from LLM 'response' text: {e}, text: {llm_text}")
+    # except ValidationError as ve:
+    #     print(f"❌ Schema Validation Error: {ve}")
+    # except Exception as e:
+    #     print(f"❌ Unexpected error: {e}")
+    # return llm_text
 
 def highlight_sources(text: str, features: Dict[str, Any]) -> str:
     for key, value in features.items():

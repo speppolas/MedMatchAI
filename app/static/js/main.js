@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (textInput && textInput.value.trim()) {
             formData.append('text', textInput.value.trim());
         }
-
+        
         // Send request
         fetch('/process', {
             method: 'POST',
@@ -236,12 +236,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Display results from processing
+
     function displayResults(data) {
         // Display extracted features
-        if (data.features) {
-            displayFeatures(data.features);
-        }
+        displayFeatures(data.features)
+        console.log(data.features)
+        // if (data.features) {
+        //     displayFeatures(data.features);
+        // }
 
         // Display matching trials
         if (data.matches) {
@@ -294,7 +296,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Display extracted features
+    /*
     function displayFeatures(features) {
         if (!featuresContainer) return;
 
@@ -302,11 +304,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Create feature items (simple values)
         const simpleFeatures = {
-            'Age': features.age && features.age.value ? `${features.age.value} anni` : 'Non rilevato',
-            'Gender': features.gender && features.gender.value ? features.gender.value : 'Non rilevato',
-            'Diagnosis': features.diagnosis && features.diagnosis.value ? features.diagnosis.value : 'Non rilevato',
-            'Stage': features.stage && features.stage.value ? features.stage.value : 'Non rilevato',
-            'ECOG Status': features.ecog && features.ecog.value !== null ? features.ecog.value : 'Non rilevato'
+            'Age': features.age ? `${features.age} anni` : 'Non menzionato',
+            'Gender': features.gender ? features.gender : 'Non rilevato',
+            'Diagnosis': features.diagnosis ? features.diagnosis : 'Non rilevato',
+            'Stage': features.stage ? features.stage : 'Non rilevato',
+            'ECOG Status': features.ecog !== null ? features.ecog : 'Non rilevato'
         };
 
         // Aggiungi le feature semplici
@@ -476,6 +478,65 @@ document.addEventListener('DOMContentLoaded', function() {
             featuresContainer.appendChild(labValuesDiv);
         }
     }
+*/
+
+    function displayFeatures(features) {
+        if (!featuresContainer) return;
+
+        featuresContainer.innerHTML = '';
+
+        for (const [key, value] of Object.entries(features)) {
+            const featureDiv = document.createElement('div');
+            featureDiv.className = 'feature-item';
+
+            const featureLabel = document.createElement('div');
+            featureLabel.className = 'feature-label';
+            // Label più leggibile
+            featureLabel.textContent = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+            const featureValue = document.createElement('div');
+            featureValue.className = 'feature-value';
+
+            if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '')) {
+                featureValue.textContent = 'Non rilevato';
+            }
+            else if (Array.isArray(value)) {
+                if (value.length === 0) {
+                    featureValue.textContent = 'Nessuno';
+                } else {
+                    value.forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        if (typeof item === 'object') {
+                            itemDiv.textContent = JSON.stringify(item);
+                        } else {
+                            itemDiv.textContent = item.toString();
+                        }
+                        featureValue.appendChild(itemDiv);
+                    });
+                }
+            }
+            else if (typeof value === 'object') {
+                // Per esempio lab_values
+                if (Object.keys(value).length === 0) {
+                    featureValue.textContent = 'Nessuno';
+                } else {
+                    for (const [subKey, subVal] of Object.entries(value)) {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.textContent = `${subKey}: ${subVal}`;
+                        featureValue.appendChild(itemDiv);
+                    }
+                }
+            }
+            else {
+                featureValue.textContent = value.toString();
+            }
+
+            featureDiv.appendChild(featureLabel);
+            featureDiv.appendChild(featureValue);
+            featuresContainer.appendChild(featureDiv);
+        }
+}
+
 
     // Display matching trials
     function displayMatches(matches) {

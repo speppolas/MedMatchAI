@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+.env
+.DS_Store
+instance/*
+uploads/*
+logs/*
+.vscode/
+.idea/
+.pytest_cache/
+.mypy_cache/

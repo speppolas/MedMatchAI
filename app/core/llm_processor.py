@@ -1,4 +1,3 @@
-
 import os
 import logging
 import requests
@@ -6,70 +5,55 @@ import json
 
 logger = logging.getLogger(__name__)
 
+
+# Carica i parametri dal file di configurazione
+def load_config():
+    try:
+        with open("config.json", "r") as f:
+            config = json.load(f)
+        return config
+    except Exception as e:
+        logger.error(f"❌ Unable to load config file: {e}")
+        return {
+            "LLM_MODEL": "llama3.1:8b-custom",
+            "LLM_CONTEXT_SIZE": 131072,
+            "LLM_TEMPERATURE": 0.1
+        }
+
 class LLMProcessor:
     def __init__(self):
-        self.logger = logging.getLogger(__name__)
-        self.api_url = "http://0.0.0.0:11434/api/generate"
+        config = load_config()
+        self.api_url = os.getenv("OLLAMA_SERVER_URL", "http://127.0.0.1:11434/api/generate")
+        self.model = config.get("LLM_MODEL")
+        self.context_size = config.get("LLM_CONTEXT_SIZE")
+        self.temperature = config.get("LLM_TEMPERATURE")
+        self.max_tokens = min(self.context_size - 512, self.context_size // 2)
 
-    def generate_response(self, prompt: str, 
-                      temperature: float = 0.7,
-                      max_tokens: int = 2048) -> str:
-        """Generate response using Ollama."""
+    def generate_response(self, prompt: str, temperature: float = None, max_tokens: int = None) -> str:
+        temperature = temperature if temperature is not None else self.temperature
+        max_tokens = max_tokens if max_tokens is not None else self.max_tokens
         try:
             payload = {
-                "model": "mistral",
+                "model": self.model,
                 "prompt": prompt,
                 "temperature": temperature,
-                "max_length": max_tokens,
+                "num_ctx": self.context_size,
+                "max_tokens": max_tokens,
                 "stream": False
             }
-
+            logger.info(f"Sending request to Ollama API with payload: {payload}")
             response = requests.post(self.api_url, json=payload)
+            logger.info(f"Ollama API response status: {response.status_code}")
             if response.status_code == 200:
-                return response.json()['response']
+                logger.info(f"Ollama API response body (truncated): {response.text[:500]}")
+                return response.text
             else:
-                self.logger.error(f"Ollama server error: {response.status_code}")
-                return "Error generating response"
-
+                logger.error(f"Non-200 response from Ollama API: {response.status_code} - {response.text}")
+                return ""
         except Exception as e:
-            self.logger.error(f"Error calling Ollama server: {str(e)}")
-            return "Error connecting to Ollama server"
+            logger.error(f"Error contacting Ollama API: {e}")
+            return ""
 
-    def process_feature_extraction(self, text: str) -> dict:
-        """Process feature extraction using the dedicated prompt."""
-        from .prompts.feature_extraction import FEATURE_EXTRACTION_PROMPT
-        prompt = FEATURE_EXTRACTION_PROMPT.format(text=text)
-        response = self.generate_response(prompt, temperature=0.7)
-        return self._parse_json_response(response)
-
-    def process_trial_matching(self, patient_features: dict, trial: dict) -> dict:
-        """Process trial matching with XAI using the dedicated prompt."""
-        from .prompts.trial_matching import TRIAL_MATCHING_PROMPT
-        prompt = TRIAL_MATCHING_PROMPT.format(
-            patient_features=json.dumps(patient_features, indent=2),
-            trial=json.dumps(trial, indent=2)
-        )
-        response = self.generate_response(prompt, temperature=0.7)
-        return self._parse_json_response(response)
-
-    def generate_trial_summary(self, match_analysis: dict) -> dict:
-        """Generate a patient-friendly trial match summary."""
-        from .prompts.trial_matching import TRIAL_SUMMARY_PROMPT
-        prompt = TRIAL_SUMMARY_PROMPT.format(
-            match_analysis=json.dumps(match_analysis, indent=2)
-        )
-        response = self.generate_response(prompt, temperature=0.7)
-        return self._parse_json_response(response)
-
-    def _parse_json_response(self, response: str) -> dict:
-        """Parse JSON response from the LLM."""
-        try:
-            return json.loads(response)
-        except json.JSONDecodeError as e:
-            self.logger.error(f"JSONDecodeError: {e}")
-            self.logger.error(f"Response causing the error: {response}")
-            return {}
 
 def get_llm_processor():
-    """Returns an instance of the LLM Processor."""
     return LLMProcessor()

@@ -1,22 +1,26 @@
-import os
+# main.py
 import logging
 from app import create_app
-from config import LOG_LEVEL, LOG_FORMAT, HOST, PORT
+from config import LOG_LEVEL, LOG_FORMAT
 
-# Configure Logging
+# Ensure the logs/ directory exists
+import os
+os.makedirs("logs", exist_ok=True)
+
 logging.basicConfig(
-    level=getattr(logging, LOG_LEVEL, "INFO"),
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
     format=LOG_FORMAT,
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler("logs/medmatchint.log", mode="a")
+        logging.FileHandler("logs/medmatchint.log", mode="a", encoding="utf-8")
     ]
 )
 
-logger = logging.getLogger(__name__)
+# Set root logger to capture all logs
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
-# Create Flask application
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)

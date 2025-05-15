@@ -1,160 +1,110 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedMatchINT - Clinical Trial Matching</title>
-    
-    <!-- CSS -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
-</head>
-<body>
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <a href="/" class="sidebar-logo">
-                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="MedMatchINT Logo" width="32" height="32">
-                <span>MedMatchINT</span>
-            </a>
-        </div>
-        
-        <ul class="sidebar-nav">
-            <li class="sidebar-nav-item">
-                <a href="/" class="sidebar-nav-link active">
-                    <i data-feather="layers"></i>
-                    <span>Clinical Trial Matching</span>
-                </a>
-            </li>
-            <li class="sidebar-nav-item">
-                <a href="/trials" class="sidebar-nav-link">
-                    <i data-feather="file-text"></i>
-                    <span>INT Active Trials</span>
-                </a>
-            </li>
-        </ul>
+<!-- templates/index.html -->
+{% extends "base.html" %}
+
+{% block title %}MedMatchINT - Clinical Trial Matching{% endblock %}
+
+{% block content %}
+<button id="mobile-menu-toggle" class="btn btn-sm btn-primary d-md-none mb-3">
+  <i data-feather="menu"></i>
+  <span>Menu</span>
+</button>
+
+<div class="header">
+  <h1 class="header-title">Clinical Trial Matching</h1>
+  <p class="header-subtitle">Upload patient data to find matching clinical trials</p>
+</div>
+
+<div id="alert-container"></div>
+
+<div class="card">
+  <div class="card-header">
+    <h5 class="card-header-title">Patient Data</h5>
+
+    <div class="btn-group" role="group">
+      <button id="file-input-toggle" class="btn btn-sm btn-primary active">PDF Upload</button>
+      <button id="text-input-toggle" class="btn btn-sm btn-primary">Text Input</button>
     </div>
-    
-    <!-- Main content -->
-    <div class="main-content">
-        <button id="mobile-menu-toggle" class="btn btn-sm btn-primary d-md-none mb-3">
-            <i data-feather="menu"></i>
-            <span>Menu</span>
-        </button>
-        
-        <div class="header">
-            <h1 class="header-title">Clinical Trial Matching</h1>
-            <p class="header-subtitle">Upload patient data to find matching clinical trials</p>
+  </div>
+
+  <div class="card-body">
+    <!-- File upload section -->
+    <div id="file-input-section">
+      <div id="dropzone" class="dropzone">
+        <div class="dropzone-icon">
+          <i data-feather="file-text" width="48" height="48"></i>
         </div>
-        
-        <div id="alert-container"></div>
-        
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-header-title">Patient Data</h5>
-                
-                <div class="btn-group" role="group">
-                    <button id="file-input-toggle" class="btn btn-sm btn-primary active">PDF Upload</button>
-                    <button id="text-input-toggle" class="btn btn-sm btn-primary">Text Input</button>
-                </div>
-            </div>
-            
-            <div class="card-body">
-                <!-- File upload section -->
-                <div id="file-input-section">
-                    <div id="dropzone" class="dropzone">
-                        <div class="dropzone-icon">
-                            <i data-feather="file-text" width="48" height="48"></i>
-                        </div>
-                        <h5 class="dropzone-message">Drag & drop your PDF file here</h5>
-                        <p class="dropzone-description">or click to browse files</p>
-                        <input id="file-input" type="file" class="d-none" accept=".pdf">
-                    </div>
-                </div>
-                
-                <!-- Text input section (hidden by default) -->
-                <div id="text-input-section" class="d-none">
-                    <div class="form-group">
-                        <label for="text-input" class="form-label">Patient clinical information</label>
-                        <textarea id="text-input" class="form-control" rows="10" placeholder="Enter patient clinical information, including diagnosis, age, gender, ECOG status, mutations, etc."></textarea>
-                    </div>
-                </div>
-                
-                <!-- Buttons -->
-                <div class="text-right mt-3">
-                    <button id="clear-button" class="btn btn-secondary mr-2">Clear</button>
-                    <button id="process-button" class="btn btn-primary" disabled>Process & Find Matches</button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Loading spinner -->
-        <div id="loading-spinner" class="spinner-container d-none">
-            <div class="spinner"></div>
-        </div>
-        
-        <!-- Results section (hidden initially) -->
-        <div id="results-section" class="d-none">
-            <div class="row">
-                <div class="col-lg-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-header-title">Extracted Features</h5>
-                        </div>
-                        <div class="card-body p-0">
-                            <div id="features-container" class="features-container">
-                                <!-- Features will be inserted here -->
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- PDF Display Card -->
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            <h5 class="card-header-title">Original Document</h5>
-                        </div>
-                        <div class="card-body p-0">
-                            <div id="pdf-container" class="p-3">
-                                <!-- PDF or text will be displayed here -->
-                                <div id="pdf-text" class="p-2" style="max-height: 400px; overflow-y: auto; background-color: #f8f9fa; border-radius: 0.25rem; font-family: monospace; font-size: 0.85rem;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-8">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-header-title">Matching Clinical Trials</h5>
-                        </div>
-                        <div class="card-body">
-                            <div id="matches-container">
-                                <!-- Matches will be inserted here -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <h5 class="dropzone-message">Drag & drop your PDF file here</h5>
+        <p class="dropzone-description">or click to browse files</p>
+        <input id="file-input" type="file" class="d-none" accept=".pdf" />
+      </div>
     </div>
-    
-    <!-- JS -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    
-    <script>
-        // Initialize Feather icons
-        document.addEventListener('DOMContentLoaded', function() {
-            feather.replace();
-        });
-    </script>
-</body>
-</html>
+
+    <!-- Text input section (hidden by default) -->
+    <div id="text-input-section" class="d-none">
+      <div class="form-group">
+        <label for="text-input" class="form-label">Patient clinical information</label>
+        <textarea id="text-input" class="form-control" rows="10"
+          placeholder="Enter patient clinical information, including diagnosis, age, gender, ECOG status, mutations, etc."></textarea>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="text-right mt-3">
+      <button id="clear-button" class="btn btn-secondary mr-2">Clear</button>
+      <button id="process-button" class="btn btn-primary">Process & Find Matches</button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading spinner -->
+<div id="loading-spinner" class="spinner-container d-none">
+  <div class="spinner"></div>
+</div>
+
+<!-- Results section (hidden initially) -->
+<div id="results-section" class="d-none">
+  <div class="row">
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-header-title">Extracted Features</h5>
+        </div>
+        <div class="card-body p-0">
+          <div id="features-container" class="features-container">
+            <!-- Features will be inserted here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-header-title">Matching Clinical Trials</h5>
+        </div>
+        <div class="card-body">
+          <div id="matches-container">
+            <!-- Matches will be inserted here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+  // Drag and Drop for PDF Upload
+  document.getElementById("dropzone").addEventListener("click", function () {
+    document.getElementById("file-input").click();
+  });
+
+  document.getElementById("file-input").addEventListener("change", function () {
+    if (this.files.length > 0) {
+      document.getElementById("process-button").disabled = false;
+    }
+  });
+</script>
+{% endblock %}

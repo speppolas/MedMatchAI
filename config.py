@@ -10,7 +10,7 @@ load_dotenv(BASE_DIR / '.env')
 HOST = os.getenv('HOST', '0.0.0.0')
 PORT = int(os.getenv('PORT', 5000))
 DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 't')
-LLM_CONTEXT_SIZE = int(os.getenv('LLM_CONTEXT_SIZE', 8192))
+LLM_CONTEXT_SIZE = int(os.getenv('LLM_CONTEXT_SIZE'))
 # Logging
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 LOG_FORMAT = os.getenv('LOG_FORMAT', '%(asctime)s - %(name)s - %(levelname)s - %(message)s')

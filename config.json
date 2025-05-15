@@ -1,5 +1,5 @@
 {
-    "LLM_MODEL": "llama3.1:8b-custom",
-    "LLM_CONTEXT_SIZE": 8192,
+    "LLM_MODEL": "mistral:latest",
+    "LLM_CONTEXT_SIZE": 13824,
     "LLM_TEMPERATURE": 0.11
 }

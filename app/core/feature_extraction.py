@@ -14,6 +14,7 @@ from app.utils import get_all_trials
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def extract_text_from_pdf(pdf_file: Union[str, bytes]) -> str:
     try:
         text = ""
@@ -68,7 +69,9 @@ Text:
         logger.error(f"❌ Failed to parse outer JSON from LLM response: {e}, raw: {response}")
         return {}
 
-    llm_text = resp_json.get("response", "").strip()
+    llm_text = resp_json.get("response", "")#.strip()
+    llm_text = json.loads(llm_text)
+    print(llm_text)
     if not llm_text:
         logger.error("❌ LLM response 'response' field is empty")
         return {}

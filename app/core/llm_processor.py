@@ -5,7 +5,6 @@ import json
 
 logger = logging.getLogger(__name__)
 
-
 # Carica i parametri dal file di configurazione
 def load_config():
     try:

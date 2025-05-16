@@ -2,10 +2,8 @@
 import logging
 from app import create_app
 from config import LOG_LEVEL, LOG_FORMAT
-
-# Ensure the logs/ directory exists
 import os
-os.makedirs("logs", exist_ok=True)
+from dotenv import load_dotenv
 
 logging.basicConfig(
     level=getattr(logging, LOG_LEVEL, logging.INFO),
@@ -16,11 +14,16 @@ logging.basicConfig(
     ]
 )
 
-# Set root logger to capture all logs
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 app = create_app()
+
+with app.app_context():
+    from models import db
+    logger.info("🔧 Ensuring database schema is ready...")
+    db.create_all()  # Ensure tables exist
+    logger.info("✅ Database schema is ready.")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)

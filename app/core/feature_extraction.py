@@ -10,11 +10,11 @@ from flask import current_app
 from app.core.llm_processor import get_llm_processor
 from app.core.schema_validation import ClinicalFeatures, ValidationError
 from app.utils import get_all_trials
+import sys
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
+ 
 def extract_text_from_pdf(pdf_file: Union[str, bytes]) -> str:
     try:
         text = ""
@@ -27,6 +27,7 @@ def extract_text_from_pdf(pdf_file: Union[str, bytes]) -> str:
         raise Exception(f"Unable to extract text from PDF: {str(e)}")
 
 def extract_features_with_llm(text: str) -> Dict[str, Any]:
+    from app.core.llm_processor import get_llm_processor
     llm = get_llm_processor()
     # prompt = f"""
     # You are a medical AI assistant. Extract clinical features from the clinical text below. For each field, return:
@@ -79,31 +80,44 @@ Text:
 {text}
 
 """
-    logger.info(f"🔍 LLM Prompt Length (chars): {len(prompt)}")
+
+
     logger.info(f"Prompt sent to LLM:\n{prompt[:2000]}")  # Log the prompt snippet
     
-    response = llm.generate_response(prompt, max_tokens=llm.max_tokens)
-    logger.info("🧠 LLM Raw Response: %s", response[:1000])
+    try:
+        # Send prompt to LLM and receive response
+        response = llm.generate_response(prompt)
+        logger.info(f"🧠 LLM Raw Response: {response[:1000]}")
 
-    # Write debug log with timestamped filename
-    try:
-        os.makedirs("logs", exist_ok=True)
-        filename = f"logs/llm_raw_debug_{int(time.time())}.json"
-        with open(filename, "w") as f:
-            json.dump({"prompt": prompt, "response": response}, f, indent=2)
-        logger.info(f"💾 Saved LLM debug output to {filename}")
-    except Exception as e:
-        logger.warning(f"⚠️ Failed to write raw debug log: {e}")
-    
-    # Then proceed parsing the response JSON as before
-    try:
+        try:
+            os.makedirs("logs", exist_ok=True)
+            filename = f"logs/llm_raw_debug_{int(time.time())}.json"
+            with open(filename, "w") as f:
+                json.dump({"prompt": prompt, "response": response}, f, indent=2)
+            logger.info(f"💾 Saved LLM debug output to {filename}")
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to write raw debug log: {e}")
+        
+        
+        # Parse the LLM response to get 'llm_text'
         resp_json = json.loads(response)
         llm_text = json.loads(resp_json['response'])
+
+        if not isinstance(llm_text, dict):
+            logger.error(f"❌ LLM response is not a valid JSON object: {llm_text}")
+            return {}
+
+        logger.info(f"✅ Extracted Features (llm_text): {json.dumps(llm_text, indent=2)}")
+        return llm_text
+
     except json.JSONDecodeError as e:
-        print(f"❌ Failed to parse outer JSON from LLM response: {e}, raw: {response}")
+        logger.error(f"❌ JSON decoding error: {str(e)} - Raw response: {response}")
+        return {}
+    except Exception as e:
+        logger.error(f"❌ Unexpected error in feature extraction: {e}")
         return {}
     
-    return llm_text
+    # return llm_text
     # if not llm_text:
     #     logger.error("❌ LLM response 'response' field is empty")
     #     return {}
@@ -131,22 +145,37 @@ def highlight_sources(text: str, features: Dict[str, Any]) -> str:
                 logger.warning(f"⚠️ Failed to highlight '{value}': {e}")
     return text
 
-def match_trials_llm(patient_features: Dict[str, Any]) -> List[Dict[str, Any]]:
+
+def match_trials_llm(llm_text: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """
+    Perform fast, efficient trial matching using a Hybrid (Rule + LLM) approach.
+    """
     llm = get_llm_processor()
-    trials = get_all_trials()
+    trials = get_all_trials()  # Load all available trials
 
     if not trials:
-        logger.error("No trials found in database")
+        logger.error("❌ No trials found in database")
         return []
 
     matched_trials = []
 
+    logger.info("🔍 Hybrid Matching: Fast Pre-Filter + LLM Matching...")
+    
+    # ✅ Step 1: Fast Rule-Based Pre-Filter (age, diagnosis, etc.)
+    filtered_trials = []
     for trial in trials:
+        if 'conditions' in trial and llm_text.get('diagnosis') and llm_text['diagnosis'].lower() in trial['conditions'].lower():
+            filtered_trials.append(trial)
+
+    logger.info(f"✅ {len(filtered_trials)} trials pre-selected for LLM matching.")
+
+    # ✅ Step 2: LLM Matching Only on Pre-Filtered Trials
+    for trial in filtered_trials:
         prompt = f"""
 Does the following patient match this trial?
 
 PATIENT:
-{json.dumps(patient_features, indent=2)}
+{json.dumps(llm_text, indent=2)}
 
 TRIAL:
 {json.dumps(trial, indent=2)}
@@ -159,22 +188,47 @@ Return a JSON with:
   "summary": string
 }}
 """
-        response = llm.generate_response(prompt, max_tokens=llm.max_tokens)
+        response = llm.generate_response(prompt)
         try:
             match_result = json.loads(response)
             matched_trials.append({
                 "trial_id": trial.get("id"),
-                "confidence": match_result.get("match_score", 0),
+                "title": trial.get("title", "Unknown Trial"),
+                "description": trial.get("description", "No description provided."),
+                "match_score": match_result.get("match_score", 0),
                 "recommendation": match_result.get("overall_recommendation", "UNKNOWN"),
-                "analysis": match_result.get("criteria_analysis", {}),
+                "criteria_analysis": match_result.get("criteria_analysis", {}),
                 "summary": match_result.get("summary", "No summary available.")
             })
         except json.JSONDecodeError:
-            logger.error(f"❌ LLM response could not be parsed: {response}")
+            logger.error(f"❌ LLM response could not be parsed for trial matching: {response}")
             continue
 
-    matched_trials.sort(key=lambda x: x['confidence'], reverse=True)
+    # ✅ Step 3: Sort by Match Score (High to Low)
+    matched_trials.sort(key=lambda x: x['match_score'], reverse=True)
+    logger.info(f"✅ Trial matching completed. {len(matched_trials)} trials matched.")
+    
     return matched_trials
+
+
+def format_criteria(criteria_list):
+    """Format criteria list into a readable string for the LLM prompt"""
+    if not criteria_list:
+        return "None"
+    
+    formatted = []
+    for i, criterion in enumerate(criteria_list):
+        # If criterion is a string
+        if isinstance(criterion, str):
+            formatted.append(f"{i+1}. {criterion}")
+        # If criterion is a dict
+        elif isinstance(criterion, dict):
+            criterion_id = criterion.get('id', i+1)
+            criterion_text = criterion.get('text', criterion.get('description', 'No description'))
+            formatted.append(f"{criterion_id}. {criterion_text}")
+    
+    return "\n".join(formatted)
+
 
 def clean_expired_files(upload_folder: str = 'uploads', max_age_minutes: int = 30) -> None:
     try:

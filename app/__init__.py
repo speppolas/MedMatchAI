@@ -1,10 +1,13 @@
+# app/__init__.py
+
 import os
 import logging
 import pdfminer
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from flask import Flask, Blueprint, jsonify, request, render_template
 from pathlib import Path
 from dotenv import load_dotenv
-from flask_migrate import Migrate
 
 # Load .env file (always loaded before anything else)
 load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
@@ -14,7 +17,7 @@ pdfminer_logger = logging.getLogger("pdfminer")
 pdfminer_logger.setLevel(logging.WARNING)
 
 # Import configurations and database
-from models import db, ClinicalTrial
+from models import db, ClinicalTrial  # Ensure db is imported from models.py
 from config import get_config
 
 # Initialize logging with the loaded configuration
@@ -23,7 +26,7 @@ logging.basicConfig(
     level=getattr(logging, config_class.LOG_LEVEL, "INFO"),
     format=config_class.LOG_FORMAT,
     handlers=[
-        logging.StreamHandler(),  
+        logging.StreamHandler(),
         logging.FileHandler("logs/medmatchint.log")
     ]
 )
@@ -32,13 +35,15 @@ logger = logging.getLogger(__name__)
 # Import routes Blueprint
 from app.api.routes import bp as api_bp
 
+migrate = Migrate()  # Initialize migrate globally
+
 def create_app(config_class=None):
     logger.info("🔧 Creating MedMatchINT Application")
     
     app = Flask(
         __name__, 
         static_folder="static", 
-        template_folder="templates"  # Ensure you have a templates/ directory with your HTML files
+        template_folder="templates"  
     )
     
     # Load configuration
@@ -56,18 +61,16 @@ def create_app(config_class=None):
         logger.info(f"✅ Created upload directory: {upload_dir}")
     
     # Initialize extensions
-    db.init_app(app)
-    
-    # Initialize Flask-Migrate (Database Migrations)
-    migrate = Migrate(app, db)
-    
+    db.init_app(app)  # Initialize the database with the app
+    migrate.init_app(app, db)  # Initialize Flask-Migrate with the app and db
+
     # Register API Blueprint without /api prefix
     app.register_blueprint(api_bp)
     
     # Serve your HTML interface on the root URL
     @app.route("/")
     def home():
-        return render_template("index.html")  # Ensure you have templates/index.html
+        return render_template("index.html")
 
     # Middleware to clean all JSON responses (Automatic Response Cleaning)
     @app.after_request

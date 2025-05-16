@@ -1,13 +1,6 @@
-"""
-Script per l'aggiornamento automatico dei trial clinici in MedMatchINT.
+#scripts/update_trials.py
 
-Questo script recupera i trial clinici aggiornati da ClinicalTrials.gov e aggiorna
-il database e il file JSON locale. Può essere eseguito manualmente o configurato come
-job cronjob per aggiornamenti automatici regolari.
-
-Utilizzo: python scripts/update_trials.py [--terms TERMS] [--max MAX_TRIALS] [--json-only] [--db-only]
-"""
-
+'''
 import os
 import sys
 import json
@@ -173,3 +166,6 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+    
+    
+'''

@@ -1,0 +1,165 @@
+INFO:app:🔧 Creating MedMatchINT Application
+INFO:app:✅ MedMatchINT Application Initialized Successfully
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.21.110.233:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:25] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:25] "GET /static/css/styles.css HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:25] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:25] "GET /static/img/logo.svg HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:27] "GET /trials HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:27] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:27] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:27] "GET /static/js/trials.js HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:27] "[33mGET /api/trials HTTP/1.1[0m" 404 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:34] "GET /trials HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:34] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:34] "[36mGET /static/js/trials.js HTTP/1.1[0m" 304 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:34] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:34] "[33mGET /api/trials HTTP/1.1[0m" 404 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:41] "[33mGET /api/trials?id=NCT HTTP/1.1[0m" 404 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:43] "[33mGET /api/trials?id=NCT0 HTTP/1.1[0m" 404 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:43] "[33mGET /api/trials?id=NCT05 HTTP/1.1[0m" 404 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 22:58:44] "[33mGET /api/trials?id=NCT052 HTTP/1.1[0m" 404 -
+INFO:app:🔧 Creating MedMatchINT Application
+INFO:app:✅ MedMatchINT Application Initialized Successfully
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.21.110.233:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:03:57] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:03:57] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:03:57] "GET /static/css/styles.css HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:03:58] "GET /static/img/logo.svg HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:03:59] "GET /trials HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:03:59] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:03:59] "[36mGET /static/js/trials.js HTTP/1.1[0m" 304 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:03:59] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:03:59] "[33mGET /api/trials HTTP/1.1[0m" 404 -
+INFO:app:🔧 Creating MedMatchINT Application
+INFO:app:✅ MedMatchINT Application Initialized Successfully
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.21.110.233:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:05:57] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:05:57] "GET /static/css/styles.css HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:05:57] "GET /static/img/logo.svg HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:05:57] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:05:58] "GET /trials HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:05:58] "GET /static/css/styles.css HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:05:58] "GET /static/img/logo.svg HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:05:58] "GET /static/js/trials.js HTTP/1.1" 200 -
+INFO:app:🔧 Creating MedMatchINT Application
+INFO:app:✅ MedMatchINT Application Initialized Successfully
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.21.110.233:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:10:42] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:10:42] "GET /static/css/styles.css HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:10:43] "GET /static/img/logo.svg HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:10:43] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:10:44] "GET /trials HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:10:44] "GET /static/css/styles.css HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:10:44] "GET /static/js/trials.js HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:10:44] "[33mGET /api/trials HTTP/1.1[0m" 404 -
+INFO:werkzeug:172.21.96.1 - - [15/May/2025 23:10:44] "GET /static/img/logo.svg HTTP/1.1" 200 -
+INFO:app:🔧 Creating MedMatchINT Application
+INFO:app:✅ MedMatchINT Application Initialized Successfully
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.21.110.233:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:127.0.0.1 - - [15/May/2025 23:11:25] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [15/May/2025 23:11:25] "GET /static/css/styles.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [15/May/2025 23:11:25] "GET /static/js/main.js HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [15/May/2025 23:11:25] "GET /static/img/logo.svg HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [15/May/2025 23:11:27] "GET /trials HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [15/May/2025 23:11:27] "GET /static/css/styles.css HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [15/May/2025 23:11:27] "GET /static/js/trials.js HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [15/May/2025 23:11:27] "GET /static/img/logo.svg HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [15/May/2025 23:11:27] "[33mGET /api/trials HTTP/1.1[0m" 404 -
+INFO:werkzeug:127.0.0.1 - - [15/May/2025 23:11:39] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [15/May/2025 23:11:39] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [15/May/2025 23:11:39] "[36mGET /static/img/logo.svg HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [15/May/2025 23:11:39] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [15/May/2025 23:11:44] "[33mPOST /process HTTP/1.1[0m" 404 -
+INFO:werkzeug:127.0.0.1 - - [15/May/2025 23:12:02] "[33mPOST /process HTTP/1.1[0m" 404 -
+INFO:werkzeug:127.0.0.1 - - [15/May/2025 23:12:15] "[33mPOST /process HTTP/1.1[0m" 404 -
+INFO:app:🔧 Creating MedMatchINT Application
+INFO:app:✅ MedMatchINT Application Initialized Successfully
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.21.110.233:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:33:07] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:33:07] "GET /static/css/styles.css HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:33:07] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:33:07] "GET /static/img/logo.svg HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:33:11] "[33mPOST /process HTTP/1.1[0m" 404 -
+INFO:app:🔧 Creating MedMatchINT Application
+INFO:app:✅ MedMatchINT Application Initialized Successfully
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.21.110.233:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:40:59] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:40:59] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:40:59] "GET /static/css/styles.css HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:40:59] "GET /static/img/logo.svg HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:41:04] "[33mPOST /process HTTP/1.1[0m" 404 -
+INFO:app:🔧 Creating MedMatchINT Application
+INFO:app:✅ MedMatchINT Application Initialized Successfully
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.21.110.233:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:44:09] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:44:09] "GET /static/css/styles.css HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:44:09] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:44:09] "GET /static/img/logo.svg HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:44:14] "[33mPOST /process HTTP/1.1[0m" 404 -
+INFO:app:🔧 Creating MedMatchINT Application
+INFO:app:✅ MedMatchINT Application Initialized Successfully
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.21.110.233:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:55:49] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:55:49] "GET /static/css/styles.css HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:55:49] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:55:49] "GET /static/img/logo.svg HTTP/1.1" 200 -
+INFO:werkzeug:172.21.96.1 - - [16/May/2025 09:55:53] "[33mPOST /process HTTP/1.1[0m" 404 -
+INFO:app:✅ Verifying database schema with migrations.
+ERROR:flask_migrate:Error: Path doesn't exist: '/home/vanja/MedMatchAI/migrations'.  Please use the 'init' command to create a new scripts folder.
+INFO:app:✅ Verifying database schema with migrations.
+ERROR:flask_migrate:Error: Path doesn't exist: '/home/vanja/MedMatchAI/migrations'.  Please use the 'init' command to create a new scripts folder.
+INFO:app:✅ Verifying database schema with migrations.
+ERROR:flask_migrate:Error: Path doesn't exist: '/home/vanja/MedMatchAI/migrations'.  Please use the 'init' command to create a new scripts folder.
+INFO:app:✅ Verifying database schema with migrations.
+ERROR:flask_migrate:Error: Path doesn't exist: '/home/vanja/MedMatchAI/migrations'.  Please use the 'init' command to create a new scripts folder.
+INFO:app:✅ Verifying database schema with migrations.
+ERROR:app:❌ Error during database migration: Can't find Python file migrations/env.py
+INFO:app:✅ MedMatchINT Application Initialized Successfully
+INFO:app:✅ Verifying database schema with migrations.
+INFO:alembic.runtime.migration:Context impl PostgresqlImpl.
+INFO:alembic.runtime.migration:Will assume transactional DDL.
+INFO:app:✅ Database schema verified and upgraded successfully.
+INFO:app:✅ MedMatchINT Application Initialized Successfully
+ERROR:flask_migrate:Error: Directory migrations already exists and is not empty
+INFO:app:✅ Verifying database schema with migrations.
+ERROR:flask_migrate:Error: Path doesn't exist: '/home/vanja/MedMatchAI/migrations'.  Please use the 'init' command to create a new scripts folder.
+INFO:app:✅ Verifying database schema with migrations.
+ERROR:app:❌ Error during database migration: Can't find Python file migrations/env.py
+INFO:app:✅ MedMatchINT Application Initialized Successfully

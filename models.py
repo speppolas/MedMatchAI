@@ -1,11 +1,11 @@
+#models.py
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import JSON, Index
 
 db = SQLAlchemy()
 
 class ClinicalTrial(db.Model):
-    """Model for clinical trials."""
-
     __tablename__ = 'clinical_trials'
 
     id = db.Column(db.String(30), primary_key=True)
@@ -26,15 +26,12 @@ class ClinicalTrial(db.Model):
     org_study_id = db.Column(db.String(100), unique=True, nullable=False)
     secondary_ids = db.Column(JSON, default=list)
 
-    __table_args__ = (
-        Index('ix_clinical_trials_title', 'title'),
-        Index('ix_clinical_trials_phase', 'phase'),
-        Index('ix_clinical_trials_status', 'status'),
-    )
-
     def __repr__(self):
         return f"<ClinicalTrial {self.id}: {self.title}>"
-
+    
+    
+    
+    '''
     def to_dict(self):
         """Converts the clinical trial to a dictionary."""
         return {
@@ -56,3 +53,4 @@ class ClinicalTrial(db.Model):
             'org_study_id': self.org_study_id,
             'secondary_ids': self.secondary_ids
         }
+        '''
